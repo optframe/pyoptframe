@@ -2,6 +2,7 @@
 
 import ctypes
 from ctypes import *
+from secrets import randbelow
 #
 #from functools import total_ordering
 from typing import TypeVar, Type
@@ -16,7 +17,11 @@ import atexit
 from copy import copy, deepcopy
 import sys
 
+# for problem
+import random  # TODO: get from hf engine ?
+
 # ==================== fcore_lib.so ===================
+
 
 fcore_lib = ctypes.cdll.LoadLibrary('build/fcore_lib.so')
 fcore_lib.fcore_test_print_1.argtypes = [
@@ -56,18 +61,36 @@ fcore_lib.fcore_test_func.argtypes = [
     ctypes.py_object, FUNC_TEST, ctypes.c_int]
 fcore_lib.fcore_test_func.restype = ctypes.c_bool
 
+# ======================================
+#                ADD
+# =====================================
+
 # fcore_float64_fevaluator(double (*_fevaluate)(void*), bool min_or_max) -> void*
 FUNC_FEVALUATE = CFUNCTYPE(c_double, ctypes.py_object)
-#
-FUNC_FCONSTRUCTIVE = CFUNCTYPE(c_double, ctypes.py_object)
 
 fcore_lib.fcore_api1_add_float64_evaluator.argtypes = [
     ctypes.c_void_p, FUNC_FEVALUATE, c_bool]
 fcore_lib.fcore_api1_add_float64_evaluator.restype = ctypes.c_int32
-#
+
+FUNC_FCONSTRUCTIVE = CFUNCTYPE(
+    ctypes.py_object, ctypes.py_object)  # problem* -> solution*
+
+fcore_lib.fcore_api1_add_constructive.argtypes = [
+    ctypes.c_void_p, FUNC_FCONSTRUCTIVE, ctypes.py_object,
+    FUNC_SOL_DEEPCOPY, FUNC_SOL_TOSTRING, FUNC_UTILS_DECREF]
+fcore_lib.fcore_api1_add_constructive.restype = ctypes.c_int32
+
+# ====================================
+#                GET
+# ====================================
 fcore_lib.fcore_api1_get_float64_evaluator.argtypes = [
     ctypes.c_void_p, c_int32]
 fcore_lib.fcore_api1_get_float64_evaluator.restype = ctypes.c_void_p
+#
+fcore_lib.fcore_api1_get_constructive.argtypes = [
+    ctypes.c_void_p, c_int32]
+fcore_lib.fcore_api1_get_constructive.restype = ctypes.c_void_p
+###
 
 
 ### Engine: HeuristicFactory
@@ -77,14 +100,24 @@ fcore_lib.fcore_api1_destroy_engine.argtypes = [ctypes.c_void_p]
 fcore_lib.fcore_api1_destroy_engine.restype = ctypes.c_bool
 ###
 
-
 #fcore_component_print(void* component);
 fcore_lib.fcore_component_print.argtypes = [c_void_p]
+
+# ======================================
+#              SPECIFIC
+# ======================================
 
 # fcore_float64_fevaluator_evaluate(void* _fevaluator, bool min_or_max, void* solution_ptr) -> double
 fcore_lib.fcore_api1_float64_fevaluator_evaluate.argtypes = [
     c_void_p, c_bool, ctypes.py_object]
 fcore_lib.fcore_api1_float64_fevaluator_evaluate.restype = ctypes.c_double
+
+# fcore_api1_fconstructive_gensolution(void* _fconstructive) -> py_object solution
+fcore_lib.fcore_api1_fconstructive_gensolution.argtypes = [
+    c_void_p]
+fcore_lib.fcore_api1_fconstructive_gensolution.restype = ctypes.py_object
+
+# ======================================
 
 
 # ===============
@@ -117,9 +150,9 @@ class ExampleSol(object):
     # def __init__(self, param=0):
     #    self.p = param
     def __init__(self):
-        print('init ExampleSol')
-        self.n = 3
-        self.bag = [0, 1, 0]
+        print('__init__ ExampleSol. Creating empty solution...')
+        self.n = 0
+        self.bag = []
 
     def __str__(self):
         return f"ExampleSol(n={self.n};bag={self.bag})"
@@ -182,10 +215,14 @@ def callback_fevaluate(userData: ExampleSol):
 
 
 def callback_constructive(problemCtx: ExampleKP) -> ExampleSol:
-    print("invoking callback_constructive for problem: ", problemCtx)
+    print("\tinvoking callback_constructive for problem: ", problemCtx)
     sol = ExampleSol()
-    print("TODO... CONTINUAR DAQUI!!!")
-    TODO
+    # print("count=", sys.getrefcount(sol)) # count=2
+    for i in range(0, problemCtx.n):
+        sol.bag.append(random.choice([0, 1]))
+    sol.n = problemCtx.n
+    print("\tfinished callback_constructive with sol: ", sol)
+    return sol
 
 
 class FEvaluator(object):
@@ -208,7 +245,7 @@ class OptFrameEngine(object):
     def print_component(self, component):
         fcore_lib.fcore_component_print(component)
 
-    # =================== evaluator =========================
+    # =================== ADD =========================
 
     # register GeneralEvaluator (as FEvaluator) for min_callback
     def minimize(self, min_callback):
@@ -221,24 +258,46 @@ class OptFrameEngine(object):
             self.hf,     FUNC_FEVALUATE(max_callback), False)
         return idx_ev
 
+    def add_constructive(self, problemCtx, callback_constructive):
+        print("add_constructive begins")
+        idx_c = fcore_lib.fcore_api1_add_constructive(
+            self.hf,     FUNC_FCONSTRUCTIVE(callback_constructive), problemCtx,
+            FUNC_SOL_DEEPCOPY(callback_sol_deepcopy),
+            FUNC_SOL_TOSTRING(callback_sol_tostring),
+            FUNC_UTILS_DECREF(callback_utils_decref))
+        print("add_constructive is finishing")
+        return idx_c
+
+    # ===================== GET =======================
+
     def get_evaluator(self, idx_ev=0):
         fevaluator = fcore_lib.fcore_api1_get_float64_evaluator(
             self.hf, idx_ev)
         return fevaluator
 
+    def get_constructive(self, idx_c=0):
+        fconstructive = fcore_lib.fcore_api1_get_constructive(
+            self.hf, idx_c)
+        return fconstructive
+
+    # ==================================================
     # non-standard non-api method... just for testing
+
     def fevaluator_evaluate(self, fevaluator_ptr: ctypes.py_object, min_or_max: bool, py_sol):
         pyo_view = ctypes.py_object(py_sol)
         z = fcore_lib.fcore_api1_float64_fevaluator_evaluate(
             fevaluator_ptr, min_or_max, pyo_view)
         return z
 
-    # =================== constructive =========================
-
-    def add_constructive(self, callback_constructive):
-        idx_c = fcore_lib.fcore_api1_add_constructive(
-            self.hf,     FUNC_FCONSTRUCTIVE(callback_constructive), False)
-        return idx_c
+    def fconstructive_gensolution(self, fconstructive_ptr: ctypes.py_object) -> ctypes.py_object:
+        #pyo_view = ctypes.py_object(py_sol)
+        print("begin fconstructive_gensolution")
+        pyo_sol = fcore_lib.fcore_api1_fconstructive_gensolution(
+            fconstructive_ptr)
+        print("finished fconstructive_gensolution!")
+        # I THINK we must decref it... because it was once boxed into C++ solution and incref'ed somewhere...
+        ctypes.pythonapi.Py_DecRef(pyo_sol)
+        return pyo_sol.value
 
 
 # ==============================
@@ -254,9 +313,12 @@ def callback_utils_incref(pyo: ctypes.py_object):
     return sys.getrefcount(pyo)
 
 
-def callback_utils_decref(pyo: ctypes.py_object):
+def callback_utils_decref(pyo):
     print("callback_utils_decref: ", sys.getrefcount(pyo), " will get -1")
-    ctypes.pythonapi.Py_DecRef(pyo)
+    print("pyo:", pyo)
+    # IMPORTANT: 'pyo' may come as a Real Python Object, not a 'ctypes.py_object'
+    cast_pyo = ctypes.py_object(pyo)
+    ctypes.pythonapi.Py_DecRef(cast_pyo)
     return sys.getrefcount(pyo)
 
 
@@ -392,6 +454,31 @@ print(sol)
 z = engine.fevaluator_evaluate(fev, True, sol)
 #
 print("")
-print("TODO: generate solution!")
+print("==========================")
+print("manually generate solution")
+print("==========================")
+
+s = callback_constructive(pKP)
+print("")
+print("count=", sys.getrefcount(s))
+print(s)
+
+print("")
+
+c_idx = engine.add_constructive(pKP, callback_constructive)
+print("c_idx=", c_idx)
+
+fc = engine.get_constructive(c_idx)
+engine.print_component(fc)
+print("")
+print("========================")
+print("engine generate solution")
+print("========================")
+#
+solxx = engine.fconstructive_gensolution(fc)
+print("")
+print("count=", sys.getrefcount(solxx))
+print("solxx:", solxx)
+
 
 exit(0)

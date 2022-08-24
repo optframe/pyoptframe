@@ -26,20 +26,24 @@ public:
 
    FCoreLibSolution(const FCoreLibSolution& s)
    {
+      std::cout << "FCoreLibSolution(COPY)" << std::endl;
       assert(s.solution_ptr);
       assert(!s.is_view); // because of deepcopy anyway... COULD we copy a view here? I don't think so..
-      // perform deepcopy and IncRef
-      this->solution_ptr = f_sol_deepcopy(s.solution_ptr);
+      std::cout << "\tFCoreLibSolution(COPY)-> will copy functions" << std::endl;
       // copy functions
       this->f_sol_deepcopy = s.f_sol_deepcopy;
       this->f_utils_decref = s.f_utils_decref;
       // copy flags
       this->is_view = s.is_view;
+      std::cout << "\tFCoreLibSolution(COPY)-> will deepcopy" << std::endl;
+      // perform deepcopy and IncRef
+      this->solution_ptr = this->f_sol_deepcopy(s.solution_ptr);
+      std::cout << "\tFCoreLibSolution(COPY; ptr1_origin=" << s.solution_ptr << "; ptr2_dest=" << this->solution_ptr << ")" << std::endl;
    }
 
    virtual ~FCoreLibSolution()
    {
-      //std::cout << "~FCoreLibSolution is_view = " << this->is_view << " ptr: " << solution_ptr << std::endl;
+      std::cout << "~FCoreLibSolution is_view = " << this->is_view << " ptr: " << solution_ptr << std::endl;
       //
       if (!this->is_view) {
          // must decref solution_ptr and discard it
@@ -63,16 +67,16 @@ public:
    //, copy_solution{ copy_solution }
    {
       printf("FCoreLibSolution3(%p, func, func, func) is_view=%d\n", solution_ptr, is_view);
-      std::cout << "C++ str: '" << toString() << "'" << std::endl;
+      std::cout << "\tFCoreLibSolution3->C++ str: '" << toString() << "'" << std::endl;
    }
 
    // temporary construction (no copy_solution required)
 
-   FCoreLibSolution(FakePythonObjPtr solution_ptr)
-     : solution_ptr{ solution_ptr }
+   FCoreLibSolution(FakePythonObjPtr solution_ptr_view)
+     : solution_ptr{ solution_ptr_view }
      , is_view{ true }
    {
-      //printf("FCoreLibSolution1(%p) is_view=%d\n", solution_ptr, is_view);
+      printf("FCoreLibSolution1(%p) is_view=%d\n", solution_ptr, is_view);
    }
 
    std::string toString() const
@@ -197,22 +201,50 @@ fcore_api1_add_float64_evaluator(FakeHeuristicFactoryPtr _hf, double (*_fevaluat
    return id;
 }
 
+// IMPORTANT: method 'add_constructive' receives a 'problem_view', while a 'problem_owned' would be desired...
+// However, this would require an extra 'int (*f_utils_decref)(FakePythonObjPtr)', but it's doable.
+// Worse, this would also require some personalization of std::function destructor over FConstructive,
+// or a change in FConstructor to allow personalized destructors...
+// Maybe, at this moment, we just require that 'problem_view' must exist at the time constructive is invoked.
+// We can somehow ensure this on Python, which prevents extra referencing counting on both sides.
+// On Python, storing it on the engine (or the opposite) may do the job for us, so, no worry for now.
+
 extern "C" int // index of constructive
-fcore_api1_add_constructive(FakeHeuristicFactoryPtr _hf, FakePythonObjPtr (*_fconstructive)())
+fcore_api1_add_constructive(FakeHeuristicFactoryPtr _hf,
+                            FakePythonObjPtr (*_fconstructive)(FakePythonObjPtr),
+                            FakePythonObjPtr problem_view,
+                            // Support necessary for Solution construction and maintainance
+                            FakePythonObjPtr (*f_sol_deepcopy)(FakePythonObjPtr),
+                            size_t (*f_sol_tostring)(FakePythonObjPtr, char*, size_t),
+                            int (*f_utils_decref)(FakePythonObjPtr))
 {
    auto* hf = (FCoreApi1Engine*)_hf;
 
-   auto fconstructive = [_fconstructive]() -> FCoreLibSolution {
-      FakePythonObjPtr vobj = _fconstructive();
-      assert(vobj); // check void* (TODO: for FxConstructive, return nullopt)
-      FCoreLibSolution sol(vobj);
+   std::cout << "invoking 'fcore_api1_add_constructive' with "
+             << "_hf=" << _hf << " _fconstructive and problem_view=" << problem_view << std::endl;
+
+   auto fconstructive = [_fconstructive,
+                         problem_view,
+                         f_sol_deepcopy,
+                         f_sol_tostring,
+                         f_utils_decref]() -> FCoreLibSolution {
+      // IMPORTANT: _fconstructive must IncRef before returning! I think so...
+      FakePythonObjPtr vobj_owned = _fconstructive(problem_view);
+      std::cout << "'fcore_api1_add_constructive' -> _fconstructive generated pointer: " << vobj_owned << std::endl;
+      assert(vobj_owned); // check void* (TODO: for FxConstructive, return nullopt)
+      FCoreLibSolution sol(vobj_owned, f_sol_deepcopy, f_sol_tostring, f_utils_decref);
+      std::cout << "'fcore_api1_add_constructive' -> solution created!" << std::endl;
       return sol;
    };
 
    sref<optframe::Component> fc(
      new optframe::FConstructive<FCoreLibSolution>{ fconstructive });
 
+   std::cout << "'fcore_api1_add_constructive' will add component on hf" << std::endl;
+
    int id = hf->addComponent(fc, "OptFrame:Constructive");
+   std::cout << "c_id = " << id << std::endl;
+   fc->print();
    return id;
 }
 
@@ -234,6 +266,24 @@ fcore_api1_get_float64_evaluator(FakeHeuristicFactoryPtr _hf, int idx_ev)
    return ptr;
 }
 
+extern "C" void* // raw (non-owned) pointer to FConstructive
+fcore_api1_get_constructive(FakeHeuristicFactoryPtr _hf, int idx_c)
+{
+   auto* hf = (FCoreApi1Engine*)_hf;
+
+   std::shared_ptr<optframe::Constructive<FCoreLibSolution>> component;
+
+   hf->assign(component, idx_c, "OptFrame:Constructive");
+   if (!component)
+      assert(false);
+   void* ptr = component.get();
+   return ptr;
+}
+
+// ==============================================
+//            SPECIFIC INVOCATIONS
+// ==============================================
+
 // min_or_max is needed to correctly cast template on FEvaluator
 extern "C" double //FEvaluator object
 fcore_api1_float64_fevaluator_evaluate(FakeFEvaluatorPtr _fevaluator, bool min_or_max, FakePythonObjPtr solution_ptr_view)
@@ -250,6 +300,24 @@ fcore_api1_float64_fevaluator_evaluate(FakeFEvaluatorPtr _fevaluator, bool min_o
       ev = fevaluator->evaluate(sol);
    }
    return ev.evaluation();
+}
+
+extern "C" FakePythonObjPtr // Python solution object
+fcore_api1_fconstructive_gensolution(FakeFConstructivePtr _fconstructive)
+{
+   std::cout << "begin 'fcore_api1_fconstructive_gensolution'" << std::endl;
+   auto* fconstructive = (optframe::FConstructive<FCoreLibSolution>*)_fconstructive;
+   std::optional<FCoreLibSolution> sol = fconstructive->generateSolution(0.0);
+   std::cout << "will check if optional solution exists: " << !!sol << std::endl;
+   assert(sol);
+   // will return solution to Python... must make sure it will live!
+   // should IncRef it here?? Perhaps...
+   // will move it out from boxed Sol object, and make it a fake is_view=1 object here.
+   FakePythonObjPtr ptr = sol->solution_ptr;
+   std::cout << "finished 'fcore_api1_fconstructive_gensolution'... returning ptr=" << ptr << std::endl;
+   sol->solution_ptr = 0;
+   sol->is_view = 1;
+   return ptr;
 }
 
 // ==============
