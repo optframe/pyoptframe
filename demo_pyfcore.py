@@ -65,9 +65,9 @@ fcore_lib.fcore_test_func.restype = ctypes.c_bool
 #                ADD
 # =====================================
 
-# fcore_float64_fevaluator(double (*_fevaluate)(void*), bool min_or_max) -> void*
-FUNC_FEVALUATE = CFUNCTYPE(c_double, ctypes.py_object)
+FUNC_FEVALUATE = CFUNCTYPE(ctypes.c_double, ctypes.py_object)
 
+# fcore_float64_fevaluator(void* hf, double (*_fevaluate)(void*), bool min_or_max) -> int (index)
 fcore_lib.fcore_api1_add_float64_evaluator.argtypes = [
     ctypes.c_void_p, FUNC_FEVALUATE, c_bool]
 fcore_lib.fcore_api1_add_float64_evaluator.restype = ctypes.c_int32
@@ -120,32 +120,6 @@ fcore_lib.fcore_api1_fconstructive_gensolution.restype = ctypes.py_object
 # ======================================
 
 
-# ===============
-# VERY GOOD EXAMPLE IN PYTHON
-# https://stackoverflow.com/questions/52053434/how-to-cast-a-ctypes-pointer-to-an-instance-of-a-python-class#52055019
-#
-# ===================
-
-class ExampleKP(object):
-    # def __init__(self, param=0):
-    #    self.p = param
-    def __init__(self):
-        print('Init KP')
-        # number of items
-        self.n = 0
-        # item weights
-        self.w = []
-        # item profits
-        self.p = []
-        # knapsack capacity
-        self.Q = 0.0
-
-    def __str__(self):
-        return f"ExampleKP(n={self.n};Q={self.Q};w={self.w};p={self.p})"
-
-# class FCore(object):
-
-
 class ExampleSol(object):
     # def __init__(self, param=0):
     #    self.p = param
@@ -173,6 +147,53 @@ class ExampleSol(object):
 
     def foo(self):
         return 30  # self.p
+
+
+# ===============
+# VERY GOOD EXAMPLE IN PYTHON
+# https://stackoverflow.com/questions/52053434/how-to-cast-a-ctypes-pointer-to-an-instance-of-a-python-class#52055019
+#
+# ===================
+
+class ExampleKP(object):
+    # def __init__(self, param=0):
+    #    self.p = param
+    def __init__(self):
+        print('Init KP')
+        # number of items
+        self.n = 0
+        # item weights
+        self.w = []
+        # item profits
+        self.p = []
+        # knapsack capacity
+        self.Q = 0.0
+
+    def __str__(self):
+        return f"ExampleKP(n={self.n};Q={self.Q};w={self.w};p={self.p})"
+
+
+# class MyKPComponents():
+def mycallback_fevaluate(userData: ExampleSol):
+    print("python: invoking 'mycallback_fevaluate'")
+    print("EVALUATE From Python: {:s}".format(mycallback.__name__))
+    v = 0.5
+    print("test value is: ", v)
+    return v
+
+
+def mycallback_constructive(problemCtx: ExampleKP) -> ExampleSol:
+    print("\tinvoking mycallback_constructive for problem: ", problemCtx)
+    sol = ExampleSol()
+    # print("count=", sys.getrefcount(sol)) # count=2
+    for i in range(0, problemCtx.n):
+        sol.bag.append(random.choice([0, 1]))
+    sol.n = problemCtx.n
+    print("\tfinished mycallback_constructive with sol: ", sol)
+    return sol
+
+# class FCore(object):
+
 
 # https://stackoverflow.com/questions/69724210/python-ctypes-how-to-write-string-to-given-buffer
 #
@@ -207,24 +228,6 @@ def mycallback(userData: ExampleSol):
     return userData.foo()
 
 
-def callback_fevaluate(userData: ExampleSol):
-    print("EVALUATE From Python: {:s}".format(mycallback.__name__))
-    v = 0.5
-    print("test value is: ", v)
-    return v
-
-
-def callback_constructive(problemCtx: ExampleKP) -> ExampleSol:
-    print("\tinvoking callback_constructive for problem: ", problemCtx)
-    sol = ExampleSol()
-    # print("count=", sys.getrefcount(sol)) # count=2
-    for i in range(0, problemCtx.n):
-        sol.bag.append(random.choice([0, 1]))
-    sol.n = problemCtx.n
-    print("\tfinished callback_constructive with sol: ", sol)
-    return sol
-
-
 class FEvaluator(object):
 
     def evaluate(self):
@@ -236,6 +239,12 @@ class FEvaluator(object):
 class OptFrameEngine(object):
     def __init__(self):
         self.hf = fcore_lib.fcore_api1_create_engine()
+        self.callback_sol_deepcopy_ptr = FUNC_SOL_DEEPCOPY(
+            callback_sol_deepcopy)
+        self.callback_sol_tostring_ptr = FUNC_SOL_TOSTRING(
+            callback_sol_tostring)
+        self.callback_utils_decref_ptr = FUNC_UTILS_DECREF(
+            callback_utils_decref)
         atexit.register(self.cleanup)
 
     def cleanup(self):
@@ -248,23 +257,30 @@ class OptFrameEngine(object):
     # =================== ADD =========================
 
     # register GeneralEvaluator (as FEvaluator) for min_callback
-    def minimize(self, min_callback):
+    def minimize(self, min_callback_ptr):
+        print("min_callback=", min_callback_ptr)
         idx_ev = fcore_lib.fcore_api1_add_float64_evaluator(
-            self.hf,     FUNC_FEVALUATE(min_callback), True)
+            # self.hf,     FUNC_FEVALUATE(min_callback), True)
+            self.hf,     min_callback_ptr, True)
         return idx_ev
 
-    def maximize(self, max_callback):
+    def maximize(self, max_callback_ptr):
         idx_ev = fcore_lib.fcore_api1_add_float64_evaluator(
-            self.hf,     FUNC_FEVALUATE(max_callback), False)
+            # self.hf,     FUNC_FEVALUATE(max_callback), False)
+            self.hf,     max_callback_ptr, False)
         return idx_ev
 
-    def add_constructive(self, problemCtx, callback_constructive):
+    def add_constructive(self, problemCtx, constructive_callback_ptr):
         print("add_constructive begins")
         idx_c = fcore_lib.fcore_api1_add_constructive(
-            self.hf,     FUNC_FCONSTRUCTIVE(callback_constructive), problemCtx,
-            FUNC_SOL_DEEPCOPY(callback_sol_deepcopy),
-            FUNC_SOL_TOSTRING(callback_sol_tostring),
-            FUNC_UTILS_DECREF(callback_utils_decref))
+            #self.hf,     FUNC_FCONSTRUCTIVE(constructive_callback), problemCtx,
+            self.hf,  constructive_callback_ptr, problemCtx,
+            self.callback_sol_deepcopy_ptr,
+            # FUNC_SOL_DEEPCOPY(callback_sol_deepcopy),
+            self.callback_sol_tostring_ptr,
+            # FUNC_SOL_TOSTRING(callback_sol_tostring),
+            self.callback_utils_decref_ptr)
+        # FUNC_UTILS_DECREF(callback_utils_decref))
         print("add_constructive is finishing")
         return idx_c
 
@@ -284,17 +300,24 @@ class OptFrameEngine(object):
     # non-standard non-api method... just for testing
 
     def fevaluator_evaluate(self, fevaluator_ptr: ctypes.py_object, min_or_max: bool, py_sol):
+        print("invoking 'fcore_lib.fcore_api1_float64_fevaluator_evaluate' with fevaluator_ptr=", fevaluator_ptr)
+        self.print_component(fevaluator_ptr)
         pyo_view = ctypes.py_object(py_sol)
+        #print("begin fevaluator_evaluate with pyo_view=", pyo_view)
         z = fcore_lib.fcore_api1_float64_fevaluator_evaluate(
             fevaluator_ptr, min_or_max, pyo_view)
+        print("'fevaluator_evaluate' final z=", z)
         return z
 
     def fconstructive_gensolution(self, fconstructive_ptr: ctypes.py_object) -> ctypes.py_object:
+        print("invoking 'fcore_lib.fcore_api1_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
+        self.print_component(fconstructive_ptr)
         #pyo_view = ctypes.py_object(py_sol)
         print("begin fconstructive_gensolution")
         pyo_sol = fcore_lib.fcore_api1_fconstructive_gensolution(
             fconstructive_ptr)
         print("finished fconstructive_gensolution!")
+        #print("pyo_sol=", pyo_sol)
         # I THINK we must decref it... because it was once boxed into C++ solution and incref'ed somewhere...
         ctypes.pythonapi.Py_DecRef(pyo_sol)
         return pyo_sol.value
@@ -390,11 +413,19 @@ print("y=", y)
 print("")
 #fcore_lib.fcore_test_1(p_x, 50)
 
+
 print("")
 print("BEGIN SERIOUS Engine HF")
 hf = fcore_lib.fcore_api1_create_engine()
 print("Engine ptr=", hf)
 
+print("")
+print("Create Callbacks KP object")
+#mykp = MyKPComponents()
+call_fev = FUNC_FEVALUATE(mycallback_fevaluate)
+call_c = FUNC_FCONSTRUCTIVE(mycallback_constructive)
+print("call_fev=", call_fev)
+print("call_c=", call_c)
 
 # function evaluate(int[] v, int sz) -> int (evaluation)
 #FUNC_EVALUATE = CFUNCTYPE(c_int, POINTER(c_int), c_int)
@@ -403,8 +434,7 @@ print("Engine ptr=", hf)
 # ctypes.py_object ..
 
 print("add evaluator")
-idx_ev = fcore_lib.fcore_api1_add_float64_evaluator(
-    hf,     FUNC_FEVALUATE(callback_fevaluate), True)
+idx_ev = fcore_lib.fcore_api1_add_float64_evaluator(hf, call_fev, True)
 print("idx_ev=", idx_ev)
 
 print("get general evaluator")
@@ -412,6 +442,16 @@ fevaluator = fcore_lib.fcore_api1_get_float64_evaluator(hf, idx_ev)
 
 print("test print")
 fcore_lib.fcore_component_print(fevaluator)
+print("")
+
+print("evaluate")
+# giving ownership over 'sol' for function 'evaluate' to Box it
+pyo_view = ctypes.py_object(sol)
+# ctypes.pythonapi.Py_IncRef(pyo)  # TODO: do we need this? I hope not...
+z = fcore_lib.fcore_api1_float64_fevaluator_evaluate(
+    fevaluator, True, pyo_view)
+print("finished evaluate")
+print(z)
 print("")
 
 print("evaluate")
@@ -434,8 +474,16 @@ print("")
 
 ####################
 
+print("")
+print("")
+print("")
+print("===============================")
 print("BEGIN again with OptFrameEngine")
+print("===============================")
+print("")
 engine = OptFrameEngine()
+print("call_ev:", call_fev)
+print("call_c:", call_c)
 pKP = ExampleKP()
 pKP.n = 5
 pKP.w = [1, 2, 3, 4, 5]
@@ -443,14 +491,21 @@ pKP.p = [5, 4, 3, 2, 1]
 pKP.Q = 6.0
 print(pKP)
 
-ev_idx = engine.minimize(callback_fevaluate)
+ev_idx = engine.minimize(call_fev)
 print("evaluator id:", ev_idx)
 fev = engine.get_evaluator()
 engine.print_component(fev)
 #
 print("")
+print("=====================")
+print("create empty solution")
+print("=====================")
 sol = ExampleSol()
 print(sol)
+print("")
+print("====================")
+print("engine test evaluate")
+print("====================")
 z = engine.fevaluator_evaluate(fev, True, sol)
 #
 print("")
@@ -458,15 +513,23 @@ print("==========================")
 print("manually generate solution")
 print("==========================")
 
-s = callback_constructive(pKP)
+s = mycallback_constructive(pKP)
 print("")
 print("count=", sys.getrefcount(s))
 print(s)
 
 print("")
 
-c_idx = engine.add_constructive(pKP, callback_constructive)
+c_idx = engine.add_constructive(pKP, call_c)
 print("c_idx=", c_idx)
+
+print("")
+print("============================")
+print("engine test evaluate (again2)")
+print("============================")
+z1 = engine.fevaluator_evaluate(fev, True, sol)
+print("evaluation:", z1)
+print("")
 
 fc = engine.get_constructive(c_idx)
 engine.print_component(fc)
@@ -479,6 +542,16 @@ solxx = engine.fconstructive_gensolution(fc)
 print("")
 print("count=", sys.getrefcount(solxx))
 print("solxx:", solxx)
+#
+print("")
+print("============================")
+print("engine test evaluate (again3)")
+print("============================")
+z1 = engine.fevaluator_evaluate(fev, True, sol)
+print("evaluation:", z1)
 
+
+print(call_fev)
+print(call_c)
 
 exit(0)

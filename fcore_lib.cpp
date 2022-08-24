@@ -175,11 +175,15 @@ extern "C" int // index of generalevaluator
 fcore_api1_add_float64_evaluator(FakeHeuristicFactoryPtr _hf, double (*_fevaluate)(FakePythonObjPtr), bool min_or_max)
 {
    auto* hf = (FCoreApi1Engine*)_hf;
+   printf("hf=%p\n", (void*)hf);
 
    auto fevaluate = [_fevaluate](const FCoreLibSolution& s) -> optframe::Evaluation<double> {
-      printf("will invoke _fevaluate over s.solution_ptr = %p\n", s.solution_ptr);
+      printf("will invoke _fevaluate(%p) over s.solution_ptr = %p\n", (void*)_fevaluate, s.solution_ptr);
       double r = _fevaluate(s.solution_ptr);
       printf("return r=%f\n", r);
+      printf("\tCHECK:will evaluate again!!\n");
+      double r2 = _fevaluate(s.solution_ptr);
+      printf("return r2=%f\n", r);
       return r;
    };
 
@@ -188,7 +192,7 @@ fcore_api1_add_float64_evaluator(FakeHeuristicFactoryPtr _hf, double (*_fevaluat
       // Minimization
       sref<optframe::Component> eval(
         new optframe::FEvaluator<FCoreLibESolution, optframe::MinOrMax::MINIMIZE>{ fevaluate });
-
+      std::cout << "created FEvaluator<MIN> ptr=" << &eval.get() << std::endl;
       id = hf->addComponent(eval, "OptFrame:GeneralEvaluator");
    } else {
       // Maximization
@@ -326,6 +330,7 @@ extern "C" void
 fcore_component_print(void* component)
 {
    auto* c = (optframe::Component*)component;
+   std::cout << "fcore_component_print ptr=" << c << " => ";
    c->print();
 }
 
