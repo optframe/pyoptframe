@@ -317,10 +317,15 @@ class OptFrameEngine(object):
         pyo_sol = fcore_lib.fcore_api1_fconstructive_gensolution(
             fconstructive_ptr)
         print("finished fconstructive_gensolution!")
-        #print("pyo_sol=", pyo_sol)
+        print("pyo_sol=", pyo_sol, " count=", sys.getrefcount(pyo_sol))
         # I THINK we must decref it... because it was once boxed into C++ solution and incref'ed somewhere...
-        ctypes.pythonapi.Py_DecRef(pyo_sol)
-        return pyo_sol.value
+        cast_pyo = ctypes.py_object(pyo_sol)
+        print("cast_pyo=", cast_pyo, " count=", sys.getrefcount(cast_pyo))
+        # ERROR: when decref, it segfaults... don't know why
+        # ctypes.pythonapi.Py_DecRef(cast_pyo)
+        return cast_pyo.value
+        # callback_utils_decref(pyo_sol)
+        # return pyo_sol.value
 
 
 # ==============================
@@ -550,8 +555,19 @@ print("============================")
 z1 = engine.fevaluator_evaluate(fev, True, sol)
 print("evaluation:", z1)
 
-
+#
 print(call_fev)
 print(call_c)
+
+print("")
+print("============================")
+print("    stress test generate    ")
+print("============================")
+# while True:
+#    sol_inf = engine.fconstructive_gensolution(fc)
+#    print("sol_inf:", sol_inf)
+#    z1 = engine.fevaluator_evaluate(fev, True, sol_inf)
+#    print("evaluation:", z1)
+print("OK. no stress...")
 
 exit(0)

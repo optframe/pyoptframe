@@ -41,6 +41,27 @@ public:
       std::cout << "\tFCoreLibSolution(COPY; ptr1_origin=" << s.solution_ptr << "; ptr2_dest=" << this->solution_ptr << ")" << std::endl;
    }
 
+   FCoreLibSolution(FCoreLibSolution&& s)
+   {
+      std::cout << "FCoreLibSolution(MOVE)" << std::endl;
+      assert(s.solution_ptr);
+      // copy flags
+      this->is_view = s.is_view;
+      if (!s.is_view) {
+         std::cout << "\tNOT_VIEW! FCoreLibSolution(MOVE)-> will move functions" << std::endl;
+         // copy functions
+         this->f_sol_deepcopy = std::move(s.f_sol_deepcopy);
+         this->f_utils_decref = std::move(s.f_utils_decref);
+      }
+      std::cout << "\tFCoreLibSolution(MOVE)-> will steal pointer" << std::endl;
+      this->solution_ptr = s.solution_ptr;
+      // prepare corpse
+      s.solution_ptr = 0;
+      s.is_view = true;
+      //
+      std::cout << "\tFCoreLibSolution(MOVE finished; ptr=" << solution_ptr << ")" << std::endl;
+   }
+
    virtual ~FCoreLibSolution()
    {
       std::cout << "~FCoreLibSolution is_view = " << this->is_view << " ptr: " << solution_ptr << std::endl;
