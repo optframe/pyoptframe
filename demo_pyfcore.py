@@ -45,15 +45,17 @@ FUNC_SOL_TOSTRING = CFUNCTYPE(
 #        OptFrame ADD Component
 # =====================================
 
-FUNC_FEVALUATE = CFUNCTYPE(ctypes.c_double, ctypes.py_object)
+# problem*, solution* -> double
+FUNC_FEVALUATE = CFUNCTYPE(ctypes.c_double, ctypes.py_object, ctypes.py_object)
 
 # fcore_float64_fevaluator(void* hf, double (*_fevaluate)(void*), bool min_or_max) -> int (index)
 fcore_lib.fcore_api1_add_float64_evaluator.argtypes = [
-    ctypes.c_void_p, FUNC_FEVALUATE, c_bool]
+    ctypes.c_void_p, FUNC_FEVALUATE, c_bool, ctypes.py_object]
 fcore_lib.fcore_api1_add_float64_evaluator.restype = ctypes.c_int32
 
+# problem* -> solution*
 FUNC_FCONSTRUCTIVE = CFUNCTYPE(
-    ctypes.py_object, ctypes.py_object)  # problem* -> solution*
+    ctypes.py_object, ctypes.py_object)
 
 fcore_lib.fcore_api1_add_constructive.argtypes = [
     ctypes.c_void_p, FUNC_FCONSTRUCTIVE, ctypes.py_object,
@@ -123,17 +125,17 @@ class OptFrameEngine(object):
     # =================== ADD =========================
 
     # register GeneralEvaluator (as FEvaluator) for min_callback
-    def minimize(self, min_callback_ptr):
+    def minimize(self, problemCtx, min_callback_ptr):
         print("min_callback=", min_callback_ptr)
         idx_ev = fcore_lib.fcore_api1_add_float64_evaluator(
             # self.hf,     FUNC_FEVALUATE(min_callback), True)
-            self.hf,     min_callback_ptr, True)
+            self.hf,     min_callback_ptr, True, problemCtx)
         return idx_ev
 
-    def maximize(self, max_callback_ptr):
+    def maximize(self, problemCtx, max_callback_ptr):
         idx_ev = fcore_lib.fcore_api1_add_float64_evaluator(
             # self.hf,     FUNC_FEVALUATE(max_callback), False)
-            self.hf,     max_callback_ptr, False)
+            self.hf,     max_callback_ptr, False, problemCtx)
         return idx_ev
 
     def add_constructive(self, problemCtx, constructive_callback_ptr):
@@ -280,8 +282,8 @@ class ExampleKP(object):
         return f"ExampleKP(n={self.n};Q={self.Q};w={self.w};p={self.p})"
 
 
-def mycallback_fevaluate(userData: ExampleSol):
-    print("python: invoking 'mycallback_fevaluate'")
+def mycallback_fevaluate(problemCtx: ExampleKP, userData: ExampleSol):
+    print("python: invoking 'mycallback_fevaluate' with problem and solution")
     print("TODO")
     #print("EVALUATE From Python: {:s}".format(mycallback.__name__))
     v = 0.5
@@ -329,7 +331,7 @@ pKP.p = [5, 4, 3, 2, 1]
 pKP.Q = 6.0
 print(pKP)
 
-ev_idx = engine.minimize(call_fev)
+ev_idx = engine.minimize(pKP, call_fev)
 print("evaluator id:", ev_idx)
 fev = engine.get_evaluator()
 engine.print_component(fev)

@@ -150,14 +150,18 @@ fcore_api1_destroy_engine(FakeHeuristicFactoryPtr _hf)
 
 // min_or_max is needed to correctly cast template on FEvaluator
 extern "C" int // index of generalevaluator
-fcore_api1_add_float64_evaluator(FakeHeuristicFactoryPtr _hf, double (*_fevaluate)(FakePythonObjPtr), bool min_or_max)
+
+fcore_api1_add_float64_evaluator(FakeHeuristicFactoryPtr _hf,
+                                 double (*_fevaluate)(FakePythonObjPtr, FakePythonObjPtr),
+                                 bool min_or_max,
+                                 FakePythonObjPtr problem_view)
 {
    auto* hf = (FCoreApi1Engine*)_hf;
    //printf("hf=%p\n", (void*)hf);
 
-   auto fevaluate = [_fevaluate](const FCoreLibSolution& s) -> optframe::Evaluation<double> {
+   auto fevaluate = [_fevaluate, problem_view](const FCoreLibSolution& s) -> optframe::Evaluation<double> {
       //printf("will invoke _fevaluate(%p) over s.solution_ptr = %p\n", (void*)_fevaluate, s.solution_ptr);
-      double r = _fevaluate(s.solution_ptr);
+      double r = _fevaluate(problem_view, s.solution_ptr);
       //printf("return r=%f\n", r);
       return r;
    };

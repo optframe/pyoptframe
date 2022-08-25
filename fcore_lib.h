@@ -11,8 +11,6 @@ typedef void* FakeHeuristicFactoryPtr;
 
 // =========================== FEVALUATOR ===========================
 // constructor
-extern "C" FakeFEvaluatorPtr // returns FEvaluator object
-fcore_new_float64_fevaluator(double (*_fevaluate)(FakePythonObjPtr), bool min_or_max);
 
 extern "C" double
 fcore_float64_fevaluator_evaluate(FakeFEvaluatorPtr fevaluator, bool min_or_max, FakePythonObjPtr solution_ptr);
@@ -28,7 +26,10 @@ fcore_api1_destroy_engine(FakeHeuristicFactoryPtr hf);
 // ============
 
 extern "C" int // index of generalevaluator
-fcore_api1_add_float64_evaluator(FakeHeuristicFactoryPtr _hf, double (*_fevaluate)(FakePythonObjPtr), bool min_or_max);
+fcore_api1_add_float64_evaluator(FakeHeuristicFactoryPtr _hf,
+                                 double (*_fevaluate)(FakePythonObjPtr, FakePythonObjPtr),
+                                 bool min_or_max,
+                                 FakePythonObjPtr problem_view);
 
 extern "C" void* // raw (non-owned) pointer to GeneralEvaluator
 fcore_api1_get_float64_evaluator(FakeHeuristicFactoryPtr _hf, int idx_ev);
