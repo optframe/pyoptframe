@@ -26,45 +26,45 @@ public:
 
    FCoreLibSolution(const FCoreLibSolution& s)
    {
-      std::cout << "FCoreLibSolution(COPY)" << std::endl;
+      //std::cout << "FCoreLibSolution(COPY)" << std::endl;
       assert(s.solution_ptr);
       assert(!s.is_view); // because of deepcopy anyway... COULD we copy a view here? I don't think so..
-      std::cout << "\tFCoreLibSolution(COPY)-> will copy functions" << std::endl;
+      //std::cout << "\tFCoreLibSolution(COPY)-> will copy functions" << std::endl;
       // copy functions
       this->f_sol_deepcopy = s.f_sol_deepcopy;
       this->f_utils_decref = s.f_utils_decref;
       // copy flags
       this->is_view = s.is_view;
-      std::cout << "\tFCoreLibSolution(COPY)-> will deepcopy" << std::endl;
+      //std::cout << "\tFCoreLibSolution(COPY)-> will deepcopy" << std::endl;
       // perform deepcopy and IncRef
       this->solution_ptr = this->f_sol_deepcopy(s.solution_ptr);
-      std::cout << "\tFCoreLibSolution(COPY; ptr1_origin=" << s.solution_ptr << "; ptr2_dest=" << this->solution_ptr << ")" << std::endl;
+      //std::cout << "\tFCoreLibSolution(COPY; ptr1_origin=" << s.solution_ptr << "; ptr2_dest=" << this->solution_ptr << ")" << std::endl;
    }
 
    FCoreLibSolution(FCoreLibSolution&& s)
    {
-      std::cout << "FCoreLibSolution(MOVE)" << std::endl;
+      //std::cout << "FCoreLibSolution(MOVE)" << std::endl;
       assert(s.solution_ptr);
       // copy flags
       this->is_view = s.is_view;
       if (!s.is_view) {
-         std::cout << "\tNOT_VIEW! FCoreLibSolution(MOVE)-> will move functions" << std::endl;
+         //std::cout << "\tNOT_VIEW! FCoreLibSolution(MOVE)-> will move functions" << std::endl;
          // copy functions
          this->f_sol_deepcopy = std::move(s.f_sol_deepcopy);
          this->f_utils_decref = std::move(s.f_utils_decref);
       }
-      std::cout << "\tFCoreLibSolution(MOVE)-> will steal pointer" << std::endl;
+      //std::cout << "\tFCoreLibSolution(MOVE)-> will steal pointer" << std::endl;
       this->solution_ptr = s.solution_ptr;
       // prepare corpse
       s.solution_ptr = 0;
       s.is_view = true;
       //
-      std::cout << "\tFCoreLibSolution(MOVE finished; ptr=" << solution_ptr << ")" << std::endl;
+      //std::cout << "\tFCoreLibSolution(MOVE finished; ptr=" << solution_ptr << ")" << std::endl;
    }
 
    virtual ~FCoreLibSolution()
    {
-      std::cout << "~FCoreLibSolution is_view = " << this->is_view << " ptr: " << solution_ptr << std::endl;
+      //std::cout << "~FCoreLibSolution is_view = " << this->is_view << " ptr: " << solution_ptr << std::endl;
       //
       if (!this->is_view) {
          // must decref solution_ptr and discard it
@@ -87,8 +87,8 @@ public:
      , f_utils_decref{ f_utils_decref }
    //, copy_solution{ copy_solution }
    {
-      printf("FCoreLibSolution3(%p, func, func, func) is_view=%d\n", solution_ptr, is_view);
-      std::cout << "\tFCoreLibSolution3->C++ str: '" << toString() << "'" << std::endl;
+      //printf("FCoreLibSolution3(%p, func, func, func) is_view=%d\n", solution_ptr, is_view);
+      //std::cout << "\tFCoreLibSolution3->C++ str: '" << toString() << "'" << std::endl;
    }
 
    // temporary construction (no copy_solution required)
@@ -97,7 +97,7 @@ public:
      : solution_ptr{ solution_ptr_view }
      , is_view{ true }
    {
-      printf("FCoreLibSolution1(%p) is_view=%d\n", solution_ptr, is_view);
+      //printf("FCoreLibSolution1(%p) is_view=%d\n", solution_ptr, is_view);
    }
 
    std::string toString() const
@@ -118,49 +118,6 @@ public:
 };
 
 using FCoreLibESolution = std::pair<FCoreLibSolution, optframe::Evaluation<double>>;
-
-extern "C" FakePythonObjPtr
-fcore_test_gensolution(
-  FakePythonObjPtr vpython,
-  FakePythonObjPtr (*f_sol_deepcopy)(FakePythonObjPtr),
-  size_t (*f_sol_tostring)(FakePythonObjPtr, char*, size_t),
-  int (*f_utils_decref)(FakePythonObjPtr) // TODO: remove this?
-)
-{
-   printf("fcore_test_gensolution registering %p\n", vpython);
-   FCoreLibSolution* sol = new FCoreLibSolution(vpython, f_sol_deepcopy, f_sol_tostring, f_utils_decref);
-   return sol;
-}
-
-extern "C" void*
-fcore_test_invokesolution(void* mysol, int32_t (*func)(FakePythonObjPtr))
-{
-   auto* sol = (FCoreLibSolution*)mysol;
-   printf("fcore_test_invokesolution will invoke function on internal pointer: %p\n", sol->solution_ptr);
-   func(sol->solution_ptr);
-   return sol->solution_ptr;
-}
-
-// ==============================================
-// ==============================================
-
-// test if python object is received, plus an int
-extern "C" int32_t
-fcore_test_print_1(FakePythonObjPtr vpython, int32_t sz_vr)
-{
-   printf("fcore_test_print_1 received python obj: %p | %d\n", vpython, sz_vr);
-   return 1;
-}
-
-// test if func is received
-extern "C" int32_t
-fcore_test_func(FakePythonObjPtr vpython, int32_t (*func)(FakePythonObjPtr), int32_t sz_vr)
-{
-   //printf("%p | %d\n", vpython, sz_vr);
-   fcore_test_print_1(vpython, sz_vr);
-   printf("%p | func_out= %d | %d\n", vpython, func(vpython), sz_vr);
-   return true;
-}
 
 // ============================ Engine: HeuristicFactory ===========================
 
@@ -196,15 +153,12 @@ extern "C" int // index of generalevaluator
 fcore_api1_add_float64_evaluator(FakeHeuristicFactoryPtr _hf, double (*_fevaluate)(FakePythonObjPtr), bool min_or_max)
 {
    auto* hf = (FCoreApi1Engine*)_hf;
-   printf("hf=%p\n", (void*)hf);
+   //printf("hf=%p\n", (void*)hf);
 
    auto fevaluate = [_fevaluate](const FCoreLibSolution& s) -> optframe::Evaluation<double> {
-      printf("will invoke _fevaluate(%p) over s.solution_ptr = %p\n", (void*)_fevaluate, s.solution_ptr);
+      //printf("will invoke _fevaluate(%p) over s.solution_ptr = %p\n", (void*)_fevaluate, s.solution_ptr);
       double r = _fevaluate(s.solution_ptr);
-      printf("return r=%f\n", r);
-      printf("\tCHECK:will evaluate again!!\n");
-      double r2 = _fevaluate(s.solution_ptr);
-      printf("return r2=%f\n", r);
+      //printf("return r=%f\n", r);
       return r;
    };
 
@@ -213,7 +167,7 @@ fcore_api1_add_float64_evaluator(FakeHeuristicFactoryPtr _hf, double (*_fevaluat
       // Minimization
       sref<optframe::Component> eval(
         new optframe::FEvaluator<FCoreLibESolution, optframe::MinOrMax::MINIMIZE>{ fevaluate });
-      std::cout << "created FEvaluator<MIN> ptr=" << &eval.get() << std::endl;
+      //std::cout << "created FEvaluator<MIN> ptr=" << &eval.get() << std::endl;
       id = hf->addComponent(eval, "OptFrame:GeneralEvaluator");
    } else {
       // Maximization
@@ -245,8 +199,8 @@ fcore_api1_add_constructive(FakeHeuristicFactoryPtr _hf,
 {
    auto* hf = (FCoreApi1Engine*)_hf;
 
-   std::cout << "invoking 'fcore_api1_add_constructive' with "
-             << "_hf=" << _hf << " _fconstructive and problem_view=" << problem_view << std::endl;
+   //std::cout << "invoking 'fcore_api1_add_constructive' with "
+   //          << "_hf=" << _hf << " _fconstructive and problem_view=" << problem_view << std::endl;
 
    auto fconstructive = [_fconstructive,
                          problem_view,
@@ -255,21 +209,21 @@ fcore_api1_add_constructive(FakeHeuristicFactoryPtr _hf,
                          f_utils_decref]() -> FCoreLibSolution {
       // IMPORTANT: _fconstructive must IncRef before returning! I think so...
       FakePythonObjPtr vobj_owned = _fconstructive(problem_view);
-      std::cout << "'fcore_api1_add_constructive' -> _fconstructive generated pointer: " << vobj_owned << std::endl;
+      //std::cout << "'fcore_api1_add_constructive' -> _fconstructive generated pointer: " << vobj_owned << std::endl;
       assert(vobj_owned); // check void* (TODO: for FxConstructive, return nullopt)
       FCoreLibSolution sol(vobj_owned, f_sol_deepcopy, f_sol_tostring, f_utils_decref);
-      std::cout << "'fcore_api1_add_constructive' -> solution created!" << std::endl;
+      //std::cout << "'fcore_api1_add_constructive' -> solution created!" << std::endl;
       return sol;
    };
 
    sref<optframe::Component> fc(
      new optframe::FConstructive<FCoreLibSolution>{ fconstructive });
 
-   std::cout << "'fcore_api1_add_constructive' will add component on hf" << std::endl;
+   //std::cout << "'fcore_api1_add_constructive' will add component on hf" << std::endl;
 
    int id = hf->addComponent(fc, "OptFrame:Constructive");
-   std::cout << "c_id = " << id << std::endl;
-   fc->print();
+   //std::cout << "c_id = " << id << std::endl;
+   //fc->print();
    return id;
 }
 
@@ -330,16 +284,17 @@ fcore_api1_float64_fevaluator_evaluate(FakeFEvaluatorPtr _fevaluator, bool min_o
 extern "C" FakePythonObjPtr // Python solution object
 fcore_api1_fconstructive_gensolution(FakeFConstructivePtr _fconstructive)
 {
-   std::cout << "begin 'fcore_api1_fconstructive_gensolution'" << std::endl;
+   //std::cout << "begin 'fcore_api1_fconstructive_gensolution'" << std::endl;
    auto* fconstructive = (optframe::FConstructive<FCoreLibSolution>*)_fconstructive;
    std::optional<FCoreLibSolution> sol = fconstructive->generateSolution(0.0);
-   std::cout << "will check if optional solution exists: " << !!sol << std::endl;
+   //std::cout << "will check if optional solution exists: " << !!sol << std::endl;
    assert(sol);
    // will return solution to Python... must make sure it will live!
    // should IncRef it here?? Perhaps...
    // will move it out from boxed Sol object, and make it a fake is_view=1 object here.
    FakePythonObjPtr ptr = sol->solution_ptr;
-   std::cout << "finished 'fcore_api1_fconstructive_gensolution'... returning ptr=" << ptr << std::endl;
+   //std::cout << "finished 'fcore_api1_fconstructive_gensolution'... returning ptr=" << ptr << std::endl;
+   // ======= "kill" sol container =======
    sol->solution_ptr = 0;
    sol->is_view = 1;
    return ptr;
@@ -351,49 +306,8 @@ extern "C" void
 fcore_component_print(void* component)
 {
    auto* c = (optframe::Component*)component;
-   std::cout << "fcore_component_print ptr=" << c << " => ";
+   //std::cout << "fcore_component_print ptr=" << c << " => ";
    c->print();
 }
 
-/*
-extern "C" void
-fcore_component_free(void* component)
-{
-   auto* c = (optframe::Component*)component;
-   delete c;
-}
-*/
-
 // ==============================================
-
-optframe::Generator<int>
-fib()
-{
-   int n1 = 1;
-   co_yield n1;
-   int n2 = 1;
-   co_yield n2;
-   while (true) {
-      int n = n1 + n2;
-      co_yield n;
-      n2 = n1;
-      n1 = n;
-   }
-}
-
-optframe::Generator<int> (*fib2)() = fib;
-
-extern "C" optframe::Generator<int>
-fcore_fib_c()
-{
-   int n1 = 1;
-   co_yield n1;
-   int n2 = 1;
-   co_yield n2;
-   while (true) {
-      int n = n1 + n2;
-      co_yield n;
-      n2 = n1;
-      n1 = n;
-   }
-}
