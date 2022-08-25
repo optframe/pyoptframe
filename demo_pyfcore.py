@@ -282,13 +282,25 @@ class ExampleKP(object):
         return f"ExampleKP(n={self.n};Q={self.Q};w={self.w};p={self.p})"
 
 
-def mycallback_fevaluate(problemCtx: ExampleKP, userData: ExampleSol):
+def mycallback_fevaluate(pKP: ExampleKP, sol: ExampleSol):
     print("python: invoking 'mycallback_fevaluate' with problem and solution")
-    print("TODO")
-    #print("EVALUATE From Python: {:s}".format(mycallback.__name__))
-    v = 0.5
-    #print("test value is: ", v)
-    return v
+    assert(sol.n == pKP.n)
+    assert(len(sol.bag) == sol.n)
+    #
+    sum_w = 0.0
+    sum_p = 0.0
+    for i in range(0, sol.n):
+        if sol.bag[i] == 1:
+            sum_w += pKP.w[i]
+            sum_p += pKP.p[i]
+    # weight for infeasibility
+    w_inf = -1000.0
+    if sum_w > pKP.Q:
+        # excess is penalized
+        print("will penalize: Q=", pKP.Q, "sum_w=", sum_w)
+        sum_p += w_inf * (sum_w-pKP.Q)
+    print("result is: ", sum_p)
+    return sum_p
 
 
 def mycallback_constructive(problemCtx: ExampleKP) -> ExampleSol:
@@ -331,7 +343,7 @@ pKP.p = [5, 4, 3, 2, 1]
 pKP.Q = 6.0
 print(pKP)
 
-ev_idx = engine.minimize(pKP, call_fev)
+ev_idx = engine.maximize(pKP, call_fev)
 print("evaluator id:", ev_idx)
 fev = engine.get_evaluator()
 engine.print_component(fev)
@@ -380,7 +392,7 @@ print("")
 print("============================")
 print("engine test evaluate (again)")
 print("============================")
-z1 = engine.fevaluator_evaluate(fev, True, solxx)
+z1 = engine.fevaluator_evaluate(fev, False, solxx)
 print("evaluation:", z1)
 
 #
@@ -396,7 +408,7 @@ if will_stress:
     while True:
         sol_inf = engine.fconstructive_gensolution(fc)
         print("sol_inf:", sol_inf)
-        z1 = engine.fevaluator_evaluate(fev, True, sol_inf)
+        z1 = engine.fevaluator_evaluate(fev, False, sol_inf)
         print("evaluation:", z1)
 else:
     print("OK. no stress...")
