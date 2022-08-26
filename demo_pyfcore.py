@@ -383,7 +383,7 @@ def mycallback_constructive(problemCtx: ExampleKP) -> ExampleSol:
 # ========================================================
 class MoveBitFlip(object):
     def __init__(self):
-        print('Init MoveBitFlip')
+        #print('Init MoveBitFlip')
         self.k = 0
 
 # C++: uptr<Move<XES>> (*fRandom)(const XES&);
@@ -409,6 +409,10 @@ def mycallback_ns_rand_bitflip(pKP: ExampleKP, sol: ExampleSol) -> MoveBitFlip:
 
 # TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
 def mycallback_move_apply_bitflip(problemCtx: ExampleKP, m: MoveBitFlip, sol: ExampleSol) -> MoveBitFlip:
+    if(isinstance(sol, ctypes.py_object)):
+        if FCORE_WARN_ISSUES == True:
+            print("WARNING3: IS ctypes.py_object")
+        sol = sol.value
     k = m.k
     #esol.first.bag[k] = 1 - esol.first.bag[k]
     sol.bag[k] = 1 - sol.bag[k]

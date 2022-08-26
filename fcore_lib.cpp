@@ -219,9 +219,10 @@ public:
 
    virtual ~FMoveLib()
    {
-      std::cout << "~FMoveLib()" << std::endl;
+      //std::cout << "~FMoveLib()" << std::endl;
+      //int x =
       int x = f_utils_decref(m);
-      std::cout << "count(m) = " << x << std::endl;
+      //std::cout << "count(m) = " << x << std::endl;
    }
 
    virtual bool canBeApplied(const XES& se) override
@@ -481,7 +482,7 @@ fcore_api1_add_ns(FakeEnginePtr _engine,
       //
       // vobj_owned should come IncRef'ed before! I guess...
       FakePythonObjPtr vobj_owned = _fns_rand(problem_view, se.first.solution_ptr);
-      std::cout << "'fcore_api1_add_ns' -> _fns_rand generated pointer: " << vobj_owned << std::endl;
+      //std::cout << "'fcore_api1_add_ns' -> _fns_rand generated pointer: " << vobj_owned << std::endl;
       assert(vobj_owned); // check void* (TODO: allow non-existing move, return nullptr)
 
       //
@@ -495,12 +496,17 @@ fcore_api1_add_ns(FakeEnginePtr _engine,
       return optframe::uptr<optframe::Move<FCoreLibESolution>>(m_ptr);
    };
 
-   sref<optframe::Component> fns(
+   sref<optframe::NS<FCoreLibESolution>> fns(
      new optframe::FNS<FCoreLibESolution>{ func_fns });
+
+   sref<optframe::Component> fns_comp(fns);
+   //new optframe::FNS<FCoreLibESolution>{ func_fns });
 
    //std::cout << "'fcore_api1_add_ns' will add component on hf" << std::endl;
 
-   int id = engine->hf.addComponent(fns, "OptFrame:NS");
+   int id = engine->hf.addComponent(fns_comp, "OptFrame:NS");
+   //
+   engine->check.add(fns);
    //fns->print();
    return id;
 }
