@@ -58,11 +58,10 @@ public:
       // will decref current copy of solution
       if (!this->is_view) {
          // must decref solution_ptr and discard it
-         //int x =
-         f_utils_decref(solution_ptr);
-         //if (x > 1) {
-         //   std::cout << "operator=(FCoreLibSolution) ptr_count = " << x << std::endl;
-         //}
+         int x = f_utils_decref(solution_ptr);
+         if (x > 1) {
+            std::cout << "operator=(FCoreLibSolution) ptr_count = " << x << std::endl;
+         }
       }
       solution_ptr = nullptr;
 
@@ -120,11 +119,10 @@ public:
       //
       if (!this->is_view) {
          // must decref solution_ptr and discard it
-         //int x =
-         f_utils_decref(solution_ptr);
-         //if (x > 1) {
-         //   std::cout << "~FCoreLibSolution ptr_count = " << x << std::endl;
-         //}
+         int x = f_utils_decref(solution_ptr);
+         if (x > 1) {
+            std::cout << "~FCoreLibSolution ptr_count = " << x << std::endl;
+         }
       }
       solution_ptr = nullptr;
       //std::cout << "~FCoreLibSolution finished" << std::endl;
@@ -258,7 +256,7 @@ public:
       //std::cout << "~FMoveLib()" << std::endl;
       //int x =
       int x = f_utils_decref(m);
-      //std::cout << "count(m) = " << x << std::endl;
+      //std::cout << "~FMoveLib count(m) = " << x << std::endl;
    }
 
    virtual bool canBeApplied(const XES& se) override

@@ -252,12 +252,20 @@ def callback_utils_incref(pyo: ctypes.py_object):
 
 
 def callback_utils_decref(pyo):
+    if(isinstance(pyo, ctypes.py_object)):
+        #print("WARNING DECREF: IS ctypes.py_object")
+        pyo = pyo.value
+        #print("pyo:", pyo)
     #print("callback_utils_decref: ", sys.getrefcount(pyo), " will get -1")
-    #print("pyo:", pyo)
     # IMPORTANT: 'pyo' may come as a Real Python Object, not a 'ctypes.py_object'
     cast_pyo = ctypes.py_object(pyo)
     ctypes.pythonapi.Py_DecRef(cast_pyo)
-    return sys.getrefcount(pyo)
+    x = sys.getrefcount(pyo)
+    if x <= 4:
+        #print("x=", x, "force delete object = ", pyo)
+        del pyo
+    #    print(gc.is_finalized(pyo))
+    return x
 
 # ==============================
 
@@ -289,6 +297,10 @@ class ExampleSol(object):
         for n, bag in self.__dict__.items():
             setattr(result, n, deepcopy(bag, memo))
         return result
+
+    def __del__(self):
+        pass
+        # print("~ExampleSol")
 
 
 class ESolutionKP(object):
@@ -387,6 +399,11 @@ class MoveBitFlip(object):
     def __init__(self):
         #print('Init MoveBitFlip')
         self.k = 0
+
+    def __del__(self):
+        # print("~MoveBitFlip")
+        pass
+
 
 # C++: uptr<Move<XES>> (*fRandom)(const XES&);
 
@@ -545,7 +562,7 @@ else:
 print("")
 print("Engine: will check")
 print("")
-engine.check(100, 10, False)
+engine.check(1000, 10, False)
 
 # must keep callback variables alive until the end... for now
 print(call_fev)
