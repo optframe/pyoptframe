@@ -274,12 +274,28 @@ def callback_utils_decref(pyo):
 # =========================
 
 
+count_solkp = 0
+count_plus_solkp = 0
+count_minus_solkp = 0
+#
+count_solkp_new_copy = 0
+count_solkp_new_deepcopy = 0
+#
+count_move_bitflip = 0
+count_plus_move_bitflip = 0
+count_minus_move_bitflip = 0
+
+
 class ExampleSol(object):
 
     def __init__(self):
-        #print('__init__ ExampleSol. Creating empty solution...')
+        #print('__init__ ExampleSol')
         self.n = 0
         self.bag = []
+        global count_solkp
+        global count_plus_solkp
+        count_solkp = count_solkp+1
+        count_plus_solkp = count_plus_solkp+1
 
     def __str__(self):
         return f"ExampleSol(n={self.n};bag={self.bag})"
@@ -288,6 +304,8 @@ class ExampleSol(object):
         cls = self.__class__
         result = cls.__new__(cls)
         result.__dict__.update(self.__dict__)
+        global count_solkp_new_copy
+        count_solkp_new_copy = count_solkp_new_copy + 1
         return result
 
     def __deepcopy__(self, memo):
@@ -296,11 +314,17 @@ class ExampleSol(object):
         memo[id(self)] = result
         for n, bag in self.__dict__.items():
             setattr(result, n, deepcopy(bag, memo))
+        global count_solkp_new_deepcopy
+        count_solkp_new_deepcopy = count_solkp_new_deepcopy + 1
         return result
 
     def __del__(self):
-        pass
         # print("~ExampleSol")
+        global count_solkp
+        global count_minus_solkp
+        count_solkp = count_solkp-1
+        count_minus_solkp = count_minus_solkp-1
+        pass
 
 
 class ESolutionKP(object):
@@ -320,7 +344,7 @@ def callback_sol_tostring(sol: ExampleSol, pt: ctypes.c_char_p, ptsize: ctypes.c
     return len(mystr)
 
 
-def callback_sol_deepcopy(sol: ExampleSol):
+def callback_sol_deepcopy(sol):
     #print("invoking 'callback_sol_deepcopy'... sol=", sol)
     if(isinstance(sol, ctypes.py_object)):
         if FCORE_WARN_ISSUES == True:
@@ -397,11 +421,19 @@ def mycallback_constructive(problemCtx: ExampleKP) -> ExampleSol:
 # ========================================================
 class MoveBitFlip(object):
     def __init__(self):
-        #print('Init MoveBitFlip')
+        #print('__init__ MoveBitFlip')
         self.k = 0
+        global count_move_bitflip
+        global count_plus_move_bitflip
+        count_move_bitflip = count_move_bitflip+1
+        count_plus_move_bitflip = count_plus_move_bitflip+1
 
     def __del__(self):
         # print("~MoveBitFlip")
+        global count_move_bitflip
+        global count_minus_move_bitflip
+        count_move_bitflip = count_move_bitflip-1
+        count_minus_move_bitflip = count_minus_move_bitflip-1
         pass
 
 
@@ -562,7 +594,8 @@ else:
 print("")
 print("Engine: will check")
 print("")
-engine.check(1000, 10, False)
+engine.check(100, 10, False)
+# print("pass...")
 
 # must keep callback variables alive until the end... for now
 print(call_fev)
@@ -572,5 +605,15 @@ print(call_move_apply)
 print(call_move_eq)
 print(call_move_cba)
 
+print("")
+print("count_solkp=", count_solkp)
+print("count_plus_solkp=", count_plus_solkp)
+print("count_minus_solkp=", count_minus_solkp)
+print("count_solkp_new_copy=", count_solkp_new_copy)
+print("count_solkp_new_deepcopy=", count_solkp_new_deepcopy)
+print("")
+print("count_move_bitflip=", count_move_bitflip)
+print("count_plus_move_bitflip=", count_plus_move_bitflip)
+print("count_minus_move_bitflip=", count_minus_move_bitflip)
 print("")
 exit(0)
