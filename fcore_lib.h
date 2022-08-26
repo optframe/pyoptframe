@@ -7,26 +7,26 @@
 typedef void* FakeFEvaluatorPtr;
 typedef void* FakeFConstructivePtr;
 typedef void* FakePythonObjPtr;
-typedef void* FakeHeuristicFactoryPtr;
+typedef void* FakeEnginePtr;
 
 // ============================ Engine: HeuristicFactory ===========================
 
-extern "C" FakeHeuristicFactoryPtr
+extern "C" FakeEnginePtr
 fcore_api1_create_engine();
 
 extern "C" bool
-fcore_api1_destroy_engine(FakeHeuristicFactoryPtr hf);
+fcore_api1_destroy_engine(FakeEnginePtr hf);
 
 // ============
 
 extern "C" int // index of generalevaluator
-fcore_api1_add_float64_evaluator(FakeHeuristicFactoryPtr _hf,
+fcore_api1_add_float64_evaluator(FakeEnginePtr _hf,
                                  double (*_fevaluate)(FakePythonObjPtr, FakePythonObjPtr),
                                  bool min_or_max,
                                  FakePythonObjPtr problem_view);
 
 extern "C" int // index of constructive
-fcore_api1_add_constructive(FakeHeuristicFactoryPtr _hf,
+fcore_api1_add_constructive(FakeEnginePtr _hf,
                             FakePythonObjPtr (*_fconstructive)(FakePythonObjPtr),
                             FakePythonObjPtr problem_view,
                             FakePythonObjPtr (*f_sol_deepcopy)(FakePythonObjPtr),
@@ -34,7 +34,7 @@ fcore_api1_add_constructive(FakeHeuristicFactoryPtr _hf,
                             int (*f_utils_decref)(FakePythonObjPtr));
 
 extern "C" int // index of ns
-fcore_api1_add_ns(FakeHeuristicFactoryPtr _hf,
+fcore_api1_add_ns(FakeEnginePtr _hf,
                   FakePythonObjPtr (*_fns_rand)(FakePythonObjPtr, FakePythonObjPtr),
                   FakePythonObjPtr (*_fmove_apply)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
                   bool (*_fmove_eq)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
@@ -45,10 +45,10 @@ fcore_api1_add_ns(FakeHeuristicFactoryPtr _hf,
 // ================
 
 extern "C" void* // raw (non-owned) pointer to GeneralEvaluator
-fcore_api1_get_float64_evaluator(FakeHeuristicFactoryPtr _hf, int idx_ev);
+fcore_api1_get_float64_evaluator(FakeEnginePtr _hf, int idx_ev);
 
 extern "C" void* // raw (non-owned) pointer to Constructive
-fcore_api1_get_constructive(FakeHeuristicFactoryPtr _hf, int idx_c);
+fcore_api1_get_constructive(FakeEnginePtr _hf, int idx_c);
 
 // ===============
 

@@ -487,9 +487,6 @@ print("============================")
 z1 = engine.fevaluator_evaluate(fev, False, solxx)
 print("evaluation:", z1)
 
-#
-print(call_fev)
-print(call_c)
 
 print("")
 print("=====================")
@@ -520,5 +517,13 @@ if will_stress:
 else:
     print("OK. no stress...")
 
+# must keep callback variables alive until the end... for now
+print(call_fev)
+print(call_c)
+print(call_ns_bitflip)
+print(call_move_apply)
+print(call_move_eq)
+print(call_move_cba)
 
+print("")
 exit(0)

@@ -8,6 +8,7 @@
 #include <OptFCore/FxCore.hpp>
 #include <OptFrame/HeuristicFactory.hpp>
 #include <OptFrame/MyConcepts.hpp> // sref
+#include <OptFrame/Util/CheckCommand.hpp>
 
 class FCoreLibSolution
 {
@@ -121,12 +122,40 @@ using FCoreLibESolution = std::pair<FCoreLibSolution, optframe::Evaluation<doubl
 
 // ============================ Engine: HeuristicFactory ===========================
 
+/*
 using FCoreApi1Engine = optframe::HeuristicFactory<
   FCoreLibSolution,             //XSolution S,
   optframe::Evaluation<double>, // XEvaluation XEv = Evaluation<>,
   FCoreLibESolution             //  XESolution XES = pair<S, XEv>,
   //X2ESolution<XES> X2ES = MultiESolution<XES>>
   >;
+*/
+
+class FCoreApi1Engine
+{
+public:
+   optframe::HeuristicFactory<
+     FCoreLibSolution,             //XSolution S,
+     optframe::Evaluation<double>, // XEvaluation XEv = Evaluation<>,
+     FCoreLibESolution             //  XESolution XES = pair<S, XEv>,
+     //X2ESolution<XES> X2ES = MultiESolution<XES>>
+     >
+     hf;
+
+   optframe::CheckCommand<FCoreLibESolution> check; // no verbose
+
+   /*
+      CheckCommand<ESolutionTSP> check(false); // verbose
+   //
+   check.addEvaluator(eval);
+   check.add(initRand);
+   check.addNS(nsswap);    // NS
+   check.addNSSeq(nsseq2); // NSSeq
+
+   // bool run(int iterMax, int nSolNSSeq)
+   check.run(100, 10);
+   */
+};
 
 // IMPORTANT: OptFrame FMove does not require Copy on M (aka, FakePythonObjPtr)... I HOPE!
 // Don't remember needing a clone() member on OptFrame Moves... but nice to clarify a NoCopy (NoNothing...) concept there.
@@ -227,15 +256,15 @@ public:
 
 // ==================
 
-extern "C" FakeHeuristicFactoryPtr
+extern "C" FakeEnginePtr
 fcore_api1_create_engine()
 {
-   FakeHeuristicFactoryPtr hf_ptr = new FCoreApi1Engine;
+   FakeEnginePtr hf_ptr = new FCoreApi1Engine;
    return hf_ptr;
 }
 
 extern "C" bool
-fcore_api1_destroy_engine(FakeHeuristicFactoryPtr _hf)
+fcore_api1_destroy_engine(FakeEnginePtr _hf)
 {
    auto* hf = (FCoreApi1Engine*)_hf;
    delete hf;
@@ -250,12 +279,12 @@ fcore_api1_destroy_engine(FakeHeuristicFactoryPtr _hf)
 // min_or_max is needed to correctly cast template on FEvaluator
 extern "C" int // index of generalevaluator
 
-fcore_api1_add_float64_evaluator(FakeHeuristicFactoryPtr _hf,
+fcore_api1_add_float64_evaluator(FakeEnginePtr _engine,
                                  double (*_fevaluate)(FakePythonObjPtr, FakePythonObjPtr),
                                  bool min_or_max,
                                  FakePythonObjPtr problem_view)
 {
-   auto* hf = (FCoreApi1Engine*)_hf;
+   auto* engine = (FCoreApi1Engine*)_engine;
    //printf("hf=%p\n", (void*)hf);
 
    auto fevaluate = [_fevaluate, problem_view](const FCoreLibSolution& s) -> optframe::Evaluation<double> {
@@ -271,13 +300,13 @@ fcore_api1_add_float64_evaluator(FakeHeuristicFactoryPtr _hf,
       sref<optframe::Component> eval(
         new optframe::FEvaluator<FCoreLibESolution, optframe::MinOrMax::MINIMIZE>{ fevaluate });
       //std::cout << "created FEvaluator<MIN> ptr=" << &eval.get() << std::endl;
-      id = hf->addComponent(eval, "OptFrame:GeneralEvaluator");
+      id = engine->hf.addComponent(eval, "OptFrame:GeneralEvaluator");
    } else {
       // Maximization
       sref<optframe::Component> eval(
         new optframe::FEvaluator<FCoreLibESolution, optframe::MinOrMax::MAXIMIZE>{ fevaluate });
 
-      id = hf->addComponent(eval, "OptFrame:GeneralEvaluator");
+      id = engine->hf.addComponent(eval, "OptFrame:GeneralEvaluator");
    }
 
    return id;
@@ -292,7 +321,7 @@ fcore_api1_add_float64_evaluator(FakeHeuristicFactoryPtr _hf,
 // On Python, storing it on the engine (or the opposite) may do the job for us, so, no worry for now.
 
 extern "C" int // index of constructive
-fcore_api1_add_constructive(FakeHeuristicFactoryPtr _hf,
+fcore_api1_add_constructive(FakeEnginePtr _engine,
                             FakePythonObjPtr (*_fconstructive)(FakePythonObjPtr),
                             FakePythonObjPtr problem_view,
                             // Support necessary for Solution construction and maintainance
@@ -300,7 +329,7 @@ fcore_api1_add_constructive(FakeHeuristicFactoryPtr _hf,
                             size_t (*f_sol_tostring)(FakePythonObjPtr, char*, size_t),
                             int (*f_utils_decref)(FakePythonObjPtr))
 {
-   auto* hf = (FCoreApi1Engine*)_hf;
+   auto* engine = (FCoreApi1Engine*)_engine;
 
    //std::cout << "invoking 'fcore_api1_add_constructive' with "
    //          << "_hf=" << _hf << " _fconstructive and problem_view=" << problem_view << std::endl;
@@ -324,14 +353,14 @@ fcore_api1_add_constructive(FakeHeuristicFactoryPtr _hf,
 
    //std::cout << "'fcore_api1_add_constructive' will add component on hf" << std::endl;
 
-   int id = hf->addComponent(fc, "OptFrame:Constructive");
+   int id = engine->hf.addComponent(fc, "OptFrame:Constructive");
    //std::cout << "c_id = " << id << std::endl;
    //fc->print();
    return id;
 }
 
 extern "C" int // index of ns
-fcore_api1_add_ns(FakeHeuristicFactoryPtr _hf,
+fcore_api1_add_ns(FakeEnginePtr _engine,
                   FakePythonObjPtr (*_fns_rand)(FakePythonObjPtr, FakePythonObjPtr),
                   FakePythonObjPtr (*_fmove_apply)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
                   bool (*_fmove_eq)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
@@ -339,7 +368,7 @@ fcore_api1_add_ns(FakeHeuristicFactoryPtr _hf,
                   FakePythonObjPtr problem_view,
                   int (*_f_utils_decref)(FakePythonObjPtr))
 {
-   auto* hf = (FCoreApi1Engine*)_hf;
+   auto* engine = (FCoreApi1Engine*)_engine;
 
    //std::cout << "invoking 'fcore_api1_add_constructive' with "
    //          << "_hf=" << _hf << " _fconstructive and problem_view=" << problem_view << std::endl;
@@ -412,7 +441,7 @@ fcore_api1_add_ns(FakeHeuristicFactoryPtr _hf,
 
    //std::cout << "'fcore_api1_add_ns' will add component on hf" << std::endl;
 
-   int id = hf->addComponent(fns, "OptFrame:NS");
+   int id = engine->hf.addComponent(fns, "OptFrame:NS");
    //fns->print();
    return id;
 }
@@ -422,13 +451,13 @@ fcore_api1_add_ns(FakeHeuristicFactoryPtr _hf,
 // ==============================================
 
 extern "C" void* // raw (non-owned) pointer to GeneralEvaluator
-fcore_api1_get_float64_evaluator(FakeHeuristicFactoryPtr _hf, int idx_ev)
+fcore_api1_get_float64_evaluator(FakeEnginePtr _engine, int idx_ev)
 {
-   auto* hf = (FCoreApi1Engine*)_hf;
+   auto* engine = (FCoreApi1Engine*)_engine;
 
    std::shared_ptr<optframe::GeneralEvaluator<FCoreLibESolution, FCoreLibESolution::second_type>> component;
 
-   hf->assignGE(component, idx_ev, "OptFrame:GeneralEvaluator");
+   engine->hf.assignGE(component, idx_ev, "OptFrame:GeneralEvaluator");
    if (!component)
       assert(false);
    void* ptr = component.get();
@@ -436,13 +465,13 @@ fcore_api1_get_float64_evaluator(FakeHeuristicFactoryPtr _hf, int idx_ev)
 }
 
 extern "C" void* // raw (non-owned) pointer to FConstructive
-fcore_api1_get_constructive(FakeHeuristicFactoryPtr _hf, int idx_c)
+fcore_api1_get_constructive(FakeEnginePtr _engine, int idx_c)
 {
-   auto* hf = (FCoreApi1Engine*)_hf;
+   auto* engine = (FCoreApi1Engine*)_engine;
 
    std::shared_ptr<optframe::Constructive<FCoreLibSolution>> component;
 
-   hf->assign(component, idx_c, "OptFrame:Constructive");
+   engine->hf.assign(component, idx_c, "OptFrame:Constructive");
    if (!component)
       assert(false);
    void* ptr = component.get();
