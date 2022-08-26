@@ -182,7 +182,8 @@ class OptFrameEngine(object):
         print("add_ns begins")
         idx_ns = fcore_lib.fcore_api1_add_ns(
             self.hf,  ns_rand_callback_ptr, move_apply_callback_ptr,
-            move_eq_callback_ptr, move_cba_callback_ptr, problemCtx)
+            move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
+            self.callback_utils_decref_ptr)
         # FUNC_UTILS_DECREF(callback_utils_decref))
         print("add_ns is finishing")
         return idx_ns
@@ -489,6 +490,21 @@ print("evaluation:", z1)
 #
 print(call_fev)
 print(call_c)
+
+print("")
+print("=====================")
+print("engine add ns bitflip")
+print("=====================")
+
+call_ns_bitflip = FUNC_FNS_RAND(mycallback_ns_rand_bitflip)
+call_move_apply = FUNC_FMOVE_APPLY(mycallback_move_apply_bitflip)
+call_move_eq = FUNC_FMOVE_EQ(mycallback_move_eq_bitflip)
+call_move_cba = FUNC_FMOVE_CBA(mycallback_move_cba_bitflip)
+
+# get index of new NS
+ns_idx = engine.add_ns(pKP, call_ns_bitflip,
+                       call_move_apply, call_move_eq, call_move_cba)
+print("ns_idx=", ns_idx)
 
 print("")
 print("============================")
