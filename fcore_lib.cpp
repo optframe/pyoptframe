@@ -55,8 +55,41 @@ public:
       // copy flags
       this->is_view = other.is_view;
 
+      // will decref current copy of solution
+      if (!this->is_view) {
+         // must decref solution_ptr and discard it
+         //int x =
+         f_utils_decref(solution_ptr);
+         //if (x > 1) {
+         //   std::cout << "operator=(FCoreLibSolution) ptr_count = " << x << std::endl;
+         //}
+      }
+      solution_ptr = nullptr;
+
       // perform deepcopy and IncRef
       this->solution_ptr = this->f_sol_deepcopy(other.solution_ptr);
+      return *this;
+   }
+
+   FCoreLibSolution& operator=(FCoreLibSolution&& other)
+   {
+      std::cout << "ERROR! Could not find a use-case for move solution... is there one?" << std::endl;
+      assert(false);
+      if (this == &other)
+         return *this;
+
+      assert(other.solution_ptr);
+      // copy functions
+      this->f_sol_deepcopy = other.f_sol_deepcopy;
+      this->f_utils_decref = other.f_utils_decref;
+      // copy flags
+      this->is_view = other.is_view;
+
+      // steal pointer from corpse
+      this->solution_ptr = other.solution_ptr;
+      // kill it
+      other.solution_ptr = 0;
+      other.is_view = 1;
       return *this;
    }
 
@@ -87,8 +120,11 @@ public:
       //
       if (!this->is_view) {
          // must decref solution_ptr and discard it
-         int x = f_utils_decref(solution_ptr);
-         //std::cout << "~FCoreLibSolution ptr count = " << x << std::endl;
+         //int x =
+         f_utils_decref(solution_ptr);
+         //if (x > 1) {
+         //   std::cout << "~FCoreLibSolution ptr_count = " << x << std::endl;
+         //}
       }
       solution_ptr = nullptr;
       //std::cout << "~FCoreLibSolution finished" << std::endl;

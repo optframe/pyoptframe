@@ -19,6 +19,8 @@ import sys
 # for problem
 import random  # TODO: get from hf engine ?
 
+import gc
+
 # ==================== fcore_lib.so ===================
 
 
