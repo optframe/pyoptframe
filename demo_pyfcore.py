@@ -111,6 +111,9 @@ fcore_lib.fcore_api1_create_engine.restype = ctypes.c_void_p
 fcore_lib.fcore_api1_destroy_engine.argtypes = [ctypes.c_void_p]
 fcore_lib.fcore_api1_destroy_engine.restype = ctypes.c_bool
 #
+fcore_lib.fcore_api1_engine_simulated_annealing.argtypes = [ctypes.c_void_p]
+fcore_lib.fcore_api1_engine_simulated_annealing.restype = ctypes.c_bool
+#
 fcore_lib.fcore_api1_engine_check.argtypes = [
     ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_bool]
 fcore_lib.fcore_api1_engine_check.restype = ctypes.c_bool
@@ -155,6 +158,12 @@ class OptFrameEngine(object):
 
     def print_component(self, component):
         fcore_lib.fcore_component_print(component)
+
+    def run_sa(self):
+        print("Will Begin SA")
+        r = fcore_lib.fcore_api1_engine_simulated_annealing(self.hf)
+        print("Finished SA")
+        return r
 
     def check(self, p1: int, p2: int, verbose=False) -> bool:
         return fcore_lib.fcore_api1_engine_check(self.hf, p1, p2, verbose)
@@ -261,9 +270,10 @@ def callback_utils_decref(pyo):
     cast_pyo = ctypes.py_object(pyo)
     ctypes.pythonapi.Py_DecRef(cast_pyo)
     x = sys.getrefcount(pyo)
-    if x <= 4:
-        #print("x=", x, "force delete object = ", pyo)
-        del pyo
+    #print("x=", x, "force delete object = ", pyo)
+    # if x <= 4:
+    #    print("x=", x, "strange object = ", pyo)
+    #del pyo
     #    print(gc.is_finalized(pyo))
     return x
 
@@ -301,6 +311,7 @@ class ExampleSol(object):
         return f"ExampleSol(n={self.n};bag={self.bag})"
 
     def __copy__(self):
+        assert(False)
         cls = self.__class__
         result = cls.__new__(cls)
         result.__dict__.update(self.__dict__)
@@ -309,6 +320,17 @@ class ExampleSol(object):
         return result
 
     def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        result.n = self.n
+        result.bag = deepcopy(self.bag)
+        #
+        #global count_solkp_new_deepcopy
+        #count_solkp_new_deepcopy = count_solkp_new_deepcopy + 1
+        #
+        return result
+        #
+        assert(False)
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
@@ -344,13 +366,19 @@ def callback_sol_tostring(sol: ExampleSol, pt: ctypes.c_char_p, ptsize: ctypes.c
     return len(mystr)
 
 
-def callback_sol_deepcopy(sol):
+def callback_sol_deepcopy(sol: ExampleSol):
     #print("invoking 'callback_sol_deepcopy'... sol=", sol)
     if(isinstance(sol, ctypes.py_object)):
         if FCORE_WARN_ISSUES == True:
             print("WARNING: IS ctypes.py_object")
         sol = sol.value
-    sol2 = deepcopy(sol)
+    #
+    #sol2 = deepcopy(sol)
+    #
+    sol2 = ExampleSol()
+    sol2.n = sol.n
+    sol2.bag = [i for i in sol.bag]
+    #
     pyo = ctypes.py_object(sol2)
     ctypes.pythonapi.Py_IncRef(pyo)  # TODO: do we need this? I hope so...
     return pyo
@@ -594,8 +622,10 @@ else:
 print("")
 print("Engine: will check")
 print("")
-engine.check(100, 10, False)
-# print("pass...")
+#engine.check(100, 10, False)
+print("pass...")
+
+engine.run_sa()
 
 # must keep callback variables alive until the end... for now
 print(call_fev)

@@ -72,8 +72,8 @@ public:
 
    FCoreLibSolution& operator=(FCoreLibSolution&& other)
    {
-      std::cout << "ERROR! Could not find a use-case for move solution... is there one?" << std::endl;
-      assert(false);
+      //std::cout << "ERROR! Could not find a use-case for move solution... is there one?" << std::endl;
+      //assert(false);
       if (this == &other)
          return *this;
 
@@ -120,6 +120,7 @@ public:
       if (!this->is_view) {
          // must decref solution_ptr and discard it
          int x = f_utils_decref(solution_ptr);
+         //std::cout << "~FCoreLibSolution ptr_count = " << x << std::endl;
          if (x > 1) {
             std::cout << "~FCoreLibSolution ptr_count = " << x << std::endl;
          }
@@ -321,6 +322,61 @@ fcore_api1_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose)
 }
 
 extern "C" bool
+fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine)
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+   //
+   using MyGenEval = optframe::GeneralEvaluator<FCoreLibESolution, optframe::Evaluation<double>>;
+   //
+   std::shared_ptr<MyGenEval> gev;
+   engine->hf.assignGE(gev, 0, "OptFrame:GeneralEvaluator");
+   assert(gev);
+   //
+   using MyEval = optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>;
+
+   // will try to get evaluator to build InitialSolution component...
+   std::shared_ptr<MyEval> ev;
+   engine->hf.assign(ev, 0, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+   assert(ev);
+   //
+   //
+   using MyConstructive = optframe::Constructive<FCoreLibSolution>;
+   //
+   std::shared_ptr<MyConstructive> initial;
+   engine->hf.assign(initial, 0, "OptFrame:Constructive");
+   assert(initial);
+   //
+   sref<optframe::InitialSearch<FCoreLibESolution>> initSol{
+      new optframe::BasicInitialSearch<FCoreLibESolution>(initial, ev)
+   };
+   //
+   using MyNS = optframe::NS<FCoreLibESolution, optframe::Evaluation<double>>;
+   //
+   std::shared_ptr<MyNS> ns;
+   engine->hf.assign(ns, 0, "OptFrame:NS");
+   assert(ns);
+   //
+
+   sref<optframe::RandGen> rg = engine->hf.getRandGen();
+
+   sref<optframe::GeneralEvaluator<FCoreLibESolution, optframe::Evaluation<double>>> evaluator{ gev };
+   sref<optframe::InitialSearch<FCoreLibESolution, optframe::Evaluation<double>>> constructive{ initSol };
+   vsref<optframe::NS<FCoreLibESolution, optframe::Evaluation<double>>> neighbors;
+   neighbors.push_back(ns);
+
+   ev->print();
+   constructive->print();
+   neighbors[0]->print();
+
+   optframe::BasicSimulatedAnnealing<FCoreLibESolution> sa{
+      evaluator, constructive, neighbors, 0.98, 100, 99999, rg
+   };
+   sa.search({ 3.0 });
+
+   return true;
+}
+
+extern "C" bool
 fcore_api1_destroy_engine(FakeEnginePtr _engine)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
@@ -425,6 +481,7 @@ fcore_api1_add_constructive(FakeEnginePtr _engine,
    //std::cout << "'fcore_api1_add_constructive' will add component on hf" << std::endl;
 
    int id = engine->hf.addComponent(fc, "OptFrame:Constructive");
+
    //std::cout << "c_id = " << id << std::endl;
    // ========== add to check module ==========
    using MyEval = optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>;

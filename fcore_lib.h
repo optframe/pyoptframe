@@ -18,6 +18,10 @@ extern "C" bool
 fcore_api1_engine_check(FakeEnginePtr hf, int p1, int p2, bool verbose);
 
 extern "C" bool
+fcore_api1_engine_simulated_annealing(FakeEnginePtr hf);
+// double alpha, int iter, double temp
+
+extern "C" bool
 fcore_api1_destroy_engine(FakeEnginePtr hf);
 
 // ============
