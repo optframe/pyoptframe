@@ -24,6 +24,7 @@ import random  # TODO: get from hf engine ?
 
 fcore_lib = ctypes.cdll.LoadLibrary('build/fcore_lib.so')
 
+FCORE_WARN_ISSUES = False
 
 # =====================================
 #   Helper Function Pointer Types
@@ -104,8 +105,13 @@ fcore_lib.fcore_api1_get_constructive.restype = ctypes.c_void_p
 ### Engine: HeuristicFactory
 fcore_lib.fcore_api1_create_engine.argtypes = []
 fcore_lib.fcore_api1_create_engine.restype = ctypes.c_void_p
+#
 fcore_lib.fcore_api1_destroy_engine.argtypes = [ctypes.c_void_p]
 fcore_lib.fcore_api1_destroy_engine.restype = ctypes.c_bool
+#
+fcore_lib.fcore_api1_engine_check.argtypes = [
+    ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_bool]
+fcore_lib.fcore_api1_engine_check.restype = ctypes.c_bool
 ###
 
 #fcore_component_print(void* component);
@@ -148,11 +154,14 @@ class OptFrameEngine(object):
     def print_component(self, component):
         fcore_lib.fcore_component_print(component)
 
+    def check(self, p1: int, p2: int, verbose=False) -> bool:
+        return fcore_lib.fcore_api1_engine_check(self.hf, p1, p2, verbose)
+
     # =================== ADD =========================
 
     # register GeneralEvaluator (as FEvaluator) for min_callback
     def minimize(self, problemCtx, min_callback_ptr):
-        print("min_callback=", min_callback_ptr)
+        #print("min_callback=", min_callback_ptr)
         idx_ev = fcore_lib.fcore_api1_add_float64_evaluator(
             # self.hf,     FUNC_FEVALUATE(min_callback), True)
             self.hf,     min_callback_ptr, True, problemCtx)
@@ -165,7 +174,7 @@ class OptFrameEngine(object):
         return idx_ev
 
     def add_constructive(self, problemCtx, constructive_callback_ptr):
-        print("add_constructive begins")
+        #print("add_constructive begins")
         idx_c = fcore_lib.fcore_api1_add_constructive(
             #self.hf,     FUNC_FCONSTRUCTIVE(constructive_callback), problemCtx,
             self.hf,  constructive_callback_ptr, problemCtx,
@@ -175,17 +184,17 @@ class OptFrameEngine(object):
             # FUNC_SOL_TOSTRING(callback_sol_tostring),
             self.callback_utils_decref_ptr)
         # FUNC_UTILS_DECREF(callback_utils_decref))
-        print("add_constructive is finishing")
+        #print("add_constructive is finishing")
         return idx_c
 
     def add_ns(self, problemCtx, ns_rand_callback_ptr, move_apply_callback_ptr, move_eq_callback_ptr, move_cba_callback_ptr):
-        print("add_ns begins")
+        #print("add_ns begins")
         idx_ns = fcore_lib.fcore_api1_add_ns(
             self.hf,  ns_rand_callback_ptr, move_apply_callback_ptr,
             move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
             self.callback_utils_decref_ptr)
         # FUNC_UTILS_DECREF(callback_utils_decref))
-        print("add_ns is finishing")
+        #print("add_ns is finishing")
         return idx_ns
 
     # ===================== GET =======================
@@ -205,13 +214,13 @@ class OptFrameEngine(object):
     # ==================================================
 
     def fevaluator_evaluate(self, fevaluator_ptr: ctypes.py_object, min_or_max: bool, py_sol):
-        print("invoking 'fcore_lib.fcore_api1_float64_fevaluator_evaluate' with fevaluator_ptr=", fevaluator_ptr)
+        #print("invoking 'fcore_lib.fcore_api1_float64_fevaluator_evaluate' with fevaluator_ptr=", fevaluator_ptr)
         self.print_component(fevaluator_ptr)
         pyo_view = ctypes.py_object(py_sol)
         #print("begin fevaluator_evaluate with pyo_view=", pyo_view)
         z = fcore_lib.fcore_api1_float64_fevaluator_evaluate(
             fevaluator_ptr, min_or_max, pyo_view)
-        print("'fevaluator_evaluate' final z=", z)
+        #print("'fevaluator_evaluate' final z=", z)
         return z
 
     def fconstructive_gensolution(self, fconstructive_ptr: ctypes.py_object) -> ctypes.py_object:
@@ -241,8 +250,8 @@ def callback_utils_incref(pyo: ctypes.py_object):
 
 
 def callback_utils_decref(pyo):
-    print("callback_utils_decref: ", sys.getrefcount(pyo), " will get -1")
-    print("pyo:", pyo)
+    #print("callback_utils_decref: ", sys.getrefcount(pyo), " will get -1")
+    #print("pyo:", pyo)
     # IMPORTANT: 'pyo' may come as a Real Python Object, not a 'ctypes.py_object'
     cast_pyo = ctypes.py_object(pyo)
     ctypes.pythonapi.Py_DecRef(cast_pyo)
@@ -258,7 +267,7 @@ def callback_utils_decref(pyo):
 class ExampleSol(object):
 
     def __init__(self):
-        print('__init__ ExampleSol. Creating empty solution...')
+        #print('__init__ ExampleSol. Creating empty solution...')
         self.n = 0
         self.bag = []
 
@@ -282,7 +291,7 @@ class ExampleSol(object):
 
 class ESolutionKP(object):
     def __init__(self):
-        print('__init__ ESolutionKP...')
+        #print('__init__ ESolutionKP...')
         # ExampleSol
         self.first = None
         self.second = 0.0
@@ -298,6 +307,11 @@ def callback_sol_tostring(sol: ExampleSol, pt: ctypes.c_char_p, ptsize: ctypes.c
 
 
 def callback_sol_deepcopy(sol: ExampleSol):
+    #print("invoking 'callback_sol_deepcopy'... sol=", sol)
+    if(isinstance(sol, ctypes.py_object)):
+        if FCORE_WARN_ISSUES == True:
+            print("WARNING: IS ctypes.py_object")
+        sol = sol.value
     sol2 = deepcopy(sol)
     pyo = ctypes.py_object(sol2)
     ctypes.pythonapi.Py_IncRef(pyo)  # TODO: do we need this? I hope so...
@@ -327,7 +341,11 @@ class ExampleKP(object):
 
 
 def mycallback_fevaluate(pKP: ExampleKP, sol: ExampleSol):
-    print("python: invoking 'mycallback_fevaluate' with problem and solution")
+    #print("python: invoking 'mycallback_fevaluate' with problem and solution sol=", sol)
+    if(isinstance(sol, ctypes.py_object)):
+        if FCORE_WARN_ISSUES == True:
+            print("WARNING2: IS ctypes.py_object")
+        sol = sol.value
     assert(sol.n == pKP.n)
     assert(len(sol.bag) == sol.n)
     #
@@ -341,9 +359,9 @@ def mycallback_fevaluate(pKP: ExampleKP, sol: ExampleSol):
     w_inf = -1000.0
     if sum_w > pKP.Q:
         # excess is penalized
-        print("will penalize: Q=", pKP.Q, "sum_w=", sum_w)
+        #print("will penalize: Q=", pKP.Q, "sum_w=", sum_w)
         sum_p += w_inf * (sum_w-pKP.Q)
-    print("result is: ", sum_p)
+    #print("result is: ", sum_p)
     return sum_p
 
 
@@ -516,6 +534,12 @@ if will_stress:
         print("evaluation:", z1)
 else:
     print("OK. no stress...")
+
+# ============= CHECK =============
+print("")
+print("Engine: will check")
+print("")
+engine.check(100, 10, False)
 
 # must keep callback variables alive until the end... for now
 print(call_fev)

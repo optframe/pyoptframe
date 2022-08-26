@@ -42,6 +42,24 @@ public:
       //std::cout << "\tFCoreLibSolution(COPY; ptr1_origin=" << s.solution_ptr << "; ptr2_dest=" << this->solution_ptr << ")" << std::endl;
    }
 
+   FCoreLibSolution& operator=(const FCoreLibSolution& other)
+   {
+      if (this == &other)
+         return *this;
+
+      assert(other.solution_ptr);
+      assert(!other.is_view); // because of deepcopy anyway... COULD we copy a view here? I don't think so..
+      // copy functions
+      this->f_sol_deepcopy = other.f_sol_deepcopy;
+      this->f_utils_decref = other.f_utils_decref;
+      // copy flags
+      this->is_view = other.is_view;
+
+      // perform deepcopy and IncRef
+      this->solution_ptr = this->f_sol_deepcopy(other.solution_ptr);
+      return *this;
+   }
+
    FCoreLibSolution(FCoreLibSolution&& s)
    {
       //std::cout << "FCoreLibSolution(MOVE)" << std::endl;
@@ -116,6 +134,12 @@ public:
       //assert(str_ret.size() == sz);
       return str_ret;
    }
+
+   friend std::ostream& operator<<(std::ostream& os, const FCoreLibSolution& me)
+   {
+      os << me.toString();
+      return os;
+   }
 };
 
 using FCoreLibESolution = std::pair<FCoreLibSolution, optframe::Evaluation<double>>;
@@ -143,18 +167,6 @@ public:
      hf;
 
    optframe::CheckCommand<FCoreLibESolution> check; // no verbose
-
-   /*
-      CheckCommand<ESolutionTSP> check(false); // verbose
-   //
-   check.addEvaluator(eval);
-   check.add(initRand);
-   check.addNS(nsswap);    // NS
-   check.addNSSeq(nsseq2); // NSSeq
-
-   // bool run(int iterMax, int nSolNSSeq)
-   check.run(100, 10);
-   */
 };
 
 // IMPORTANT: OptFrame FMove does not require Copy on M (aka, FakePythonObjPtr)... I HOPE!
@@ -259,15 +271,25 @@ public:
 extern "C" FakeEnginePtr
 fcore_api1_create_engine()
 {
-   FakeEnginePtr hf_ptr = new FCoreApi1Engine;
-   return hf_ptr;
+   FakeEnginePtr engine_ptr = new FCoreApi1Engine;
+   return engine_ptr;
 }
 
 extern "C" bool
-fcore_api1_destroy_engine(FakeEnginePtr _hf)
+fcore_api1_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose)
 {
-   auto* hf = (FCoreApi1Engine*)_hf;
-   delete hf;
+   auto* engine = (FCoreApi1Engine*)_engine;
+   engine->check.setParameters(verbose);
+   // bool run(int iterMax, int nSolNSSeq)
+   auto data = engine->check.run(p1, p2);
+   return true;
+}
+
+extern "C" bool
+fcore_api1_destroy_engine(FakeEnginePtr _engine)
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+   delete engine;
    // good
    return true;
 }
@@ -297,16 +319,28 @@ fcore_api1_add_float64_evaluator(FakeEnginePtr _engine,
    int id = -1;
    if (min_or_max) {
       // Minimization
-      sref<optframe::Component> eval(
-        new optframe::FEvaluator<FCoreLibESolution, optframe::MinOrMax::MINIMIZE>{ fevaluate });
+      auto* ev_ptr = new optframe::FEvaluator<FCoreLibESolution, optframe::MinOrMax::MINIMIZE>{ fevaluate };
+      sref<optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>> eval2(ev_ptr);
+      sref<optframe::Component> eval(eval2);
       //std::cout << "created FEvaluator<MIN> ptr=" << &eval.get() << std::endl;
       id = engine->hf.addComponent(eval, "OptFrame:GeneralEvaluator");
+      // double add to prevent future down-casts
+      int id2 = engine->hf.addComponent(eval, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+      assert(id == id2);
+      // also add to check module
+      engine->check.addEvaluator(eval2);
    } else {
       // Maximization
-      sref<optframe::Component> eval(
-        new optframe::FEvaluator<FCoreLibESolution, optframe::MinOrMax::MAXIMIZE>{ fevaluate });
+      auto* ev_ptr = new optframe::FEvaluator<FCoreLibESolution, optframe::MinOrMax::MAXIMIZE>{ fevaluate };
+      sref<optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>> eval2(ev_ptr);
+      sref<optframe::Component> eval(eval2);
 
       id = engine->hf.addComponent(eval, "OptFrame:GeneralEvaluator");
+      // double add to prevent future down-casts
+      int id2 = engine->hf.addComponent(eval, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+      assert(id == id2);
+      // also add to check module
+      engine->check.addEvaluator(eval2);
    }
 
    return id;
@@ -348,13 +382,38 @@ fcore_api1_add_constructive(FakeEnginePtr _engine,
       return sol;
    };
 
-   sref<optframe::Component> fc(
-     new optframe::FConstructive<FCoreLibSolution>{ fconstructive });
+   auto* c_ptr = new optframe::FConstructive<FCoreLibSolution>{ fconstructive };
+
+   sref<optframe::Constructive<FCoreLibSolution>> fc2(c_ptr);
+   sref<optframe::Component> fc(fc2);
 
    //std::cout << "'fcore_api1_add_constructive' will add component on hf" << std::endl;
 
    int id = engine->hf.addComponent(fc, "OptFrame:Constructive");
    //std::cout << "c_id = " << id << std::endl;
+   // ========== add to check module ==========
+   using MyEval = optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>;
+
+   // will try to get evaluator to build InitialSolution component...
+   std::shared_ptr<MyEval> ev;
+   engine->hf.assign(ev, 0, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+   assert(ev);
+   //
+   if (!ev)
+      std::cout
+        << "WARNING: No Evaluator! Cannot build InitialSearch for Constructive id=" << id << "!" << std::endl;
+   else {
+      //auto ev = std::make_shared<optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>>(
+      //  gev);
+      //std::shared_ptr<MyEval>
+      //  ev(
+      //    std::static_pointer_cast<MyEval>(gev));
+
+      sref<optframe::InitialSearch<FCoreLibESolution>> initSol{
+         new optframe::BasicInitialSearch<FCoreLibESolution>(fc2, ev)
+      };
+      engine->check.add(initSol);
+   }
    //fc->print();
    return id;
 }
