@@ -9,12 +9,6 @@ typedef void* FakeFConstructivePtr;
 typedef void* FakePythonObjPtr;
 typedef void* FakeHeuristicFactoryPtr;
 
-// =========================== FEVALUATOR ===========================
-// constructor
-
-extern "C" double
-fcore_float64_fevaluator_evaluate(FakeFEvaluatorPtr fevaluator, bool min_or_max, FakePythonObjPtr solution_ptr);
-
 // ============================ Engine: HeuristicFactory ===========================
 
 extern "C" FakeHeuristicFactoryPtr
@@ -31,11 +25,6 @@ fcore_api1_add_float64_evaluator(FakeHeuristicFactoryPtr _hf,
                                  bool min_or_max,
                                  FakePythonObjPtr problem_view);
 
-extern "C" void* // raw (non-owned) pointer to GeneralEvaluator
-fcore_api1_get_float64_evaluator(FakeHeuristicFactoryPtr _hf, int idx_ev);
-
-// ==============
-
 extern "C" int // index of constructive
 fcore_api1_add_constructive(FakeHeuristicFactoryPtr _hf,
                             FakePythonObjPtr (*_fconstructive)(FakePythonObjPtr),
@@ -44,8 +33,29 @@ fcore_api1_add_constructive(FakeHeuristicFactoryPtr _hf,
                             size_t (*f_sol_tostring)(FakePythonObjPtr, char*, size_t),
                             int (*f_utils_decref)(FakePythonObjPtr));
 
+extern "C" int // index of ns
+fcore_api1_add_ns(FakeHeuristicFactoryPtr _hf,
+                  FakePythonObjPtr (*_fns_rand)(FakePythonObjPtr, FakePythonObjPtr),
+                  FakePythonObjPtr (*_fmove_apply)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                  bool (*_fmove_eq)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                  bool (*_fmove_cba)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                  FakePythonObjPtr problem_view,
+                  int (*f_utils_decref)(FakePythonObjPtr));
+
+// ================
+
+extern "C" void* // raw (non-owned) pointer to GeneralEvaluator
+fcore_api1_get_float64_evaluator(FakeHeuristicFactoryPtr _hf, int idx_ev);
+
 extern "C" void* // raw (non-owned) pointer to Constructive
 fcore_api1_get_constructive(FakeHeuristicFactoryPtr _hf, int idx_c);
+
+// ===============
+
+// SPECIFIC
+
+extern "C" double
+fcore_float64_fevaluator_evaluate(FakeFEvaluatorPtr fevaluator, bool min_or_max, FakePythonObjPtr solution_ptr);
 
 extern "C" FakePythonObjPtr // Python solution object (owned??? by who?? maybe non-owned, but alive...)
 fcore_api1_fconstructive_gensolution(FakeFConstructivePtr _fconstructive);

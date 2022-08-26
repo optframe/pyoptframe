@@ -53,6 +53,8 @@ fcore_lib.fcore_api1_add_float64_evaluator.argtypes = [
     ctypes.c_void_p, FUNC_FEVALUATE, c_bool, ctypes.py_object]
 fcore_lib.fcore_api1_add_float64_evaluator.restype = ctypes.c_int32
 
+# ----------
+
 # problem* -> solution*
 FUNC_FCONSTRUCTIVE = CFUNCTYPE(
     ctypes.py_object, ctypes.py_object)
@@ -61,6 +63,30 @@ fcore_lib.fcore_api1_add_constructive.argtypes = [
     ctypes.c_void_p, FUNC_FCONSTRUCTIVE, ctypes.py_object,
     FUNC_SOL_DEEPCOPY, FUNC_SOL_TOSTRING, FUNC_UTILS_DECREF]
 fcore_lib.fcore_api1_add_constructive.restype = ctypes.c_int32
+
+# ----------
+
+# problem*,solution* -> move*
+FUNC_FNS_RAND = CFUNCTYPE(
+    ctypes.py_object, ctypes.py_object, ctypes.py_object)
+
+# problem*,move*,solution* -> move*
+FUNC_FMOVE_APPLY = CFUNCTYPE(
+    ctypes.py_object, ctypes.py_object, ctypes.py_object, ctypes.py_object)
+
+# operator==: problem*,move*,move* -> bool
+FUNC_FMOVE_EQ = CFUNCTYPE(
+    ctypes.c_bool, ctypes.py_object, ctypes.py_object, ctypes.py_object)
+
+# canBeApplied: problem*,move*,solution* -> bool
+FUNC_FMOVE_CBA = CFUNCTYPE(
+    ctypes.c_bool, ctypes.py_object, ctypes.py_object, ctypes.py_object)
+
+# fns: hf*, func_ns, func_mv1, func_mv2, func_mv3, problem* -> int
+fcore_lib.fcore_api1_add_ns.argtypes = [
+    ctypes.c_void_p, FUNC_FNS_RAND, FUNC_FMOVE_APPLY, FUNC_FMOVE_EQ, FUNC_FMOVE_CBA, ctypes.py_object, FUNC_UTILS_DECREF]
+fcore_lib.fcore_api1_add_ns.restype = ctypes.c_int32
+
 
 # ====================================
 #        OptFrame GET Component
@@ -151,6 +177,15 @@ class OptFrameEngine(object):
         # FUNC_UTILS_DECREF(callback_utils_decref))
         print("add_constructive is finishing")
         return idx_c
+
+    def add_ns(self, problemCtx, ns_rand_callback_ptr, move_apply_callback_ptr, move_eq_callback_ptr, move_cba_callback_ptr):
+        print("add_ns begins")
+        idx_ns = fcore_lib.fcore_api1_add_ns(
+            self.hf,  ns_rand_callback_ptr, move_apply_callback_ptr,
+            move_eq_callback_ptr, move_cba_callback_ptr, problemCtx)
+        # FUNC_UTILS_DECREF(callback_utils_decref))
+        print("add_ns is finishing")
+        return idx_ns
 
     # ===================== GET =======================
 
@@ -244,6 +279,14 @@ class ExampleSol(object):
         return result
 
 
+class ESolutionKP(object):
+    def __init__(self):
+        print('__init__ ESolutionKP...')
+        # ExampleSol
+        self.first = None
+        self.second = 0.0
+
+
 def callback_sol_tostring(sol: ExampleSol, pt: ctypes.c_char_p, ptsize: ctypes.c_size_t):
     mystr = sol.__str__()  # + '\0'
     mystr_bytes = mystr.encode()  # str.encode(mystr)
@@ -314,9 +357,57 @@ def mycallback_constructive(problemCtx: ExampleKP) -> ExampleSol:
     return sol
 
 
-def callback_sol_print(sol: ExampleSol):
-    print("sol = ", sol)
-    return 1
+# ========================================================
+# IMPORTANT: MoveBitFlip represents a move here,
+# while on C++ it only represents a Move Structure...
+# It will work fine, anyway. What pleases the user most ;)
+# ========================================================
+class MoveBitFlip(object):
+    def __init__(self):
+        print('Init MoveBitFlip')
+        self.k = 0
+
+# C++: uptr<Move<XES>> (*fRandom)(const XES&);
+
+
+# TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
+def mycallback_ns_rand_bitflip(pKP: ExampleKP, sol: ExampleSol) -> MoveBitFlip:
+    k = random.randint(0, pKP.n-1)
+    mv = MoveBitFlip()
+    mv.k = k
+    # TODO: should we IncRef this? probably...
+    return mv
+
+
+# ===============================
+
+#    FMove(
+#     const M& _m,
+#     M (*_fApply)(const M&, XES&),                                                // fApply
+#     bool (*_fCanBeApplied)(const M&, const XES&) = fDefaultCanBeApplied<M, XES>, // fCanBeApplied
+#     bool (*_fCompareEq)(const M&, const Move<XES>&) = fDefaultCompareEq<M, XES>  // fCompareEq
+#     )
+
+# TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
+def mycallback_move_apply_bitflip(problemCtx: ExampleKP, m: MoveBitFlip, sol: ExampleSol) -> MoveBitFlip:
+    k = m.k
+    #esol.first.bag[k] = 1 - esol.first.bag[k]
+    sol.bag[k] = 1 - sol.bag[k]
+    # must create reverse move
+    mv = MoveBitFlip()
+    mv.k = k
+    # TODO: should we IncRef this? probably...
+    return mv
+
+# TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
+
+
+def mycallback_move_cba_bitflip(problemCtx: ExampleKP, m: MoveBitFlip, sol: ExampleSol) -> bool:
+    return True
+
+
+def mycallback_move_eq_bitflip(problemCtx: ExampleKP, m1: MoveBitFlip, m2: MoveBitFlip) -> bool:
+    return m1.k == m2.k
 
 
 # =============================

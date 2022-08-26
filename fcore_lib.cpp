@@ -128,6 +128,105 @@ using FCoreApi1Engine = optframe::HeuristicFactory<
   //X2ESolution<XES> X2ES = MultiESolution<XES>>
   >;
 
+// IMPORTANT: OptFrame FMove does not require Copy on M (aka, FakePythonObjPtr)... I HOPE!
+// Don't remember needing a clone() member on OptFrame Moves... but nice to clarify a NoCopy (NoNothing...) concept there.
+//using FMoveLib = optframe::FMove<FakePythonObjPtr, FCoreLibESolution>;
+
+// will not use FMove now, because of DecRef on destructor... a necessary personalization.
+
+class FMoveLib : public optframe::Move<FCoreLibESolution, typename FCoreLibESolution::second_type>
+{
+   using XES = FCoreLibESolution;
+   using XEv = typename XES::second_type;
+   using XSH = XES; // only single objective
+   using M = FakePythonObjPtr;
+
+public:
+   M m; // internal structure for move
+
+   typedef std::function<M(const M&, XES&)> FuncTypeMoveApply;
+   typedef std::function<bool(const M&, const XES&)> FuncTypeMoveCBA;
+   typedef std::function<bool(const M&, const Move<XES>&)> FuncTypeMoveEq;
+   typedef std::function<bool(FakePythonObjPtr)> FuncTypeUtilsDecRef;
+
+   //M (*fApply)(const M&, XES&);                    // fApply
+   FuncTypeMoveApply fApply;
+   //bool (*fCanBeApplied)(const M&, const XES&) ;   // fCanBeApplied
+   FuncTypeMoveCBA fCanBeApplied;
+   //bool (*fCompareEq)(const M&, const Move<XES>&); // fCompareEq
+   FuncTypeMoveEq fCompareEq;
+   // utils for decref
+   FuncTypeUtilsDecRef f_utils_decref;
+
+   FMoveLib(
+     M _m_owned, // must IncRef before passing here...
+     //M (*_fApply)(const M&, XES&),                   // fApply
+     const FuncTypeMoveApply& _fApply,
+     //bool (*_fCanBeApplied)(const M&, const XES&) ,  // fCanBeApplied
+     const FuncTypeMoveCBA& _fCanBeApplied,
+     //bool (*_fCompareEq)(const M&, const Move<XES>&) // fCompareEq
+     const FuncTypeMoveEq& _fCompareEq,
+     // decref utils
+     const FuncTypeUtilsDecRef& _f_utils_decref)
+     : m{ _m_owned }
+     , fApply{ _fApply }
+     , fCanBeApplied{ _fCanBeApplied }
+     , fCompareEq{ _fCompareEq }
+     , f_utils_decref{ _f_utils_decref }
+   {
+   }
+
+   virtual ~FMoveLib()
+   {
+      std::cout << "~FMoveLib()" << std::endl;
+      int x = f_utils_decref(m);
+      std::cout << "count(m) = " << x << std::endl;
+   }
+
+   virtual bool canBeApplied(const XES& se) override
+   {
+      return fCanBeApplied(m, se);
+   }
+
+   virtual optframe::uptr<Move<XES, XEv, XSH>> apply(XSH& se) override
+   {
+      return optframe::uptr<Move<XES, XEv, XSH>>{
+         new FMoveLib{ fApply(m, se), fApply, fCanBeApplied, fCompareEq, f_utils_decref }
+      };
+   }
+
+   virtual bool operator==(const Move<XES, XEv, XSH>& move) const override
+   {
+      const Move<XES>& move2 = (Move<XES>&)move;
+      return fCompareEq(this->m, move2);
+   }
+
+   bool operator!=(const Move<XES, XEv, XSH>& m) const
+   {
+      return !(*this == m);
+   }
+
+   static string idComponent()
+   {
+      std::stringstream ss;
+      ss << Component::idComponent() << ":FMoveLib";
+      return ss.str();
+   }
+
+   virtual string id() const override
+   {
+      return idComponent();
+   }
+
+   // use 'operator<<' for M
+   virtual void print() const override
+   {
+      std::cout << m << std::endl;
+   }
+};
+
+// ==================
+
 extern "C" FakeHeuristicFactoryPtr
 fcore_api1_create_engine()
 {
@@ -211,7 +310,7 @@ fcore_api1_add_constructive(FakeHeuristicFactoryPtr _hf,
                          f_sol_deepcopy,
                          f_sol_tostring,
                          f_utils_decref]() -> FCoreLibSolution {
-      // IMPORTANT: _fconstructive must IncRef before returning! I think so...
+      // IMPORTANT: _fconstructive must IncRef solution on python before returning! I think so...
       FakePythonObjPtr vobj_owned = _fconstructive(problem_view);
       //std::cout << "'fcore_api1_add_constructive' -> _fconstructive generated pointer: " << vobj_owned << std::endl;
       assert(vobj_owned); // check void* (TODO: for FxConstructive, return nullopt)
@@ -228,6 +327,93 @@ fcore_api1_add_constructive(FakeHeuristicFactoryPtr _hf,
    int id = hf->addComponent(fc, "OptFrame:Constructive");
    //std::cout << "c_id = " << id << std::endl;
    //fc->print();
+   return id;
+}
+
+extern "C" int // index of ns
+fcore_api1_add_ns(FakeHeuristicFactoryPtr _hf,
+                  FakePythonObjPtr (*_fns_rand)(FakePythonObjPtr, FakePythonObjPtr),
+                  FakePythonObjPtr (*_fmove_apply)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                  bool (*_fmove_eq)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                  bool (*_fmove_cba)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                  FakePythonObjPtr problem_view,
+                  int (*_f_utils_decref)(FakePythonObjPtr))
+{
+   auto* hf = (FCoreApi1Engine*)_hf;
+
+   //std::cout << "invoking 'fcore_api1_add_constructive' with "
+   //          << "_hf=" << _hf << " _fconstructive and problem_view=" << problem_view << std::endl;
+
+   // ======== preparing move functions ========
+   typedef std::function<FakePythonObjPtr(const FakePythonObjPtr&, FCoreLibESolution&)> FuncTypeMoveApply;
+   FuncTypeMoveApply func_fmove_apply = [_fmove_apply, problem_view](const FakePythonObjPtr& m_view, FCoreLibESolution& se) -> FakePythonObjPtr {
+      // IMPORTANT: _fmove_apply must IncRef Move on python before returning! I think so...
+      // m_view seems to come from Python, to be used on Python... don't know if we need to IncRef or DecRef that...
+      // TODO: will pass ESolution as a Solution in API1... ignoring Evaluation/Re-evaluation!
+      //
+      // vobj_owned should come IncRef'ed before! I guess...
+      //
+      FakePythonObjPtr vobj_owned = _fmove_apply(problem_view, m_view, se.first.solution_ptr);
+      // TODO: don't know if IncRef or not solution_ptr... I THINK it's a "view" for python, so no IncRef here.
+      return vobj_owned;
+   };
+
+   typedef std::function<bool(const FakePythonObjPtr&, const FCoreLibESolution&)> FuncTypeMoveCBA;
+   FuncTypeMoveCBA func_fmove_cba = [_fmove_cba, problem_view](const FakePythonObjPtr& m_view, const FCoreLibESolution& se) -> bool {
+      // IMPORTANT: python will receive all as views..
+      // TODO: will pass ESolution as a Solution in API1... ignoring Evaluation/Re-evaluation!
+      bool r = _fmove_cba(problem_view, m_view, se.first.solution_ptr);
+      return r;
+   };
+
+   typedef std::function<bool(const FakePythonObjPtr&, const optframe::Move<FCoreLibESolution>&)> FuncTypeMoveEq;
+   FuncTypeMoveEq func_fmove_eq = [_fmove_eq, problem_view](const FakePythonObjPtr& my_m_view, const optframe::Move<FCoreLibESolution>& _mOther) -> bool {
+      // cast to to lib move type. (TODO: check type... how? use OptFrame Component id()? or must improve OptFrame in this regard... not worry now!)
+      auto& mOther = (FMoveLib&)_mOther;
+      //
+      FakePythonObjPtr mStructOtherView = mOther.m;
+      // IMPORTANT: python will receive all as views..
+      bool r = _fmove_eq(problem_view, my_m_view, mStructOtherView);
+      return r;
+   };
+
+   typedef std::function<bool(FakePythonObjPtr)> FuncTypeUtilsDecRef;
+   FuncTypeUtilsDecRef func_utils_decref = _f_utils_decref;
+
+   //std::function<uptr<Move<XES>>(const XES&)>
+   auto func_fns = [_fns_rand,
+                    problem_view,
+                    func_fmove_apply,
+                    func_fmove_cba,
+                    func_fmove_eq,
+                    func_utils_decref](const FCoreLibESolution& se) -> optframe::uptr<optframe::Move<FCoreLibESolution>> {
+      // IMPORTANT: _fns_rand must IncRef Move on python before returning! I think so...
+      // TODO: will pass ESolution as a Solution in API1... ignoring Evaluation/Re-evaluation!
+      // TODO: don't know if IncRef or not solution_ptr... I THINK it's a "view" for python, so no IncRef here.
+      //
+      // vobj_owned should come IncRef'ed before! I guess...
+      FakePythonObjPtr vobj_owned = _fns_rand(problem_view, se.first.solution_ptr);
+      std::cout << "'fcore_api1_add_ns' -> _fns_rand generated pointer: " << vobj_owned << std::endl;
+      assert(vobj_owned); // check void* (TODO: allow non-existing move, return nullptr)
+
+      //
+      auto* m_ptr = new FMoveLib(vobj_owned,
+                                 func_fmove_apply,
+                                 func_fmove_cba,
+                                 func_fmove_eq,
+                                 func_utils_decref);
+
+      //std::cout << "'fcore_api1_add_ns' -> move created!" << std::endl;
+      return optframe::uptr<optframe::Move<FCoreLibESolution>>(m_ptr);
+   };
+
+   sref<optframe::Component> fns(
+     new optframe::FNS<FCoreLibESolution>{ func_fns });
+
+   //std::cout << "'fcore_api1_add_ns' will add component on hf" << std::endl;
+
+   int id = hf->addComponent(fns, "OptFrame:NS");
+   //fns->print();
    return id;
 }
 
