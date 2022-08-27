@@ -625,7 +625,7 @@ print("")
 #engine.check(100, 10, False)
 print("pass...")
 
-# engine.run_sa()
+engine.run_sa()
 
 # must keep callback variables alive until the end... for now
 print(call_fev)

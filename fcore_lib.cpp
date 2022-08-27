@@ -118,6 +118,7 @@ public:
       //std::cout << "~FCoreLibSolution is_view = " << this->is_view << " ptr: " << solution_ptr << std::endl;
       //
       if (!this->is_view) {
+         assert(solution_ptr);
          // must decref solution_ptr and discard it
          int x = f_utils_decref(solution_ptr);
          //std::cout << "~FCoreLibSolution ptr_count = " << x << std::endl;
@@ -156,7 +157,7 @@ public:
 
    std::string toString() const
    {
-      constexpr int max_buffer = 100;
+      constexpr int max_buffer = 1000;
       //
       std::string str_buffer(max_buffer, '\0');
       //std::cout << "size = " << str_buffer.size() << std::endl;
@@ -326,11 +327,14 @@ fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
    //
+   /*
    using MyGenEval = optframe::GeneralEvaluator<FCoreLibESolution, optframe::Evaluation<double>>;
    //
    std::shared_ptr<MyGenEval> gev;
    engine->hf.assignGE(gev, 0, "OptFrame:GeneralEvaluator");
    assert(gev);
+   std::cout << "idGE:" << gev->idGE() << std::endl;
+   */
    //
    using MyEval = optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>;
 
@@ -338,6 +342,7 @@ fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine)
    std::shared_ptr<MyEval> ev;
    engine->hf.assign(ev, 0, "OptFrame:GeneralEvaluator:Direction:Evaluator");
    assert(ev);
+   sref<MyEval> ev2{ ev };
    //
    //
    using MyConstructive = optframe::Constructive<FCoreLibSolution>;
@@ -359,7 +364,7 @@ fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine)
 
    sref<optframe::RandGen> rg = engine->hf.getRandGen();
 
-   sref<optframe::GeneralEvaluator<FCoreLibESolution, optframe::Evaluation<double>>> evaluator{ gev };
+   //sref<optframe::GeneralEvaluator<FCoreLibESolution, optframe::Evaluation<double>>> evaluator{ gev };
    sref<optframe::InitialSearch<FCoreLibESolution, optframe::Evaluation<double>>> constructive{ initSol };
    vsref<optframe::NS<FCoreLibESolution, optframe::Evaluation<double>>> neighbors;
    neighbors.push_back(ns);
@@ -369,8 +374,9 @@ fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine)
    neighbors[0]->print();
 
    optframe::BasicSimulatedAnnealing<FCoreLibESolution> sa{
-      evaluator, constructive, neighbors, 0.98, 100, 99999, rg
+      ev2, constructive, neighbors, 0.98, 100, 99999, rg
    };
+   sa.setVerbose();
    sa.search({ 3.0 });
 
    return true;
