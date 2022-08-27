@@ -22,6 +22,9 @@ fcore_api1_engine_simulated_annealing(FakeEnginePtr hf);
 // double alpha, int iter, double temp
 
 extern "C" bool
+fcore_api1_engine_test(FakeEnginePtr hf);
+
+extern "C" bool
 fcore_api1_destroy_engine(FakeEnginePtr hf);
 
 // ============

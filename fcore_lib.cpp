@@ -383,6 +383,42 @@ fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine)
 }
 
 extern "C" bool
+fcore_api1_engine_test(FakeEnginePtr _engine)
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+   //
+   using MyEval = optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>;
+
+   // will try to get evaluator to build InitialSolution component...
+   std::shared_ptr<MyEval> ev;
+   engine->hf.assign(ev, 0, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+   assert(ev);
+   sref<MyEval> ev2{ ev };
+   //
+   //
+   using MyConstructive = optframe::Constructive<FCoreLibSolution>;
+   //
+   std::shared_ptr<MyConstructive> initial;
+   engine->hf.assign(initial, 0, "OptFrame:Constructive");
+   assert(initial);
+   //
+   sref<optframe::InitialSearch<FCoreLibESolution>> initSol{
+      new optframe::BasicInitialSearch<FCoreLibESolution>(initial, ev)
+   };
+   //
+   std::cout << "### test will generate solution" << std::endl;
+   auto ose_status = initSol->initialSearch({ 10.0 });
+   std::cout << "### test will copy optional" << std::endl;
+   auto ose = ose_status.first;
+   std::cout << "### test will get 'se' from optional" << std::endl;
+   auto se = *ose;
+   std::cout << "### test will copy 'se'" << std::endl;
+   auto se2 = se;
+
+   return true;
+}
+
+extern "C" bool
 fcore_api1_destroy_engine(FakeEnginePtr _engine)
 {
    auto* engine = (FCoreApi1Engine*)_engine;

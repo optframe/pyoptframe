@@ -26,7 +26,7 @@ import gc
 
 fcore_lib = ctypes.cdll.LoadLibrary('build/fcore_lib.so')
 
-FCORE_WARN_ISSUES = False
+FCORE_WARN_ISSUES = True
 
 # =====================================
 #   Helper Function Pointer Types
@@ -111,6 +111,9 @@ fcore_lib.fcore_api1_create_engine.restype = ctypes.c_void_p
 fcore_lib.fcore_api1_destroy_engine.argtypes = [ctypes.c_void_p]
 fcore_lib.fcore_api1_destroy_engine.restype = ctypes.c_bool
 #
+fcore_lib.fcore_api1_engine_test.argtypes = [ctypes.c_void_p]
+fcore_lib.fcore_api1_engine_test.restype = ctypes.c_bool
+#
 fcore_lib.fcore_api1_engine_simulated_annealing.argtypes = [ctypes.c_void_p]
 fcore_lib.fcore_api1_engine_simulated_annealing.restype = ctypes.c_bool
 #
@@ -163,6 +166,12 @@ class OptFrameEngine(object):
         print("Will Begin SA")
         r = fcore_lib.fcore_api1_engine_simulated_annealing(self.hf)
         print("Finished SA")
+        return r
+
+    def run_test(self):
+        print("Will Begin Test")
+        r = fcore_lib.fcore_api1_engine_test(self.hf)
+        print("Finished Test")
         return r
 
     def check(self, p1: int, p2: int, verbose=False) -> bool:
@@ -319,11 +328,11 @@ class ExampleSol(object):
         count_solkp_new_copy = count_solkp_new_copy + 1
         return result
 
-    def __deepcopy__(self, memo):
-        cls = self.__class__
-        result = cls.__new__(cls)
-        result.n = self.n
-        result.bag = deepcopy(self.bag)
+    # def __deepcopy__(self, memo):
+    #    cls = self.__class__
+    #    result = cls.__new__(cls)
+    #    result.n = self.n
+    #    result.bag = deepcopy(self.bag)
         #
         #global count_solkp_new_deepcopy
         #count_solkp_new_deepcopy = count_solkp_new_deepcopy + 1
@@ -369,8 +378,10 @@ def callback_sol_tostring(sol: ExampleSol, pt: ctypes.c_char_p, ptsize: ctypes.c
 def callback_sol_deepcopy(sol: ExampleSol):
     #print("invoking 'callback_sol_deepcopy'... sol=", sol)
     if(isinstance(sol, ctypes.py_object)):
-        if FCORE_WARN_ISSUES == True:
-            print("WARNING: IS ctypes.py_object")
+        # this should never happen!
+        assert(False)
+        # if FCORE_WARN_ISSUES == True:
+        print("WARNING: IS ctypes.py_object")
         sol = sol.value
     #
     #sol2 = deepcopy(sol)
@@ -379,9 +390,10 @@ def callback_sol_deepcopy(sol: ExampleSol):
     sol2.n = sol.n
     sol2.bag = [i for i in sol.bag]
     #
-    pyo = ctypes.py_object(sol2)
-    ctypes.pythonapi.Py_IncRef(pyo)  # TODO: do we need this? I hope so...
-    return pyo
+    #pyo = ctypes.py_object(sol2)
+    # ctypes.pythonapi.Py_IncRef(pyo)  # TODO: do we need this? I hope so...
+    #print("final sol=", sol2)
+    return sol2
 
 # =========================
 #       Problem KP
@@ -409,6 +421,8 @@ class ExampleKP(object):
 def mycallback_fevaluate(pKP: ExampleKP, sol: ExampleSol):
     #print("python: invoking 'mycallback_fevaluate' with problem and solution sol=", sol)
     if(isinstance(sol, ctypes.py_object)):
+        # this should never happen!
+        assert(False)
         if FCORE_WARN_ISSUES == True:
             print("WARNING2: IS ctypes.py_object")
         sol = sol.value
@@ -489,6 +503,8 @@ def mycallback_ns_rand_bitflip(pKP: ExampleKP, sol: ExampleSol) -> MoveBitFlip:
 # TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
 def mycallback_move_apply_bitflip(problemCtx: ExampleKP, m: MoveBitFlip, sol: ExampleSol) -> MoveBitFlip:
     if(isinstance(sol, ctypes.py_object)):
+        # this should never happen!
+        assert(False)
         if FCORE_WARN_ISSUES == True:
             print("WARNING3: IS ctypes.py_object")
         sol = sol.value
@@ -510,6 +526,14 @@ def mycallback_move_cba_bitflip(problemCtx: ExampleKP, m: MoveBitFlip, sol: Exam
 
 def mycallback_move_eq_bitflip(problemCtx: ExampleKP, m1: MoveBitFlip, m2: MoveBitFlip) -> bool:
     return m1.k == m2.k
+
+
+def test_leak_new_solution(engine, problemCtx: ExampleKP) -> ExampleSol:
+    fc = engine.get_constructive(0)
+    engine.print_component(fc)
+    solxx = engine.fconstructive_gensolution(fc)
+    print("solxx=", solxx)
+    return True
 
 
 # =============================
@@ -622,10 +646,11 @@ else:
 print("")
 print("Engine: will check")
 print("")
-#engine.check(100, 10, False)
+engine.check(300, 10, False)
 print("pass...")
 
 engine.run_sa()
+# engine.run_test() # run generic test on C++... just for debugging
 
 # must keep callback variables alive until the end... for now
 print(call_fev)
@@ -634,6 +659,7 @@ print(call_ns_bitflip)
 print(call_move_apply)
 print(call_move_eq)
 print(call_move_cba)
+
 
 print("")
 print("count_solkp=", count_solkp)
