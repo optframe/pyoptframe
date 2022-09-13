@@ -24,7 +24,7 @@ import gc
 # ==================== fcore_lib.so ===================
 
 
-fcore_lib = ctypes.cdll.LoadLibrary('build/fcore_lib.so')
+fcore_lib = ctypes.cdll.LoadLibrary('../build/fcore_lib.so')
 
 FCORE_WARN_ISSUES = True
 
