@@ -9,6 +9,7 @@
 #include <OptFrame/HeuristicFactory.hpp>
 #include <OptFrame/Loader.hpp>
 #include <OptFrame/MyConcepts.hpp> // sref
+#include <OptFrame/OptFrameList.hpp>
 #include <OptFrame/Util/CheckCommand.hpp>
 
 class FCoreLibSolution
@@ -199,6 +200,13 @@ using CB = optframe::ComponentBuilder<
   //X2ESolution<XES> X2ES = MultiESolution<XES>>
   >;
 
+using CBSingle = optframe::SingleObjSearchBuilder<
+  FCoreLibSolution,             //XSolution S,
+  optframe::Evaluation<double>, // XEvaluation XEv = Evaluation<>,
+  FCoreLibESolution             //  XESolution XES = pair<S, XEv>,
+  //X2ESolution<XES> X2ES = MultiESolution<XES>>
+  >;
+
 class FCoreApi1Engine
 {
 public:
@@ -361,20 +369,73 @@ fcore_api1_engine_builders(FakeEnginePtr _engine, char* prefix)
    return vlist.size();
 }
 
+extern "C" int // index of ComponentList
+fcore_api1_create_component_list(FakeEnginePtr _engine, char* clist, char* list_type)
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+   //
+   std::string str_list{ clist };
+   std::string str_type{ list_type };
+   //
+   std::map<std::string, std::vector<std::string>> ldictionary; // TODO: why??
+   //
+   std::vector<std::string>* vvlist = optframe::OptFrameList::readList(ldictionary, str_list);
+   //std::cout << "lsit size=" << vvlist->size() << std::endl;
+   std::cout << vvlist->at(0) << std::endl;
+   std::vector<sptr<optframe::Component>> vcomp;
+   for (unsigned i = 0; i < vvlist->size(); i++) {
+      sptr<optframe::Component> comp;
+      scannerpp::Scanner scanComp{ vvlist->at(i) };
+      std::string sid = scanComp.next();
+      int cid = *scanComp.nextInt();
+      engine->loader.factory.assign(comp, cid, sid);
+      vcomp.push_back(comp);
+   }
+   delete vvlist;
+
+   int id = engine->loader.factory.addComponentList(vcomp, str_type);
+   return id;
+}
+
 extern "C" bool
 fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timelimit, int id_evaluator, int id_constructive, int id_ns, double alpha, int iter, double T)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
    //
-   /*
-   CB* cb = engine->loader.factory.getBuilder("BasicSA");
-   std::cout << "cb*=" << cb << std::endl;
-   std::vector<std::pair<std::string, std::vector<std::pair<std::string, std::string>>>>
-     vlist = engine->loader.factory.listBuilders(":BasicSA");
-   for (auto& p : vlist) {
-      std::cout << "builder: " << p.first << " |v|=" << p.second.size() << std::endl;
+   // build_single (TESTING)
+   //
+
+   std::vector<std::string> vstring = engine->loader.factory.listAllComponents();
+   for (unsigned i = 0; i < vstring.size(); i++)
+      std::cout << "\tCOMPONENT " << i << ":" << vstring[i] << std::endl;
+   //
+   std::string sbuilder = "OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA";
+   CB* cb = engine->loader.factory.getBuilder(sbuilder);
+   if (!cb) {
+      std::cout << "WARNING! Builder not found!" << std::endl;
    }
-   */
+   //cb->buildComponent
+   CBSingle* cbsingle = (CBSingle*)cb;
+
+   std::string scan_params = "OptFrame:GeneralEvaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999";
+   scannerpp::Scanner scanner{ scan_params };
+   optframe::SingleObjSearch<FCoreLibESolution>* single = cbsingle->build(scanner, engine->loader.factory);
+   std::cout << "single =" << single << std::endl;
+   single->print();
+
+   //
+   // END build_single (TESTING)
+   //
+
+   /*
+builder: OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA |params|=6
+	param 0 => OptFrame:GeneralEvaluator : evaluation function
+	param 1 => OptFrame:InitialSearch : constructive heuristic
+	param 2 => OptFrame:NS[] : list of NS
+	param 3 => OptFrame:double : cooling factor
+	param 4 => OptFrame:int : number of iterations for each temperature
+	param 5 => OptFrame:double : initial temperature
+*/
 
    /*
    using MyGenEval = optframe::GeneralEvaluator<FCoreLibESolution, optframe::Evaluation<double>>;
@@ -690,6 +751,37 @@ fcore_api1_add_ns(FakeEnginePtr _engine,
    //
    engine->check.add(fns);
    //fns->print();
+   return id;
+}
+
+extern "C" int // index of InitialSearch
+fcore_api1_create_initial_search(FakeEnginePtr _engine, int ev_idx, int c_idx)
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+
+   using MyEval = optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>;
+
+   // will try to get evaluator to build InitialSolution component...
+   std::shared_ptr<MyEval> _ev;
+   engine->loader.factory.assign(_ev, ev_idx, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+   assert(_ev);
+   sref<MyEval> single_ev{ _ev };
+   //
+   //
+   using MyConstructive = optframe::Constructive<FCoreLibSolution>;
+   //
+   std::shared_ptr<MyConstructive> initial;
+   engine->loader.factory.assign(initial, c_idx, "OptFrame:Constructive");
+   assert(initial);
+   //
+   sref<optframe::InitialSearch<FCoreLibESolution>> initSol{
+      new optframe::BasicInitialSearch<FCoreLibESolution>(initial, single_ev)
+   };
+
+   int id = engine->loader.factory.addComponent(initSol, "OptFrame:InitialSearch");
+   //
+   //engine->check.add(fns);
+
    return id;
 }
 

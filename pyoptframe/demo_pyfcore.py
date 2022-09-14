@@ -90,6 +90,17 @@ fcore_lib.fcore_api1_add_ns.argtypes = [
     ctypes.c_void_p, FUNC_FNS_RAND, FUNC_FMOVE_APPLY, FUNC_FMOVE_EQ, FUNC_FMOVE_CBA, ctypes.py_object, FUNC_UTILS_DECREF]
 fcore_lib.fcore_api1_add_ns.restype = ctypes.c_int32
 
+# ================================
+#              CREATE
+# ================================
+fcore_lib.fcore_api1_create_initial_search.argtypes = [
+    ctypes.c_void_p, ctypes.c_int32, ctypes.c_int32]
+fcore_lib.fcore_api1_create_initial_search.restype = ctypes.c_int32
+#
+fcore_lib.fcore_api1_create_component_list.argtypes = [
+    ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p]
+fcore_lib.fcore_api1_create_component_list.restype = ctypes.c_int32
+
 
 # ====================================
 #        OptFrame GET Component
@@ -242,6 +253,24 @@ class OptFrameEngine(object):
         # FUNC_UTILS_DECREF(callback_utils_decref))
         #print("add_ns is finishing")
         return idx_ns
+
+    def create_initial_search(self, ev_idx, c_idx):
+        #print("create_initial_search begins")
+        idx_is = fcore_lib.fcore_api1_create_initial_search(
+            self.hf, ev_idx, c_idx)
+        return idx_is
+
+    def create_component_list(self, str_list, str_type):
+        if(not isinstance(str_list, str)):
+            assert(False)
+        b_list = str_list.encode('ascii')
+        if(not isinstance(str_type, str)):
+            assert(False)
+        b_type = str_type.encode('ascii')
+        #print("create_initial_search begins")
+        idx_list = fcore_lib.fcore_api1_create_component_list(
+            self.hf, b_list, b_type)
+        return idx_list
 
     # ===================== GET =======================
 
@@ -618,6 +647,8 @@ print("")
 c_idx = engine.add_constructive(pKP, call_c)
 print("c_idx=", c_idx)
 
+is_idx = engine.create_initial_search(ev_idx, c_idx)
+print("is_idx=", is_idx)
 
 fc = engine.get_constructive(c_idx)
 engine.print_component(fc)
@@ -653,6 +684,9 @@ call_move_cba = FUNC_FMOVE_CBA(mycallback_move_cba_bitflip)
 ns_idx = engine.add_ns(pKP, call_ns_bitflip,
                        call_move_apply, call_move_eq, call_move_cba)
 print("ns_idx=", ns_idx)
+
+list_idx = engine.create_component_list("[ OptFrame:NS 0 ]", "OptFrame:NS[]")
+print("list_idx=", list_idx)
 
 print("")
 print("============================")

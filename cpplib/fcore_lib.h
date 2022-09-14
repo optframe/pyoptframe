@@ -16,7 +16,7 @@ extern "C" FakeEnginePtr
 fcore_api1_create_engine();
 
 extern "C" bool
-fcore_api1_engine_check(FakeEnginePtr hf, int p1, int p2, bool verbose);
+fcore_api1_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose);
 
 extern "C" bool
 fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine);
@@ -30,21 +30,21 @@ extern "C" int
 fcore_api1_engine_builders(FakeEnginePtr _engine, char* prefix);
 
 extern "C" bool
-fcore_api1_engine_test(FakeEnginePtr hf);
+fcore_api1_engine_test(FakeEnginePtr _engine);
 
 extern "C" bool
-fcore_api1_destroy_engine(FakeEnginePtr hf);
+fcore_api1_destroy_engine(FakeEnginePtr _engine);
 
 // ============
 
 extern "C" int // index of generalevaluator
-fcore_api1_add_float64_evaluator(FakeEnginePtr _hf,
+fcore_api1_add_float64_evaluator(FakeEnginePtr _engine,
                                  double (*_fevaluate)(FakePythonObjPtr, FakePythonObjPtr),
                                  bool min_or_max,
                                  FakePythonObjPtr problem_view);
 
 extern "C" int // index of constructive
-fcore_api1_add_constructive(FakeEnginePtr _hf,
+fcore_api1_add_constructive(FakeEnginePtr _engine,
                             FakePythonObjPtr (*_fconstructive)(FakePythonObjPtr),
                             FakePythonObjPtr problem_view,
                             FakePythonObjPtr (*f_sol_deepcopy)(FakePythonObjPtr),
@@ -52,7 +52,7 @@ fcore_api1_add_constructive(FakeEnginePtr _hf,
                             int (*f_utils_decref)(FakePythonObjPtr));
 
 extern "C" int // index of ns
-fcore_api1_add_ns(FakeEnginePtr _hf,
+fcore_api1_add_ns(FakeEnginePtr _engine,
                   FakePythonObjPtr (*_fns_rand)(FakePythonObjPtr, FakePythonObjPtr),
                   FakePythonObjPtr (*_fmove_apply)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
                   bool (*_fmove_eq)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
@@ -60,10 +60,16 @@ fcore_api1_add_ns(FakeEnginePtr _hf,
                   FakePythonObjPtr problem_view,
                   int (*f_utils_decref)(FakePythonObjPtr));
 
+extern "C" int // index of ComponentList
+fcore_api1_create_component_list(FakeEnginePtr _engine, char* clist, char* list_type);
+
+extern "C" int // index of InitialSearch
+fcore_api1_create_initial_search(FakeEnginePtr _engine, int ev_idx, int c_idx);
+
 // ================
 
 extern "C" void* // raw (non-owned) pointer to GeneralEvaluator
-fcore_api1_get_float64_evaluator(FakeEnginePtr _hf, int idx_ev);
+fcore_api1_get_float64_evaluator(FakeEnginePtr _engine, int idx_ev);
 
 extern "C" void* // raw (non-owned) pointer to Constructive
 fcore_api1_get_constructive(FakeEnginePtr _hf, int idx_c);
