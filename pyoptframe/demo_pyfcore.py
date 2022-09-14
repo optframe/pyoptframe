@@ -117,8 +117,13 @@ fcore_lib.fcore_api1_engine_test.restype = ctypes.c_bool
 fcore_lib.fcore_api1_engine_simulated_annealing.argtypes = [ctypes.c_void_p]
 fcore_lib.fcore_api1_engine_simulated_annealing.restype = ctypes.c_bool
 #
+fcore_lib.fcore_api1_engine_simulated_annealing_params.argtypes = [
+    ctypes.c_void_p,  ctypes.c_double, ctypes.c_int, ctypes.c_int, ctypes.c_int,
+    ctypes.c_double, ctypes.c_int, ctypes.c_double]
+fcore_lib.fcore_api1_engine_simulated_annealing_params.restype = ctypes.c_bool
+#
 fcore_lib.fcore_api1_engine_check.argtypes = [
-    ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_bool]
+    ctypes.c_void_p]
 fcore_lib.fcore_api1_engine_check.restype = ctypes.c_bool
 ###
 
@@ -163,9 +168,18 @@ class OptFrameEngine(object):
         fcore_lib.fcore_component_print(component)
 
     def run_sa(self):
+        print("DEPRECATED")
         print("Will Begin SA")
         r = fcore_lib.fcore_api1_engine_simulated_annealing(self.hf)
         print("Finished SA")
+        return r
+
+    def run_sa_params(self, timelimit, id_ev, id_c, id_ns, alpha, iter, T):
+        print("Will Begin SA Params")
+        r = fcore_lib.fcore_api1_engine_simulated_annealing_params(self.hf,
+                                                                   timelimit, id_ev, id_c, id_ns,
+                                                                   alpha, iter, T)
+        print("Finished SA Params")
         return r
 
     def run_test(self):
@@ -436,11 +450,11 @@ def mycallback_fevaluate(pKP: ExampleKP, sol: ExampleSol):
             sum_w += pKP.w[i]
             sum_p += pKP.p[i]
     # weight for infeasibility
-    w_inf = -1000.0
+    W_INF = -1000.0
     if sum_w > pKP.Q:
         # excess is penalized
         #print("will penalize: Q=", pKP.Q, "sum_w=", sum_w)
-        sum_p += w_inf * (sum_w-pKP.Q)
+        sum_p += W_INF * (sum_w-pKP.Q)
     #print("result is: ", sum_p)
     return sum_p
 
@@ -646,10 +660,15 @@ else:
 print("")
 print("Engine: will check")
 print("")
-engine.check(300, 10, False)
+engine.check(100, 10, False)
 print("pass...")
 
-engine.run_sa()
+# engine.run_sa()
+#
+engine.run_sa_params(5.0, 0, 0, 0, 0.98, 200, 9999999)
+# engine.run_sa(alpha, T, ...)
+# engine.run_brkga()
+
 # engine.run_test() # run generic test on C++... just for debugging
 
 # must keep callback variables alive until the end... for now

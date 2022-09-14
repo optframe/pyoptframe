@@ -6,6 +6,7 @@
 
 typedef void* FakeFEvaluatorPtr;
 typedef void* FakeFConstructivePtr;
+typedef void* FakeFNSPtr;
 typedef void* FakePythonObjPtr;
 typedef void* FakeEnginePtr;
 
@@ -18,7 +19,11 @@ extern "C" bool
 fcore_api1_engine_check(FakeEnginePtr hf, int p1, int p2, bool verbose);
 
 extern "C" bool
-fcore_api1_engine_simulated_annealing(FakeEnginePtr hf);
+fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine);
+// double alpha, int iter, double temp
+
+extern "C" bool
+fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timelimit, int id_evaluator, int id_constructive, int id_ns, double alpha, int iter, double T);
 // double alpha, int iter, double temp
 
 extern "C" bool

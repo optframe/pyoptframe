@@ -325,6 +325,12 @@ fcore_api1_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose)
 extern "C" bool
 fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine)
 {
+   return fcore_api1_engine_simulated_annealing_params(_engine, 3.0, 0, 0, 0, 0.99, 100, 9999);
+}
+
+extern "C" bool
+fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timelimit, int id_evaluator, int id_constructive, int id_ns, double alpha, int iter, double T)
+{
    auto* engine = (FCoreApi1Engine*)_engine;
    //
    /*
@@ -339,26 +345,26 @@ fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine)
    using MyEval = optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>;
 
    // will try to get evaluator to build InitialSolution component...
-   std::shared_ptr<MyEval> ev;
-   engine->hf.assign(ev, 0, "OptFrame:GeneralEvaluator:Direction:Evaluator");
-   assert(ev);
-   sref<MyEval> ev2{ ev };
+   std::shared_ptr<MyEval> _ev;
+   engine->hf.assign(_ev, id_evaluator, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+   assert(_ev);
+   sref<MyEval> single_ev{ _ev };
    //
    //
    using MyConstructive = optframe::Constructive<FCoreLibSolution>;
    //
    std::shared_ptr<MyConstructive> initial;
-   engine->hf.assign(initial, 0, "OptFrame:Constructive");
+   engine->hf.assign(initial, id_constructive, "OptFrame:Constructive");
    assert(initial);
    //
    sref<optframe::InitialSearch<FCoreLibESolution>> initSol{
-      new optframe::BasicInitialSearch<FCoreLibESolution>(initial, ev)
+      new optframe::BasicInitialSearch<FCoreLibESolution>(initial, single_ev)
    };
    //
    using MyNS = optframe::NS<FCoreLibESolution, optframe::Evaluation<double>>;
    //
    std::shared_ptr<MyNS> ns;
-   engine->hf.assign(ns, 0, "OptFrame:NS");
+   engine->hf.assign(ns, id_ns, "OptFrame:NS");
    assert(ns);
    //
 
@@ -369,15 +375,15 @@ fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine)
    vsref<optframe::NS<FCoreLibESolution, optframe::Evaluation<double>>> neighbors;
    neighbors.push_back(ns);
 
-   ev->print();
+   single_ev->print();
    constructive->print();
    neighbors[0]->print();
 
    optframe::BasicSimulatedAnnealing<FCoreLibESolution> sa{
-      ev2, constructive, neighbors, 0.98, 100, 99999, rg
+      single_ev, constructive, neighbors, alpha, iter, T, rg
    };
    sa.setVerbose();
-   sa.search({ 3.0 });
+   sa.search({ timelimit });
 
    return true;
 }
