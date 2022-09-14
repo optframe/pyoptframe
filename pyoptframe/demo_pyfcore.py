@@ -665,7 +665,7 @@ print("pass...")
 
 # engine.run_sa()
 #
-engine.run_sa_params(5.0, 0, 0, 0, 0.98, 200, 9999999)
+engine.run_sa_params(5.0, ev_idx, c_idx, ns_idx, 0.98, 200, 9999999)
 # engine.run_sa(alpha, T, ...)
 # engine.run_brkga()
 
