@@ -26,6 +26,9 @@ extern "C" bool
 fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timelimit, int id_evaluator, int id_constructive, int id_ns, double alpha, int iter, double T);
 // double alpha, int iter, double temp
 
+extern "C" int
+fcore_api1_engine_builders(FakeEnginePtr _engine, char* prefix);
+
 extern "C" bool
 fcore_api1_engine_test(FakeEnginePtr hf);
 

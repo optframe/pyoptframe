@@ -122,6 +122,10 @@ fcore_lib.fcore_api1_engine_simulated_annealing_params.argtypes = [
     ctypes.c_double, ctypes.c_int, ctypes.c_double]
 fcore_lib.fcore_api1_engine_simulated_annealing_params.restype = ctypes.c_bool
 #
+fcore_lib.fcore_api1_engine_builders.argtypes = [
+    ctypes.c_void_p,  ctypes.c_char_p]
+fcore_lib.fcore_api1_engine_builders.restype = ctypes.c_int
+#
 fcore_lib.fcore_api1_engine_check.argtypes = [
     ctypes.c_void_p]
 fcore_lib.fcore_api1_engine_check.restype = ctypes.c_bool
@@ -166,6 +170,14 @@ class OptFrameEngine(object):
 
     def print_component(self, component):
         fcore_lib.fcore_component_print(component)
+
+    def list_builders(self, pattern: str):
+        if(not isinstance(pattern, str)):
+            assert(False)
+        b_pattern = pattern.encode('ascii')
+        # type of b_pattern is 'bytes'
+        #print("bytes type: ", type(b_pattern))
+        return fcore_lib.fcore_api1_engine_builders(self.hf, ctypes.c_char_p(b_pattern))
 
     def run_sa(self):
         print("DEPRECATED")
@@ -662,6 +674,14 @@ print("Engine: will check")
 print("")
 engine.check(100, 10, False)
 print("pass...")
+
+print()
+print("engine will list builders ")
+print(engine.list_builders("OptFrame:"))
+print()
+print("engine will list builders for :BasicSA ")
+print(engine.list_builders(":BasicSA"))
+print()
 
 # engine.run_sa()
 #

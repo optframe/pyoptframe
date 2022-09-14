@@ -7,6 +7,7 @@
 #include <OptFCore/FCore.hpp>
 #include <OptFCore/FxCore.hpp>
 #include <OptFrame/HeuristicFactory.hpp>
+#include <OptFrame/Loader.hpp>
 #include <OptFrame/MyConcepts.hpp> // sref
 #include <OptFrame/Util/CheckCommand.hpp>
 
@@ -191,9 +192,17 @@ using FCoreApi1Engine = optframe::HeuristicFactory<
   >;
 */
 
+using CB = optframe::ComponentBuilder<
+  FCoreLibSolution,             //XSolution S,
+  optframe::Evaluation<double>, // XEvaluation XEv = Evaluation<>,
+  FCoreLibESolution             //  XESolution XES = pair<S, XEv>,
+  //X2ESolution<XES> X2ES = MultiESolution<XES>>
+  >;
+
 class FCoreApi1Engine
 {
 public:
+   /*
    optframe::HeuristicFactory<
      FCoreLibSolution,             //XSolution S,
      optframe::Evaluation<double>, // XEvaluation XEv = Evaluation<>,
@@ -201,6 +210,15 @@ public:
      //X2ESolution<XES> X2ES = MultiESolution<XES>>
      >
      hf;
+     */
+
+   optframe::Loader<
+     FCoreLibSolution,             //XSolution S,
+     optframe::Evaluation<double>, // XEvaluation XEv = Evaluation<>,
+     FCoreLibESolution             //  XESolution XES = pair<S, XEv>,
+     //X2ESolution<XES> X2ES = MultiESolution<XES>>
+     >
+     loader;
 
    optframe::CheckCommand<FCoreLibESolution> check; // no verbose
 };
@@ -257,7 +275,7 @@ public:
    {
       //std::cout << "~FMoveLib()" << std::endl;
       //int x =
-      int x = f_utils_decref(m);
+      f_utils_decref(m);
       //std::cout << "~FMoveLib count(m) = " << x << std::endl;
    }
 
@@ -328,16 +346,41 @@ fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine)
    return fcore_api1_engine_simulated_annealing_params(_engine, 3.0, 0, 0, 0, 0.99, 100, 9999);
 }
 
+extern "C" int
+fcore_api1_engine_builders(FakeEnginePtr _engine, char* prefix)
+{
+   std::string sprefix{ prefix };
+   auto* engine = (FCoreApi1Engine*)_engine;
+   std::vector<std::pair<std::string, std::vector<std::pair<std::string, std::string>>>>
+     vlist = engine->loader.factory.listBuilders(sprefix);
+   for (auto& p : vlist) {
+      std::cout << "builder: " << p.first << " |params|=" << p.second.size() << std::endl;
+      for (unsigned i = 0; i < p.second.size(); i++)
+         std::cout << "\tparam " << i << " => " << p.second[i].first << " : " << p.second[i].second << std::endl;
+   }
+   return vlist.size();
+}
+
 extern "C" bool
 fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timelimit, int id_evaluator, int id_constructive, int id_ns, double alpha, int iter, double T)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
    //
    /*
+   CB* cb = engine->loader.factory.getBuilder("BasicSA");
+   std::cout << "cb*=" << cb << std::endl;
+   std::vector<std::pair<std::string, std::vector<std::pair<std::string, std::string>>>>
+     vlist = engine->loader.factory.listBuilders(":BasicSA");
+   for (auto& p : vlist) {
+      std::cout << "builder: " << p.first << " |v|=" << p.second.size() << std::endl;
+   }
+   */
+
+   /*
    using MyGenEval = optframe::GeneralEvaluator<FCoreLibESolution, optframe::Evaluation<double>>;
    //
    std::shared_ptr<MyGenEval> gev;
-   engine->hf.assignGE(gev, 0, "OptFrame:GeneralEvaluator");
+   engine->loader.factory.assignGE(gev, 0, "OptFrame:GeneralEvaluator");
    assert(gev);
    std::cout << "idGE:" << gev->idGE() << std::endl;
    */
@@ -346,7 +389,7 @@ fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timel
 
    // will try to get evaluator to build InitialSolution component...
    std::shared_ptr<MyEval> _ev;
-   engine->hf.assign(_ev, id_evaluator, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+   engine->loader.factory.assign(_ev, id_evaluator, "OptFrame:GeneralEvaluator:Direction:Evaluator");
    assert(_ev);
    sref<MyEval> single_ev{ _ev };
    //
@@ -354,7 +397,7 @@ fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timel
    using MyConstructive = optframe::Constructive<FCoreLibSolution>;
    //
    std::shared_ptr<MyConstructive> initial;
-   engine->hf.assign(initial, id_constructive, "OptFrame:Constructive");
+   engine->loader.factory.assign(initial, id_constructive, "OptFrame:Constructive");
    assert(initial);
    //
    sref<optframe::InitialSearch<FCoreLibESolution>> initSol{
@@ -364,11 +407,11 @@ fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timel
    using MyNS = optframe::NS<FCoreLibESolution, optframe::Evaluation<double>>;
    //
    std::shared_ptr<MyNS> ns;
-   engine->hf.assign(ns, id_ns, "OptFrame:NS");
+   engine->loader.factory.assign(ns, id_ns, "OptFrame:NS");
    assert(ns);
    //
 
-   sref<optframe::RandGen> rg = engine->hf.getRandGen();
+   sref<optframe::RandGen> rg = engine->loader.factory.getRandGen();
 
    //sref<optframe::GeneralEvaluator<FCoreLibESolution, optframe::Evaluation<double>>> evaluator{ gev };
    sref<optframe::InitialSearch<FCoreLibESolution, optframe::Evaluation<double>>> constructive{ initSol };
@@ -397,7 +440,7 @@ fcore_api1_engine_test(FakeEnginePtr _engine)
 
    // will try to get evaluator to build InitialSolution component...
    std::shared_ptr<MyEval> ev;
-   engine->hf.assign(ev, 0, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+   engine->loader.factory.assign(ev, 0, "OptFrame:GeneralEvaluator:Direction:Evaluator");
    assert(ev);
    sref<MyEval> ev2{ ev };
    //
@@ -405,7 +448,7 @@ fcore_api1_engine_test(FakeEnginePtr _engine)
    using MyConstructive = optframe::Constructive<FCoreLibSolution>;
    //
    std::shared_ptr<MyConstructive> initial;
-   engine->hf.assign(initial, 0, "OptFrame:Constructive");
+   engine->loader.factory.assign(initial, 0, "OptFrame:Constructive");
    assert(initial);
    //
    sref<optframe::InitialSearch<FCoreLibESolution>> initSol{
@@ -462,9 +505,9 @@ fcore_api1_add_float64_evaluator(FakeEnginePtr _engine,
       sref<optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>> eval2(ev_ptr);
       sref<optframe::Component> eval(eval2);
       //std::cout << "created FEvaluator<MIN> ptr=" << &eval.get() << std::endl;
-      id = engine->hf.addComponent(eval, "OptFrame:GeneralEvaluator");
+      id = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator");
       // double add to prevent future down-casts
-      int id2 = engine->hf.addComponent(eval, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+      int id2 = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator:Direction:Evaluator");
       assert(id == id2);
       // also add to check module
       engine->check.addEvaluator(eval2);
@@ -474,9 +517,9 @@ fcore_api1_add_float64_evaluator(FakeEnginePtr _engine,
       sref<optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>> eval2(ev_ptr);
       sref<optframe::Component> eval(eval2);
 
-      id = engine->hf.addComponent(eval, "OptFrame:GeneralEvaluator");
+      id = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator");
       // double add to prevent future down-casts
-      int id2 = engine->hf.addComponent(eval, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+      int id2 = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator:Direction:Evaluator");
       assert(id == id2);
       // also add to check module
       engine->check.addEvaluator(eval2);
@@ -528,7 +571,7 @@ fcore_api1_add_constructive(FakeEnginePtr _engine,
 
    //std::cout << "'fcore_api1_add_constructive' will add component on hf" << std::endl;
 
-   int id = engine->hf.addComponent(fc, "OptFrame:Constructive");
+   int id = engine->loader.factory.addComponent(fc, "OptFrame:Constructive");
 
    //std::cout << "c_id = " << id << std::endl;
    // ========== add to check module ==========
@@ -536,7 +579,7 @@ fcore_api1_add_constructive(FakeEnginePtr _engine,
 
    // will try to get evaluator to build InitialSolution component...
    std::shared_ptr<MyEval> ev;
-   engine->hf.assign(ev, 0, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+   engine->loader.factory.assign(ev, 0, "OptFrame:GeneralEvaluator:Direction:Evaluator");
    assert(ev);
    //
    if (!ev)
@@ -643,7 +686,7 @@ fcore_api1_add_ns(FakeEnginePtr _engine,
 
    //std::cout << "'fcore_api1_add_ns' will add component on hf" << std::endl;
 
-   int id = engine->hf.addComponent(fns_comp, "OptFrame:NS");
+   int id = engine->loader.factory.addComponent(fns_comp, "OptFrame:NS");
    //
    engine->check.add(fns);
    //fns->print();
@@ -661,7 +704,7 @@ fcore_api1_get_float64_evaluator(FakeEnginePtr _engine, int idx_ev)
 
    std::shared_ptr<optframe::GeneralEvaluator<FCoreLibESolution, FCoreLibESolution::second_type>> component;
 
-   engine->hf.assignGE(component, idx_ev, "OptFrame:GeneralEvaluator");
+   engine->loader.factory.assignGE(component, idx_ev, "OptFrame:GeneralEvaluator");
    if (!component)
       assert(false);
    void* ptr = component.get();
@@ -675,7 +718,7 @@ fcore_api1_get_constructive(FakeEnginePtr _engine, int idx_c)
 
    std::shared_ptr<optframe::Constructive<FCoreLibSolution>> component;
 
-   engine->hf.assign(component, idx_c, "OptFrame:Constructive");
+   engine->loader.factory.assign(component, idx_c, "OptFrame:Constructive");
    if (!component)
       assert(false);
    void* ptr = component.get();
