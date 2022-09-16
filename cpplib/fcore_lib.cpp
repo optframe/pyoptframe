@@ -35,6 +35,7 @@ public:
       //std::cout << "\tFCoreLibSolution(COPY)-> will copy functions" << std::endl;
       // copy functions
       this->f_sol_deepcopy = s.f_sol_deepcopy;
+      this->f_sol_tostring = s.f_sol_tostring;
       this->f_utils_decref = s.f_utils_decref;
       // copy flags
       this->is_view = s.is_view;
@@ -53,6 +54,7 @@ public:
       assert(!other.is_view); // because of deepcopy anyway... COULD we copy a view here? I don't think so..
       // copy functions
       this->f_sol_deepcopy = other.f_sol_deepcopy;
+      this->f_sol_tostring = other.f_sol_tostring;
       this->f_utils_decref = other.f_utils_decref;
       // copy flags
       this->is_view = other.is_view;
@@ -82,6 +84,7 @@ public:
       assert(other.solution_ptr);
       // copy functions
       this->f_sol_deepcopy = other.f_sol_deepcopy;
+      this->f_sol_tostring = other.f_sol_tostring;
       this->f_utils_decref = other.f_utils_decref;
       // copy flags
       this->is_view = other.is_view;
@@ -96,14 +99,17 @@ public:
 
    FCoreLibSolution(FCoreLibSolution&& s)
    {
-      //std::cout << "FCoreLibSolution(MOVE)" << std::endl;
+      //std::cout << "FCoreLibSolution(MOVE) BEGIN" << std::endl;
       assert(s.solution_ptr);
+      //std::cout << "FCoreLibSolution(MOVE).other.toString() -> '" << s.toString() << "'" << std::endl;
+
       // copy flags
       this->is_view = s.is_view;
       if (!s.is_view) {
          //std::cout << "\tNOT_VIEW! FCoreLibSolution(MOVE)-> will move functions" << std::endl;
-         // copy functions
+         // copy functions OR MOVE???? TODO....
          this->f_sol_deepcopy = std::move(s.f_sol_deepcopy);
+         this->f_sol_tostring = std::move(s.f_sol_tostring);
          this->f_utils_decref = std::move(s.f_utils_decref);
       }
       //std::cout << "\tFCoreLibSolution(MOVE)-> will steal pointer" << std::endl;
@@ -112,7 +118,9 @@ public:
       s.solution_ptr = 0;
       s.is_view = true;
       //
+      //std::cout << "\tFCoreLibSolution(MOVE).toString() -> '" << toString() << "'" << std::endl;
       //std::cout << "\tFCoreLibSolution(MOVE finished; ptr=" << solution_ptr << ")" << std::endl;
+      //std::cout << "FCoreLibSolution(MOVE) ENDS" << std::endl;
    }
 
    virtual ~FCoreLibSolution()
@@ -145,7 +153,8 @@ public:
    //, copy_solution{ copy_solution }
    {
       //printf("FCoreLibSolution3(%p, func, func, func) is_view=%d\n", solution_ptr, is_view);
-      //std::cout << "\tFCoreLibSolution3->C++ str: '" << toString() << "'" << std::endl;
+      //std::string str = toString();
+      //std::cout << "\tFCoreLibSolution3->C++ str: '" << str << "'" << std::endl;
    }
 
    // temporary construction (no copy_solution required)
@@ -159,7 +168,8 @@ public:
 
    std::string toString() const
    {
-      constexpr int max_buffer = 1000;
+      //std::cout << "WILL PRINT! is_view=" << is_view << " ptr=" << solution_ptr << std::endl;
+      constexpr int max_buffer = 10'000; // TODO: MAKE THIS FLEXIBLE!!!
       //
       std::string str_buffer(max_buffer, '\0');
       //std::cout << "size = " << str_buffer.size() << std::endl;
@@ -167,9 +177,11 @@ public:
       //
       char* s_ptr = &str_buffer[0];
       int sz = f_sol_tostring(solution_ptr, s_ptr, str_buffer.size());
+      assert(sz < max_buffer);
       //std::cout << "toString spent sz=" << sz << " from max=" << max_buffer << std::endl;
       std::string str_ret(s_ptr, s_ptr + sz);
       //assert(str_ret.size() == sz);
+      //std::cout << "finished print!" << std::endl;
       return str_ret;
    }
 
@@ -401,50 +413,7 @@ extern "C" bool
 fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timelimit, int id_evaluator, int id_constructive, int id_ns, double alpha, int iter, double T)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
-   //
-   // build_single (TESTING)
-   //
 
-   std::vector<std::string> vstring = engine->loader.factory.listAllComponents();
-   for (unsigned i = 0; i < vstring.size(); i++)
-      std::cout << "\tCOMPONENT " << i << ":" << vstring[i] << std::endl;
-   //
-   std::string sbuilder = "OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA";
-   CB* cb = engine->loader.factory.getBuilder(sbuilder);
-   if (!cb) {
-      std::cout << "WARNING! Builder not found!" << std::endl;
-   }
-   //cb->buildComponent
-   CBSingle* cbsingle = (CBSingle*)cb;
-
-   std::string scan_params = "OptFrame:GeneralEvaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999";
-   scannerpp::Scanner scanner{ scan_params };
-   optframe::SingleObjSearch<FCoreLibESolution>* single = cbsingle->build(scanner, engine->loader.factory);
-   std::cout << "single =" << single << std::endl;
-   single->print();
-
-   //
-   // END build_single (TESTING)
-   //
-
-   /*
-builder: OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA |params|=6
-	param 0 => OptFrame:GeneralEvaluator : evaluation function
-	param 1 => OptFrame:InitialSearch : constructive heuristic
-	param 2 => OptFrame:NS[] : list of NS
-	param 3 => OptFrame:double : cooling factor
-	param 4 => OptFrame:int : number of iterations for each temperature
-	param 5 => OptFrame:double : initial temperature
-*/
-
-   /*
-   using MyGenEval = optframe::GeneralEvaluator<FCoreLibESolution, optframe::Evaluation<double>>;
-   //
-   std::shared_ptr<MyGenEval> gev;
-   engine->loader.factory.assignGE(gev, 0, "OptFrame:GeneralEvaluator");
-   assert(gev);
-   std::cout << "idGE:" << gev->idGE() << std::endl;
-   */
    //
    using MyEval = optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>;
 
@@ -490,6 +459,79 @@ builder: OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA |params|=6
    sa.search({ timelimit });
 
    return true;
+}
+
+extern "C" int // index of SingleObjSearch
+fcore_api1_build_single(FakeEnginePtr _engine, char* builder, char* build_string)
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+   // =============================
+   //     build_single (TESTING)
+   // =============================
+   std::string strBuilder{ builder };
+   std::string strBuildString{ build_string };
+
+   //std::vector<std::string> vstring = engine->loader.factory.listAllComponents();
+   //for (unsigned i = 0; i < vstring.size(); i++)
+   //   std::cout << "\tCOMPONENT " << i << ":" << vstring[i] << std::endl;
+   //
+   std::string sbuilder = strBuilder; //"OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA";
+   CB* cb = engine->loader.factory.getBuilder(sbuilder);
+   if (!cb) {
+      std::cout << "WARNING! OptFrame builder for SingleObjSearch not found!" << std::endl;
+      return -1;
+   }
+   //cb->buildComponent
+   CBSingle* cbsingle = (CBSingle*)cb;
+
+   std::string scan_params = strBuildString; // "OptFrame:GeneralEvaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999";
+   scannerpp::Scanner scanner{ scan_params };
+   optframe::SingleObjSearch<FCoreLibESolution>* single = cbsingle->build(scanner, engine->loader.factory);
+   std::cout << "single =" << single << std::endl;
+   single->print();
+   //single->setVerboseR();
+
+   // TESTING!!! TODO REMOVE
+   optframe::SearchOutput<FCoreLibESolution> out1 = single->search({ 7.7 });
+   std::cout << "out=" << out1.status << std::endl;
+   // ======== end testing
+
+   optframe::Component* csingle = (optframe::Component*)single; // why??
+   sptr<optframe::Component> sptrSingle{ csingle };
+
+   int id = engine->loader.factory.addComponent(sptrSingle, "OptFrame:GlobalSearch:SingleObjSearch");
+
+   // TESTING!!! TODO REMOVE
+   sptr<optframe::SingleObjSearch<FCoreLibESolution>> sos;
+   engine->loader.factory.assign(sos, id, "OptFrame:GlobalSearch:SingleObjSearch");
+   std::cout << "id=" << id << "sos=" << sos << std::endl;
+   assert(sos);
+   sos->print();
+   //sos->setVerbose();
+   optframe::SearchOutput<FCoreLibESolution> out = sos->search({ 6.6 });
+   std::cout << "out=" << out.status << std::endl;
+   // ======== end testing
+
+   return id;
+}
+
+extern "C" LibSearchOutput // SearchOutput for XSH "best-type"
+fcore_api1_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelimit)
+{
+   std::cout << "begin C++ fcore_api1_run_sos_search: sos_idx=" << sos_idx << " timelimit=" << timelimit << std::endl;
+   auto* engine = (FCoreApi1Engine*)_engine;
+   //
+   sptr<optframe::SingleObjSearch<FCoreLibESolution>> sos;
+   engine->loader.factory.assign(sos, sos_idx, "OptFrame:GlobalSearch:SingleObjSearch");
+   assert(sos);
+   sos->print();
+   //sos->setVerbose();
+   //
+   optframe::SearchOutput<FCoreLibESolution> out = sos->search({ timelimit });
+   std::cout << "out=" << out.status << std::endl;
+
+   LibSearchOutput lout;
+   return lout;
 }
 
 extern "C" bool

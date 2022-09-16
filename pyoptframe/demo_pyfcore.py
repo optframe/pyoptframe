@@ -101,6 +101,14 @@ fcore_lib.fcore_api1_create_component_list.argtypes = [
     ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p]
 fcore_lib.fcore_api1_create_component_list.restype = ctypes.c_int32
 
+# =================================
+#            BUILD
+# =================================
+
+fcore_lib.fcore_api1_build_single.argtypes = [
+    ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p]
+fcore_lib.fcore_api1_build_single.restype = ctypes.c_int32
+
 
 # ====================================
 #        OptFrame GET Component
@@ -160,9 +168,25 @@ fcore_lib.fcore_api1_fconstructive_gensolution.argtypes = [
 fcore_lib.fcore_api1_fconstructive_gensolution.restype = ctypes.py_object
 
 
+class SearchOutput(ctypes.Structure):
+    _fields_ = [("status", c_int),
+                ("has_best", ctypes.c_bool),
+                ("best_s", ctypes.py_object),
+                ("best_e", ctypes.c_double)]
+
+
+# extern "C" LibSearchOutput
+# fcore_api1_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelimit);
+
+fcore_lib.fcore_api1_run_sos_search.argtypes = [
+    ctypes.c_void_p, ctypes.c_int, ctypes.c_double]
+fcore_lib.fcore_api1_run_sos_search.restype = SearchOutput
+
+
 # =========================
 #     OptFrame Engine
 # =========================
+
 
 class OptFrameEngine(object):
     def __init__(self):
@@ -272,6 +296,18 @@ class OptFrameEngine(object):
             self.hf, b_list, b_type)
         return idx_list
 
+    def build_single_obj_search(self, str_builder, str_params):
+        if(not isinstance(str_builder, str)):
+            assert(False)
+        b_builder = str_builder.encode('ascii')
+        if(not isinstance(str_params, str)):
+            assert(False)
+        b_params = str_params.encode('ascii')
+        #print("create_initial_search begins")
+        idx_list = fcore_lib.fcore_api1_build_single(
+            self.hf, b_builder, b_params)
+        return idx_list
+
     # ===================== GET =======================
 
     def get_evaluator(self, idx_ev=0):
@@ -299,12 +335,16 @@ class OptFrameEngine(object):
         return z
 
     def fconstructive_gensolution(self, fconstructive_ptr: ctypes.py_object) -> ctypes.py_object:
+        #print("XXXXX BEGIN 'fconstructive_gensolution'")
         #print("invoking 'fcore_lib.fcore_api1_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
+        #print("printing component... => ")
         self.print_component(fconstructive_ptr)
+
         #print("begin fconstructive_gensolution")
         pyo_sol = fcore_lib.fcore_api1_fconstructive_gensolution(
             fconstructive_ptr)
-        #print("finished fconstructive_gensolution!")
+        #print("finished invoking 'fcore_lib.fcore_api1_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
+
         #print("pyo_sol=", pyo_sol, " count=", sys.getrefcount(pyo_sol))
         #
         # I THINK we must decref it... because it was once boxed into C++ solution and incref'ed somewhere...
@@ -313,7 +353,16 @@ class OptFrameEngine(object):
         #print("cast_pyo=", cast_pyo, " count=", sys.getrefcount(cast_pyo))
         # ERROR: when decref, it segfaults... don't know why
         # ctypes.pythonapi.Py_DecRef(cast_pyo)
+        ###print("finished invoking 'fcore_lib.fcore_api1_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
+        #
+        #
+        #print("XXXXX FINISHED 'fconstructive_gensolution'!")
         return cast_pyo.value
+
+    def run_sos_search(self, sos_idx, timelimit) -> SearchOutput:
+        lout = fcore_lib.fcore_api1_run_sos_search(self.hf, sos_idx, timelimit)
+        return lout
+
 
 # ==============================
 
@@ -426,7 +475,7 @@ def callback_sol_tostring(sol: ExampleSol, pt: ctypes.c_char_p, ptsize: ctypes.c
     mystr_bytes = mystr.encode()  # str.encode(mystr)
     pa = cast(pt, POINTER(c_char * ptsize))
     pa.contents.value = mystr_bytes
-
+    #print("\tPYTHON TOSTRING callback_sol_tostring: '", mystr, "'")
     return len(mystr)
 
 
@@ -661,6 +710,15 @@ solxx = engine.fconstructive_gensolution(fc)
 print("")
 print("count=", sys.getrefcount(solxx))
 print("solxx:", solxx)
+
+print("")
+print("")
+print("")
+print("")
+print("")
+print("")
+print(fc)
+print(call_c)
 #
 print("")
 print("============================")
@@ -717,11 +775,29 @@ print("engine will list builders for :BasicSA ")
 print(engine.list_builders(":BasicSA"))
 print()
 
-# engine.run_sa()
+print("")
+print("testing handmade SA (run_sa_params) on C++...")
+print("")
+# DISABLED
+if False:
+    engine.run_sa_params(5.0, ev_idx, c_idx, ns_idx, 0.98, 200, 9999999)
 #
-engine.run_sa_params(5.0, ev_idx, c_idx, ns_idx, 0.98, 200, 9999999)
-# engine.run_sa(alpha, T, ...)
-# engine.run_brkga()
+
+print("")
+print("testing builder (build_single_obj_search) for SA...")
+print("")
+
+sos_idx = engine.build_single_obj_search(
+    "OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA",
+    "OptFrame:GeneralEvaluator:Direction:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999")
+print("sos_idx=", sos_idx)
+
+print("")
+print("testing execution of SingleObjSearch (run_sos_search) for SA...")
+print("")
+
+lout = engine.run_sos_search(sos_idx, 4.0)
+print(lout)
 
 # engine.run_test() # run generic test on C++... just for debugging
 
