@@ -10,6 +10,16 @@ typedef void* FakeFNSPtr;
 typedef void* FakePythonObjPtr;
 typedef void* FakeEnginePtr;
 
+// ============= compatible api components =============
+
+extern "C" struct LibSearchOutput
+{
+   int status;    // ("status", c_int),
+   bool has_best; // ("has_best", ctypes.c_bool),
+   void* best_s;  // ("best_s", ctypes.py_object),
+   double best_e; // ("best_e", ctypes.c_double)]
+};
+
 // ============================ Engine: HeuristicFactory ===========================
 
 extern "C" FakeEnginePtr
@@ -18,11 +28,11 @@ fcore_api1_create_engine();
 extern "C" bool
 fcore_api1_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose);
 
-extern "C" bool
+extern "C" LibSearchOutput
 fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine);
 // double alpha, int iter, double temp
 
-extern "C" bool
+extern "C" LibSearchOutput
 fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timelimit, int id_evaluator, int id_constructive, int id_ns, double alpha, int iter, double T);
 // double alpha, int iter, double temp
 
@@ -92,14 +102,6 @@ extern "C" FakePythonObjPtr // Python solution object (owned??? by who?? maybe n
 fcore_api1_fconstructive_gensolution(FakeFConstructivePtr _fconstructive);
 
 // RUN
-
-extern "C" struct LibSearchOutput
-{
-   int status;    // ("status", c_int),
-   bool has_best; // ("has_best", ctypes.c_bool),
-   void* best_s;  // ("best_s", ctypes.py_object),
-   double best_e; // ("best_e", ctypes.c_double)]
-};
 
 extern "C" LibSearchOutput // SearchOutput for XSH "best-type"
 fcore_api1_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelimit);

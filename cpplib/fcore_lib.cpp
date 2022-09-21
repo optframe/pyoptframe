@@ -166,6 +166,20 @@ public:
       //printf("FCoreLibSolution1(%p) is_view=%d\n", solution_ptr, is_view);
    }
 
+   FakePythonObjPtr releasePtr()
+   {
+      // pointer must exist
+      assert(this->solution_ptr);
+      // cannot take this from view
+      assert(!this->is_view);
+      FakePythonObjPtr sol = this->solution_ptr;
+      // "move" from this container
+      this->solution_ptr = nullptr;
+      this->is_view = true;
+      // TODO: do we need to remove the functions too?
+      return sol;
+   }
+
    std::string toString() const
    {
       //std::cout << "WILL PRINT! is_view=" << is_view << " ptr=" << solution_ptr << std::endl;
@@ -360,7 +374,7 @@ fcore_api1_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose)
    return true;
 }
 
-extern "C" bool
+extern "C" LibSearchOutput
 fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine)
 {
    return fcore_api1_engine_simulated_annealing_params(_engine, 3.0, 0, 0, 0, 0.99, 100, 9999);
@@ -409,7 +423,7 @@ fcore_api1_create_component_list(FakeEnginePtr _engine, char* clist, char* list_
    return id;
 }
 
-extern "C" bool
+extern "C" LibSearchOutput
 fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timelimit, int id_evaluator, int id_constructive, int id_ns, double alpha, int iter, double T)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
@@ -456,9 +470,19 @@ fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timel
       single_ev, constructive, neighbors, alpha, iter, T, rg
    };
    sa.setVerbose();
-   sa.search({ timelimit });
 
-   return true;
+   optframe::SearchOutput<FCoreLibESolution> out = sa.search({ timelimit });
+   //std::cout << "out=" << out.status << std::endl;
+
+   LibSearchOutput lout;
+   lout.status = (int)out.status;  // ("status", c_int),
+   lout.has_best = (bool)out.best; // ("has_best", ctypes.c_bool),
+   if (out.best) {
+      // extract pointer from solution container
+      lout.best_s = out.best->first.releasePtr();  // ("best_s", ctypes.py_object),
+      lout.best_e = out.best->second.evaluation(); // ("best_e", ctypes.c_double)]
+   }
+   return lout;
 }
 
 extern "C" int // index of SingleObjSearch
@@ -471,11 +495,10 @@ fcore_api1_build_single(FakeEnginePtr _engine, char* builder, char* build_string
    std::string strBuilder{ builder };
    std::string strBuildString{ build_string };
 
-   //std::vector<std::string> vstring = engine->loader.factory.listAllComponents();
-   //for (unsigned i = 0; i < vstring.size(); i++)
-   //   std::cout << "\tCOMPONENT " << i << ":" << vstring[i] << std::endl;
    //
-   std::string sbuilder = strBuilder; //"OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA";
+   // Example: "OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA"
+   //
+   std::string sbuilder = strBuilder;
    CB* cb = engine->loader.factory.getBuilder(sbuilder);
    if (!cb) {
       std::cout << "WARNING! OptFrame builder for SingleObjSearch not found!" << std::endl;
@@ -484,34 +507,20 @@ fcore_api1_build_single(FakeEnginePtr _engine, char* builder, char* build_string
    //cb->buildComponent
    CBSingle* cbsingle = (CBSingle*)cb;
 
-   std::string scan_params = strBuildString; // "OptFrame:GeneralEvaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999";
+   //
+   // Example: "OptFrame:GeneralEvaluator:Direction:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999";
+   //
+   std::string scan_params = strBuildString;
    scannerpp::Scanner scanner{ scan_params };
    optframe::SingleObjSearch<FCoreLibESolution>* single = cbsingle->build(scanner, engine->loader.factory);
    std::cout << "single =" << single << std::endl;
    single->print();
-   //single->setVerboseR();
-
-   // TESTING!!! TODO REMOVE
-   optframe::SearchOutput<FCoreLibESolution> out1 = single->search({ 7.7 });
-   std::cout << "out=" << out1.status << std::endl;
-   // ======== end testing
+   //
 
    optframe::Component* csingle = (optframe::Component*)single; // why??
    sptr<optframe::Component> sptrSingle{ csingle };
 
    int id = engine->loader.factory.addComponent(sptrSingle, "OptFrame:GlobalSearch:SingleObjSearch");
-
-   // TESTING!!! TODO REMOVE
-   sptr<optframe::SingleObjSearch<FCoreLibESolution>> sos;
-   engine->loader.factory.assign(sos, id, "OptFrame:GlobalSearch:SingleObjSearch");
-   std::cout << "id=" << id << "sos=" << sos << std::endl;
-   assert(sos);
-   sos->print();
-   //sos->setVerbose();
-   optframe::SearchOutput<FCoreLibESolution> out = sos->search({ 6.6 });
-   std::cout << "out=" << out.status << std::endl;
-   // ======== end testing
-
    return id;
 }
 
@@ -531,6 +540,13 @@ fcore_api1_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelimit)
    std::cout << "out=" << out.status << std::endl;
 
    LibSearchOutput lout;
+   lout.status = (int)out.status;  // ("status", c_int),
+   lout.has_best = (bool)out.best; // ("has_best", ctypes.c_bool),
+   if (out.best) {
+      // extract pointer from solution container
+      lout.best_s = out.best->first.releasePtr();  // ("best_s", ctypes.py_object),
+      lout.best_e = out.best->second.evaluation(); // ("best_e", ctypes.c_double)]
+   }
    return lout;
 }
 

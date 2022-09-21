@@ -132,14 +132,7 @@ fcore_lib.fcore_api1_destroy_engine.restype = ctypes.c_bool
 #
 fcore_lib.fcore_api1_engine_test.argtypes = [ctypes.c_void_p]
 fcore_lib.fcore_api1_engine_test.restype = ctypes.c_bool
-#
-fcore_lib.fcore_api1_engine_simulated_annealing.argtypes = [ctypes.c_void_p]
-fcore_lib.fcore_api1_engine_simulated_annealing.restype = ctypes.c_bool
-#
-fcore_lib.fcore_api1_engine_simulated_annealing_params.argtypes = [
-    ctypes.c_void_p,  ctypes.c_double, ctypes.c_int, ctypes.c_int, ctypes.c_int,
-    ctypes.c_double, ctypes.c_int, ctypes.c_double]
-fcore_lib.fcore_api1_engine_simulated_annealing_params.restype = ctypes.c_bool
+
 #
 fcore_lib.fcore_api1_engine_builders.argtypes = [
     ctypes.c_void_p,  ctypes.c_char_p]
@@ -152,6 +145,34 @@ fcore_lib.fcore_api1_engine_check.restype = ctypes.c_bool
 
 #fcore_component_print(void* component);
 fcore_lib.fcore_component_print.argtypes = [c_void_p]
+
+
+class SearchOutput(ctypes.Structure):
+    _fields_ = [("status", c_int),
+                ("has_best", ctypes.c_bool),
+                ("best_s", ctypes.py_object),
+                ("best_e", ctypes.c_double)]
+
+    def __str__(self):
+        return f"SearchOutput(status={self.status};has_best={self.has_best};best_s={self.best_s};best_e={self.best_e};)"
+
+
+#
+fcore_lib.fcore_api1_engine_simulated_annealing.argtypes = [ctypes.c_void_p]
+fcore_lib.fcore_api1_engine_simulated_annealing.restype = SearchOutput
+#
+fcore_lib.fcore_api1_engine_simulated_annealing_params.argtypes = [
+    ctypes.c_void_p,  ctypes.c_double, ctypes.c_int, ctypes.c_int, ctypes.c_int,
+    ctypes.c_double, ctypes.c_int, ctypes.c_double]
+fcore_lib.fcore_api1_engine_simulated_annealing_params.restype = SearchOutput
+
+# extern "C" LibSearchOutput
+# fcore_api1_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelimit);
+
+fcore_lib.fcore_api1_run_sos_search.argtypes = [
+    ctypes.c_void_p, ctypes.c_int, ctypes.c_double]
+fcore_lib.fcore_api1_run_sos_search.restype = SearchOutput
+
 
 # ======================================
 #              SPECIFIC
@@ -166,21 +187,6 @@ fcore_lib.fcore_api1_float64_fevaluator_evaluate.restype = ctypes.c_double
 fcore_lib.fcore_api1_fconstructive_gensolution.argtypes = [
     c_void_p]
 fcore_lib.fcore_api1_fconstructive_gensolution.restype = ctypes.py_object
-
-
-class SearchOutput(ctypes.Structure):
-    _fields_ = [("status", c_int),
-                ("has_best", ctypes.c_bool),
-                ("best_s", ctypes.py_object),
-                ("best_e", ctypes.c_double)]
-
-
-# extern "C" LibSearchOutput
-# fcore_api1_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelimit);
-
-fcore_lib.fcore_api1_run_sos_search.argtypes = [
-    ctypes.c_void_p, ctypes.c_int, ctypes.c_double]
-fcore_lib.fcore_api1_run_sos_search.restype = SearchOutput
 
 
 # =========================
@@ -361,6 +367,7 @@ class OptFrameEngine(object):
 
     def run_sos_search(self, sos_idx, timelimit) -> SearchOutput:
         lout = fcore_lib.fcore_api1_run_sos_search(self.hf, sos_idx, timelimit)
+        #l2out = SearchOutput(lout)
         return lout
 
 
@@ -779,7 +786,7 @@ print("")
 print("testing handmade SA (run_sa_params) on C++...")
 print("")
 # DISABLED
-if False:
+if True:
     engine.run_sa_params(5.0, ev_idx, c_idx, ns_idx, 0.98, 200, 9999999)
 #
 
@@ -797,7 +804,7 @@ print("testing execution of SingleObjSearch (run_sos_search) for SA...")
 print("")
 
 lout = engine.run_sos_search(sos_idx, 4.0)
-print(lout)
+print('lout=', lout)
 
 # engine.run_test() # run generic test on C++... just for debugging
 
