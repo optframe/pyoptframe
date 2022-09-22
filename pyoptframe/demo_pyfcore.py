@@ -85,10 +85,41 @@ FUNC_FMOVE_EQ = CFUNCTYPE(
 FUNC_FMOVE_CBA = CFUNCTYPE(
     ctypes.c_bool, ctypes.py_object, ctypes.py_object, ctypes.py_object)
 
+# FakePythonObjPtr(*_fIterator)(FakePythonObjPtr), // fIterator(just initializes IMS)
+FUNC_FNSSEQ_IT_INIT = CFUNCTYPE(
+    ctypes.py_object, ctypes.py_object)
+
+# problem*, ims* -> void
+# void(*_fFirst)(FakePythonObjPtr, FakePythonObjPtr),                        // iterator.first()
+FUNC_FNSSEQ_IT_FIRST = CFUNCTYPE(
+    None, ctypes.py_object, ctypes.py_object)
+
+# problem*, ims* -> void
+# void(*_fNext)(FakePythonObjPtr),                         // iterator.next()
+FUNC_FNSSEQ_IT_NEXT = CFUNCTYPE(
+    None, ctypes.py_object, ctypes.py_object)
+
+# problem*, ims* -> bool
+# bool(*_fIsDone)(FakePythonObjPtr),                       // iterator.isDone()
+FUNC_FNSSEQ_IT_ISDONE = CFUNCTYPE(
+    ctypes.c_bool, ctypes.py_object, ctypes.py_object)
+
+# problem*, ims* -> move*
+# FakePythonObjPtr(*_fCurrent)(FakePythonObjPtr) // iterator.current()
+FUNC_FNSSEQ_IT_CURRENT = CFUNCTYPE(
+    ctypes.py_object, ctypes.py_object, ctypes.py_object)
+
 # fns: hf*, func_ns, func_mv1, func_mv2, func_mv3, problem* -> int
 fcore_lib.fcore_api1_add_ns.argtypes = [
     ctypes.c_void_p, FUNC_FNS_RAND, FUNC_FMOVE_APPLY, FUNC_FMOVE_EQ, FUNC_FMOVE_CBA, ctypes.py_object, FUNC_UTILS_DECREF]
 fcore_lib.fcore_api1_add_ns.restype = ctypes.c_int32
+
+# fns: hf*, func_ns, func_mv1, func_mv2, func_mv3, problem* -> int
+fcore_lib.fcore_api1_add_nsseq.argtypes = [
+    ctypes.c_void_p, FUNC_FNS_RAND,
+    FUNC_FNSSEQ_IT_INIT, FUNC_FNSSEQ_IT_FIRST, FUNC_FNSSEQ_IT_NEXT, FUNC_FNSSEQ_IT_ISDONE, FUNC_FNSSEQ_IT_CURRENT,
+    FUNC_FMOVE_APPLY, FUNC_FMOVE_EQ, FUNC_FMOVE_CBA, ctypes.py_object, FUNC_UTILS_DECREF]
+fcore_lib.fcore_api1_add_nsseq.restype = ctypes.c_int32
 
 # ================================
 #              CREATE
@@ -283,6 +314,34 @@ class OptFrameEngine(object):
         # FUNC_UTILS_DECREF(callback_utils_decref))
         #print("add_ns is finishing")
         return idx_ns
+
+    def add_nsseq(self, problemCtx,
+                  ns_rand_callback_ptr,
+                  nsseq_it_init_callback_ptr,
+                  nsseq_it_first_callback_ptr,
+                  nsseq_it_next_callback_ptr,
+                  nsseq_it_isdone_callback_ptr,
+                  nsseq_it_current_callback_ptr,
+                  ###########
+                  move_apply_callback_ptr, move_eq_callback_ptr, move_cba_callback_ptr):
+        #print("add_ns begins")
+        idx_nsseq = fcore_lib.fcore_api1_add_nsseq(
+            self.hf,  ns_rand_callback_ptr,
+            nsseq_it_init_callback_ptr,
+            nsseq_it_first_callback_ptr,
+            nsseq_it_next_callback_ptr,
+            nsseq_it_isdone_callback_ptr,
+            nsseq_it_current_callback_ptr,
+            move_apply_callback_ptr,
+            move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
+            self.callback_utils_decref_ptr)
+        # FUNC_UTILS_DECREF(callback_utils_decref))
+        #print("add_ns is finishing")
+        return idx_nsseq
+
+    # =============================
+    #            CREATE
+    # =============================
 
     def create_initial_search(self, ev_idx, c_idx):
         #print("create_initial_search begins")
@@ -786,7 +845,7 @@ print("")
 print("testing handmade SA (run_sa_params) on C++...")
 print("")
 # DISABLED
-if True:
+if False:
     engine.run_sa_params(5.0, ev_idx, c_idx, ns_idx, 0.98, 200, 9999999)
 #
 

@@ -355,6 +355,103 @@ public:
    }
 };
 
+// Iterator object for NSSeqIterator
+class IMSObjLib
+{
+public:
+   // 'ims_ptr' is internal representation/solution pointer
+   FakePythonObjPtr ims_ptr;
+   // utils function
+   std::function<bool(FakePythonObjPtr)> f_utils_decref;
+
+   IMSObjLib(const IMSObjLib& s) = delete;
+   IMSObjLib& operator=(const IMSObjLib& other) = delete;
+
+   IMSObjLib& operator=(IMSObjLib&& other)
+   {
+      // is this possible?
+      if (this == &other)
+         return *this;
+      // check if other exists
+      assert(other.ims_ptr);
+      // copy functions
+      this->f_utils_decref = other.f_utils_decref;
+      // steal pointer from corpse
+      this->ims_ptr = other.ims_ptr;
+      // kill it
+      other.ims_ptr = 0;
+      return *this;
+   }
+
+   IMSObjLib(IMSObjLib&& s)
+   {
+      //std::cout << "IMSObjLib(MOVE) BEGIN" << std::endl;
+      assert(s.ims_ptr);
+      //std::cout << "IMSObjLib(MOVE).other.toString() -> '" << s.toString() << "'" << std::endl;
+
+      // copy
+      this->f_utils_decref = std::move(s.f_utils_decref);
+
+      //std::cout << "\tIMSObjLib(MOVE)-> will steal pointer" << std::endl;
+      this->ims_ptr = s.ims_ptr;
+      // prepare corpse
+      s.ims_ptr = 0;
+      //
+      //std::cout << "\tIMSObjLib(MOVE finished; ptr=" << ims_ptr << ")" << std::endl;
+      //std::cout << "IMSObjLib(MOVE) ENDS" << std::endl;
+   }
+
+   virtual ~IMSObjLib()
+   {
+      //std::cout << "~IMSObjLib ptr: " << ims_ptr << std::endl;
+      //
+      assert(this->ims_ptr);
+      // must decref solution_ptr and discard it
+      int x = f_utils_decref(this->ims_ptr);
+      //std::cout << "~FCoreLibSolution ptr_count = " << x << std::endl;
+      if (x > 1) {
+         std::cout << "~IMSObjLib ptr_count = " << x << std::endl;
+      }
+
+      ims_ptr = 0;
+      //std::cout << "~IMSObjLib finished" << std::endl;
+   }
+
+   IMSObjLib(FakePythonObjPtr ims_ptr, std::function<int(FakePythonObjPtr)> f_utils_decref)
+     : ims_ptr{ ims_ptr }
+     , f_utils_decref{ f_utils_decref }
+   {
+      //printf("IMSObjLib1(%p, func)\n", ims_ptr);
+   }
+
+   // temporary construction (no copy_solution required)
+   /*
+   FCoreLibSolution(FakePythonObjPtr solution_ptr_view)
+     : solution_ptr{ solution_ptr_view }
+     , is_view{ true }
+   {
+      //printf("FCoreLibSolution1(%p) is_view=%d\n", solution_ptr, is_view);
+   }
+   */
+
+   /*
+   FakePythonObjPtr
+   releasePtr()
+   {
+      // pointer must exist
+      assert(this->solution_ptr);
+      // cannot take this from view
+      assert(!this->is_view);
+      FakePythonObjPtr sol = this->solution_ptr;
+      // "move" from this container
+      this->solution_ptr = nullptr;
+      this->is_view = true;
+      // TODO: do we need to remove the functions too?
+      return sol;
+   }
+   */
+};
+
 // ==================
 
 extern "C" FakeEnginePtr
@@ -808,6 +905,177 @@ fcore_api1_add_ns(FakeEnginePtr _engine,
    int id = engine->loader.factory.addComponent(fns_comp, "OptFrame:NS");
    //
    engine->check.add(fns);
+   //fns->print();
+   return id;
+}
+
+// FOR NOW, WE IGNORE 'const XES' AND JUST USE 'const S'.... LET'S SEE!
+
+extern "C" int // index of ns
+fcore_api1_add_nsseq(FakeEnginePtr _engine,
+                     FakePythonObjPtr (*_fns_rand)(FakePythonObjPtr, FakePythonObjPtr),
+                     FakePythonObjPtr (*_fIterator)(FakePythonObjPtr, FakePythonObjPtr), // fIterator (just initializes IMS)
+                     // problem*, ims*
+                     void (*_fFirst)(FakePythonObjPtr, FakePythonObjPtr),               // iterator.first()
+                     void (*_fNext)(FakePythonObjPtr, FakePythonObjPtr),                // iterator.next()
+                     bool (*_fIsDone)(FakePythonObjPtr, FakePythonObjPtr),              // iterator.isDone()
+                     FakePythonObjPtr (*_fCurrent)(FakePythonObjPtr, FakePythonObjPtr), // iterator.current()
+                     FakePythonObjPtr (*_fmove_apply)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                     bool (*_fmove_eq)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                     bool (*_fmove_cba)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                     FakePythonObjPtr problem_view,
+                     int (*_f_utils_decref)(FakePythonObjPtr))
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+
+   //std::cout << "invoking 'fcore_api1_add_constructive' with "
+   //          << "_hf=" << _hf << " _fconstructive and problem_view=" << problem_view << std::endl;
+
+   // ======== preparing move functions ========
+   typedef std::function<FakePythonObjPtr(const FakePythonObjPtr&, FCoreLibESolution&)> FuncTypeMoveApply;
+   FuncTypeMoveApply func_fmove_apply = [_fmove_apply, problem_view](const FakePythonObjPtr& m_view, FCoreLibESolution& se) -> FakePythonObjPtr {
+      // TODO: will pass ESolution as a Solution in API1... ignoring Evaluation/Re-evaluation!
+      // IMPORTANT: python will receive all as views..
+      FakePythonObjPtr vobj_owned = _fmove_apply(problem_view, m_view, se.first.solution_ptr);
+      return vobj_owned;
+   };
+
+   typedef std::function<bool(const FakePythonObjPtr&, const FCoreLibESolution&)> FuncTypeMoveCBA;
+   FuncTypeMoveCBA func_fmove_cba = [_fmove_cba, problem_view](const FakePythonObjPtr& m_view, const FCoreLibESolution& se) -> bool {
+      // TODO: will pass ESolution as a Solution in API1... ignoring Evaluation/Re-evaluation!
+      // IMPORTANT: python will receive all as views..
+      bool r = _fmove_cba(problem_view, m_view, se.first.solution_ptr);
+      return r;
+   };
+
+   typedef std::function<bool(const FakePythonObjPtr&, const optframe::Move<FCoreLibESolution>&)> FuncTypeMoveEq;
+   FuncTypeMoveEq func_fmove_eq = [_fmove_eq, problem_view](const FakePythonObjPtr& my_m_view, const optframe::Move<FCoreLibESolution>& _mOther) -> bool {
+      // cast to to lib move type. (TODO: check type... how? use OptFrame Component id()? or must improve OptFrame in this regard... not worry now!)
+      auto& mOther = (FMoveLib&)_mOther;
+      //
+      FakePythonObjPtr mStructOtherView = mOther.m;
+      // IMPORTANT: python will receive all as views..
+      bool r = _fmove_eq(problem_view, my_m_view, mStructOtherView);
+      return r;
+   };
+
+   typedef std::function<bool(FakePythonObjPtr)> FuncTypeUtilsDecRef;
+   FuncTypeUtilsDecRef func_utils_decref = _f_utils_decref;
+
+   //std::function<uptr<Move<XES>>(const XES&)>
+   auto func_fnsrand = [_fns_rand,
+                        problem_view,
+                        func_fmove_apply,
+                        func_fmove_cba,
+                        func_fmove_eq,
+                        func_utils_decref](const FCoreLibESolution& se) -> optframe::uptr<optframe::Move<FCoreLibESolution>> {
+      // IMPORTANT: _fns_rand must IncRef Move on python before returning! I think so...
+      // TODO: will pass ESolution as a Solution in API1... ignoring Evaluation/Re-evaluation!
+      // TODO: don't know if IncRef or not solution_ptr... I THINK it's a "view" for python, so no IncRef here.
+      //
+      // vobj_owned should come IncRef'ed before! I guess...
+      FakePythonObjPtr vobj_owned = _fns_rand(problem_view, se.first.solution_ptr);
+      //std::cout << "'fcore_api1_add_ns' -> _fns_rand generated pointer: " << vobj_owned << std::endl;
+      assert(vobj_owned); // check void* (TODO: allow non-existing move, return nullptr)
+
+      //
+      auto* m_ptr = new FMoveLib(vobj_owned,
+                                 func_fmove_apply,
+                                 func_fmove_cba,
+                                 func_fmove_eq,
+                                 func_utils_decref);
+
+      //std::cout << "'fcore_api1_add_ns' -> move created!" << std::endl;
+      return optframe::uptr<optframe::Move<FCoreLibESolution>>(m_ptr);
+   };
+
+   // =============================
+   //      Iterator Functions
+   // =============================
+
+   typedef std::function<IMSObjLib(const FCoreLibESolution&)> FuncTypeNSSeqItInit;
+   // FakePythonObjPtr (*_fIterator)(FakePythonObjPtr, FakePythonObjPtr),
+   FuncTypeNSSeqItInit func_fnsseq_it_init = [_fIterator, problem_view, func_utils_decref](const FCoreLibESolution& se) -> IMSObjLib {
+      // TODO: will pass ESolution as a Solution in API1... ignoring Evaluation/Re-evaluation!
+      // IMPORTANT: python will receive all as views..
+      FakePythonObjPtr ims_obj_owned = _fIterator(problem_view, se.first.solution_ptr);
+      assert(ims_obj_owned);
+
+      IMSObjLib ims{ ims_obj_owned, func_utils_decref };
+      return ims;
+   };
+
+   typedef std::function<void(IMSObjLib&)> FuncTypeNSSeqItFirst;
+   // void (*_fFirst)(FakePythonObjPtr, FakePythonObjPtr),
+   FuncTypeNSSeqItFirst func_fnsseq_it_first = [_fFirst, problem_view](IMSObjLib& it) -> void {
+      // IMPORTANT: python will receive all as views..
+      _fFirst(problem_view, it.ims_ptr);
+   };
+
+   typedef std::function<void(IMSObjLib&)> FuncTypeNSSeqItNext;
+   // void (*_fFirst)(FakePythonObjPtr, FakePythonObjPtr),
+   FuncTypeNSSeqItNext func_fnsseq_it_next = [_fNext, problem_view](IMSObjLib& it) -> void {
+      // IMPORTANT: python will receive all as views..
+      _fNext(problem_view, it.ims_ptr);
+   };
+
+   typedef std::function<bool(IMSObjLib&)> FuncTypeNSSeqItIsDone;
+
+   FuncTypeNSSeqItIsDone func_fnsseq_it_isdone = [_fIsDone, problem_view](IMSObjLib& it) -> bool {
+      // IMPORTANT: python will receive all as views..
+      bool b = _fIsDone(problem_view, it.ims_ptr);
+      return b;
+   };
+
+   typedef std::function<optframe::uptr<optframe::Move<FCoreLibESolution>>(IMSObjLib & it)> FuncTypeNSSeqItCurrent;
+
+   FuncTypeNSSeqItCurrent func_fnsseq_it_current = [_fCurrent,
+                                                    problem_view,
+                                                    func_fmove_apply,
+                                                    func_fmove_cba,
+                                                    func_fmove_eq,
+                                                    func_utils_decref](IMSObjLib& it) -> optframe::uptr<optframe::Move<FCoreLibESolution>> {
+      // TODO: will pass ESolution as a Solution in API1... ignoring Evaluation/Re-evaluation!
+      // IMPORTANT: python will receive all as views..
+      FakePythonObjPtr vobj_owned = _fCurrent(problem_view, it.ims_ptr);
+      assert(vobj_owned); // check void* (TODO: allow non-existing move, return nullptr)
+
+      //
+      auto* m_ptr = new FMoveLib(vobj_owned,
+                                 func_fmove_apply,
+                                 func_fmove_cba,
+                                 func_fmove_eq,
+                                 func_utils_decref);
+
+      //std::cout << "'fcore_api1_add_ns' -> move created!" << std::endl;
+      return optframe::uptr<optframe::Move<FCoreLibESolution>>(m_ptr);
+   };
+   /*
+      FNSSeq(
+     uptr<Move<XES>> (*_fRandom)(const XES&), // fRandom
+     IMS (*_fIterator)(const XES&),           // fIterator (just initializes IMS)
+     void (*_fFirst)(IMS&),                   // iterator.first()
+     void (*_fNext)(IMS&),                    // iterator.next()
+     bool (*_fIsDone)(IMS&),                  // iterator.isDone()
+     uptr<Move<XES>> (*_fCurrent)(IMS&)       // iterator.current()
+     )
+   */
+
+   sref<optframe::NSSeq<FCoreLibESolution>>
+     fnsseq(new optframe::FNSSeq<IMSObjLib, FCoreLibESolution>{ func_fnsrand,
+                                                                func_fnsseq_it_init,
+                                                                func_fnsseq_it_first,
+                                                                func_fnsseq_it_next,
+                                                                func_fnsseq_it_isdone,
+                                                                func_fnsseq_it_current });
+
+   sref<optframe::Component> fnsseq_comp(fnsseq);
+
+   //std::cout << "'fcore_api1_add_nsseq' will add component on hf" << std::endl;
+
+   int id = engine->loader.factory.addComponent(fnsseq_comp, "OptFrame:NS:NSFind:NSSeq");
+   //
+   engine->check.add(fnsseq);
    //fns->print();
    return id;
 }
