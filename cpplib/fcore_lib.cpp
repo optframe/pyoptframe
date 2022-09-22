@@ -233,6 +233,13 @@ using CBSingle = optframe::SingleObjSearchBuilder<
   //X2ESolution<XES> X2ES = MultiESolution<XES>>
   >;
 
+using CBLocal = optframe::LocalSearchBuilder<
+  FCoreLibSolution,             //XSolution S,
+  optframe::Evaluation<double>, // XEvaluation XEv = Evaluation<>,
+  FCoreLibESolution             //  XESolution XES = pair<S, XEv>,
+  //X2ESolution<XES> X2ES = MultiESolution<XES>>
+  >;
+
 class FCoreApi1Engine
 {
 public:
@@ -403,7 +410,7 @@ public:
 
    virtual ~IMSObjLib()
    {
-      std::cout << "~IMSObjLib ptr: " << ims_ptr << std::endl;
+      //std::cout << "~IMSObjLib ptr: " << ims_ptr << std::endl;
       //
       if (this->ims_ptr) {
          // must decref solution_ptr and discard it
@@ -490,6 +497,17 @@ fcore_api1_engine_builders(FakeEnginePtr _engine, char* prefix)
       for (unsigned i = 0; i < p.second.size(); i++)
          std::cout << "\tparam " << i << " => " << p.second[i].first << " : " << p.second[i].second << std::endl;
    }
+   return vlist.size();
+}
+
+extern "C" int
+fcore_api1_engine_list_components(FakeEnginePtr _engine, char* prefix)
+{
+   std::string sprefix{ prefix };
+   auto* engine = (FCoreApi1Engine*)_engine;
+   std::vector<std::string> vlist = engine->loader.factory.listComponents(sprefix);
+   for (unsigned i = 0; i < vlist.size(); i++)
+      std::cout << "component " << i << " => " << vlist[i] << std::endl;
    return vlist.size();
 }
 
@@ -619,6 +637,45 @@ fcore_api1_build_single(FakeEnginePtr _engine, char* builder, char* build_string
    sptr<optframe::Component> sptrSingle{ csingle };
 
    int id = engine->loader.factory.addComponent(sptrSingle, "OptFrame:GlobalSearch:SingleObjSearch");
+   return id;
+}
+
+extern "C" int // index of LocalSearch
+fcore_api1_build_local_search(FakeEnginePtr _engine, char* builder, char* build_string)
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+   // =============================
+   //     build_single (TESTING)
+   // =============================
+   std::string strBuilder{ builder };
+   std::string strBuildString{ build_string };
+
+   //
+   // Example: "OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA"
+   //
+   std::string sbuilder = strBuilder;
+   CB* cb = engine->loader.factory.getBuilder(sbuilder);
+   if (!cb) {
+      std::cout << "WARNING! OptFrame builder for LocalSearch not found!" << std::endl;
+      return -1;
+   }
+   //cb->buildComponent
+   CBLocal* cblocal = (CBLocal*)cb;
+
+   //
+   // Example: "OptFrame:GeneralEvaluator:Direction:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999";
+   //
+   std::string scan_params = strBuildString;
+   scannerpp::Scanner scanner{ scan_params };
+   optframe::LocalSearch<FCoreLibESolution>* local = cblocal->build(scanner, engine->loader.factory);
+   std::cout << "local_search =" << local << std::endl;
+   local->print();
+   //
+
+   optframe::Component* clocal = (optframe::Component*)local; // why??
+   sptr<optframe::Component> sptrLocal{ clocal };
+
+   int id = engine->loader.factory.addComponent(sptrLocal, "OptFrame:LocalSearch");
    return id;
 }
 

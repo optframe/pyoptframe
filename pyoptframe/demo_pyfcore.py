@@ -132,9 +132,15 @@ fcore_lib.fcore_api1_create_component_list.restype = ctypes.c_int32
 #            BUILD
 # =================================
 
+# for SingleObjSearch
 fcore_lib.fcore_api1_build_single.argtypes = [
     ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p]
 fcore_lib.fcore_api1_build_single.restype = ctypes.c_int32
+
+# for LocalSearch
+fcore_lib.fcore_api1_build_local_search.argtypes = [
+    ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p]
+fcore_lib.fcore_api1_build_local_search.restype = ctypes.c_int32
 
 
 # ====================================
@@ -164,6 +170,10 @@ fcore_lib.fcore_api1_engine_test.restype = ctypes.c_bool
 fcore_lib.fcore_api1_engine_builders.argtypes = [
     ctypes.c_void_p,  ctypes.c_char_p]
 fcore_lib.fcore_api1_engine_builders.restype = ctypes.c_int
+#
+fcore_lib.fcore_api1_engine_list_components.argtypes = [
+    ctypes.c_void_p,  ctypes.c_char_p]
+fcore_lib.fcore_api1_engine_list_components.restype = ctypes.c_int
 #
 fcore_lib.fcore_api1_engine_check.argtypes = [
     ctypes.c_void_p]
@@ -246,6 +256,14 @@ class OptFrameEngine(object):
         # type of b_pattern is 'bytes'
         #print("bytes type: ", type(b_pattern))
         return fcore_lib.fcore_api1_engine_builders(self.hf, ctypes.c_char_p(b_pattern))
+
+    def list_components(self, pattern: str):
+        if(not isinstance(pattern, str)):
+            assert(False)
+        b_pattern = pattern.encode('ascii')
+        # type of b_pattern is 'bytes'
+        #print("bytes type: ", type(b_pattern))
+        return fcore_lib.fcore_api1_engine_list_components(self.hf, ctypes.c_char_p(b_pattern))
 
     def run_sa(self):
         print("DEPRECATED")
@@ -366,6 +384,18 @@ class OptFrameEngine(object):
         b_params = str_params.encode('ascii')
         #print("create_initial_search begins")
         idx_list = fcore_lib.fcore_api1_build_single(
+            self.hf, b_builder, b_params)
+        return idx_list
+
+    def build_local_search(self, str_builder, str_params):
+        if(not isinstance(str_builder, str)):
+            assert(False)
+        b_builder = str_builder.encode('ascii')
+        if(not isinstance(str_params, str)):
+            assert(False)
+        b_params = str_params.encode('ascii')
+        #print("create_initial_search begins")
+        idx_list = fcore_lib.fcore_api1_build_local_search(
             self.hf, b_builder, b_params)
         return idx_list
 
@@ -698,13 +728,13 @@ def mycallback_move_eq_bitflip(problemCtx: ExampleKP, m1: MoveBitFlip, m2: MoveB
 
 class IteratorBitFlip(object):
     def __init__(self):
-        print('__init__ IteratorBitFlip')
+        # print('__init__ IteratorBitFlip')
         self.k = 0
         global count_it_bitflip
         count_it_bitflip = count_it_bitflip+1
 
     def __del__(self):
-        print("~IteratorBitFlip")
+        # print("__del__ IteratorBitFlip")
         global count_it_bitflip
         count_it_bitflip = count_it_bitflip-1
         pass
@@ -912,6 +942,34 @@ print("")
 
 sos_idx = engine.build_single_obj_search(
     "OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA",
+    "OptFrame:GeneralEvaluator:Direction:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999")
+print("sos_idx=", sos_idx)
+
+print("")
+print("testing execution of SingleObjSearch (run_sos_search) for SA...")
+print("")
+
+lout = engine.run_sos_search(sos_idx, 4.0)
+print('lout=', lout)
+
+print("")
+print("testing builder (build_local_search) for BI...")
+print("")
+
+ls_idx = engine.build_local_search(
+    "OptFrame:ComponentBuilder:LocalSearch:BI",
+    "OptFrame:GeneralEvaluator:Direction:Evaluator 0  OptFrame:NS:NSFind:NSSeq 0")
+print("ls_idx=", ls_idx)
+
+engine.list_components("OptFrame:")
+
+
+print("")
+print("testing builder (build_single_obj_search) for ILS...")
+print("")
+
+sos_idx = engine.build_single_obj_search(
+    "OptFrame:ComponentBuilder:SingleObjSearch:ILS:ILSLevels",
     "OptFrame:GeneralEvaluator:Direction:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999")
 print("sos_idx=", sos_idx)
 

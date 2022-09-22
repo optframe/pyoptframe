@@ -39,6 +39,9 @@ fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timel
 extern "C" int
 fcore_api1_engine_builders(FakeEnginePtr _engine, char* prefix);
 
+extern "C" int
+fcore_api1_engine_list_components(FakeEnginePtr _engine, char* prefix);
+
 extern "C" bool
 fcore_api1_engine_test(FakeEnginePtr _engine);
 
@@ -82,6 +85,9 @@ fcore_api1_create_initial_search(FakeEnginePtr _engine, int ev_idx, int c_idx);
 
 extern "C" int // index of SingleObjSearch
 fcore_api1_build_single(FakeEnginePtr _engine, char* builder, char* build_string);
+
+extern "C" int // index of LocalSearch
+fcore_api1_build_local_search(FakeEnginePtr _engine, char* builder, char* build_string);
 
 // ================
 
