@@ -85,27 +85,23 @@ FUNC_FMOVE_EQ = CFUNCTYPE(
 FUNC_FMOVE_CBA = CFUNCTYPE(
     ctypes.c_bool, ctypes.py_object, ctypes.py_object, ctypes.py_object)
 
-# FakePythonObjPtr(*_fIterator)(FakePythonObjPtr), // fIterator(just initializes IMS)
+# problem*, solution* -> ims*
 FUNC_FNSSEQ_IT_INIT = CFUNCTYPE(
-    ctypes.py_object, ctypes.py_object)
+    ctypes.py_object, ctypes.py_object, ctypes.py_object)
 
 # problem*, ims* -> void
-# void(*_fFirst)(FakePythonObjPtr, FakePythonObjPtr),                        // iterator.first()
 FUNC_FNSSEQ_IT_FIRST = CFUNCTYPE(
     None, ctypes.py_object, ctypes.py_object)
 
 # problem*, ims* -> void
-# void(*_fNext)(FakePythonObjPtr),                         // iterator.next()
 FUNC_FNSSEQ_IT_NEXT = CFUNCTYPE(
     None, ctypes.py_object, ctypes.py_object)
 
 # problem*, ims* -> bool
-# bool(*_fIsDone)(FakePythonObjPtr),                       // iterator.isDone()
 FUNC_FNSSEQ_IT_ISDONE = CFUNCTYPE(
     ctypes.c_bool, ctypes.py_object, ctypes.py_object)
 
 # problem*, ims* -> move*
-# FakePythonObjPtr(*_fCurrent)(FakePythonObjPtr) // iterator.current()
 FUNC_FNSSEQ_IT_CURRENT = CFUNCTYPE(
     ctypes.py_object, ctypes.py_object, ctypes.py_object)
 
@@ -473,6 +469,8 @@ count_solkp_new_deepcopy = 0
 count_move_bitflip = 0
 count_plus_move_bitflip = 0
 count_minus_move_bitflip = 0
+#
+count_it_bitflip = 0
 
 
 class ExampleSol(object):
@@ -698,12 +696,42 @@ def mycallback_move_eq_bitflip(problemCtx: ExampleKP, m1: MoveBitFlip, m2: MoveB
     return m1.k == m2.k
 
 
-def test_leak_new_solution(engine, problemCtx: ExampleKP) -> ExampleSol:
-    fc = engine.get_constructive(0)
-    engine.print_component(fc)
-    solxx = engine.fconstructive_gensolution(fc)
-    print("solxx=", solxx)
-    return True
+class IteratorBitFlip(object):
+    def __init__(self):
+        print('__init__ IteratorBitFlip')
+        self.k = 0
+        global count_it_bitflip
+        count_it_bitflip = count_it_bitflip+1
+
+    def __del__(self):
+        print("~IteratorBitFlip")
+        global count_it_bitflip
+        count_it_bitflip = count_it_bitflip-1
+        pass
+
+
+def mycallback_nsseq_it_init_bitflip(pKP: ExampleKP, sol: ExampleSol) -> IteratorBitFlip:
+    it = IteratorBitFlip()
+    it.k = 0
+    return it
+
+
+def mycallback_nsseq_it_first_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
+    it.k = 0
+
+
+def mycallback_nsseq_it_next_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
+    it.k = it.k+1
+
+
+def mycallback_nsseq_it_isdone_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
+    return it.k >= pKP.n
+
+
+def mycallback_nsseq_it_current_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
+    mv = MoveBitFlip()
+    mv.k = it.k
+    return mv
 
 
 # =============================
@@ -812,6 +840,35 @@ print("ns_idx=", ns_idx)
 list_idx = engine.create_component_list("[ OptFrame:NS 0 ]", "OptFrame:NS[]")
 print("list_idx=", list_idx)
 
+
+print("")
+print("========================")
+print("engine add nsseq bitflip")
+print("========================")
+
+call_nsseq_it_init_bitflip = FUNC_FNSSEQ_IT_INIT(
+    mycallback_nsseq_it_init_bitflip)
+call_nsseq_it_first_bitflip = FUNC_FNSSEQ_IT_FIRST(
+    mycallback_nsseq_it_first_bitflip)
+call_nsseq_it_next_bitflip = FUNC_FNSSEQ_IT_NEXT(
+    mycallback_nsseq_it_next_bitflip)
+call_nsseq_it_isdone_bitflip = FUNC_FNSSEQ_IT_ISDONE(
+    mycallback_nsseq_it_isdone_bitflip)
+call_nsseq_it_current_bitflip = FUNC_FNSSEQ_IT_CURRENT(
+    mycallback_nsseq_it_current_bitflip)
+
+# get index of new NSSeq
+nsseq_idx = engine.add_nsseq(pKP,
+                             call_ns_bitflip,
+                             call_nsseq_it_init_bitflip,
+                             call_nsseq_it_first_bitflip,
+                             call_nsseq_it_next_bitflip,
+                             call_nsseq_it_isdone_bitflip,
+                             call_nsseq_it_current_bitflip,
+                             call_move_apply, call_move_eq, call_move_cba)
+print("nsseq_idx=", nsseq_idx)
+
+
 print("")
 print("============================")
 print("    stress test generate    ")
@@ -875,6 +932,12 @@ print(call_move_apply)
 print(call_move_eq)
 print(call_move_cba)
 
+print(call_nsseq_it_init_bitflip)
+print(call_nsseq_it_first_bitflip)
+print(call_nsseq_it_next_bitflip)
+print(call_nsseq_it_isdone_bitflip)
+print(call_nsseq_it_current_bitflip)
+
 
 print("")
 print("count_solkp=", count_solkp)
@@ -886,5 +949,7 @@ print("")
 print("count_move_bitflip=", count_move_bitflip)
 print("count_plus_move_bitflip=", count_plus_move_bitflip)
 print("count_minus_move_bitflip=", count_minus_move_bitflip)
+print("")
+print("count_it_bitflip=", count_it_bitflip)
 print("")
 exit(0)

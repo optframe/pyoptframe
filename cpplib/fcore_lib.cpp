@@ -403,17 +403,18 @@ public:
 
    virtual ~IMSObjLib()
    {
-      //std::cout << "~IMSObjLib ptr: " << ims_ptr << std::endl;
+      std::cout << "~IMSObjLib ptr: " << ims_ptr << std::endl;
       //
-      assert(this->ims_ptr);
-      // must decref solution_ptr and discard it
-      int x = f_utils_decref(this->ims_ptr);
-      //std::cout << "~FCoreLibSolution ptr_count = " << x << std::endl;
-      if (x > 1) {
-         std::cout << "~IMSObjLib ptr_count = " << x << std::endl;
-      }
+      if (this->ims_ptr) {
+         // must decref solution_ptr and discard it
+         int x = f_utils_decref(this->ims_ptr);
+         //std::cout << "~FCoreLibSolution ptr_count = " << x << std::endl;
+         if (x > 1) {
+            std::cout << "~IMSObjLib ptr_count = " << x << std::endl;
+         }
 
-      ims_ptr = 0;
+         ims_ptr = 0;
+      }
       //std::cout << "~IMSObjLib finished" << std::endl;
    }
 
