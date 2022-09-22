@@ -89,6 +89,9 @@ fcore_api1_build_single(FakeEnginePtr _engine, char* builder, char* build_string
 extern "C" int // index of LocalSearch
 fcore_api1_build_local_search(FakeEnginePtr _engine, char* builder, char* build_string);
 
+extern "C" int // index of Component
+fcore_api1_build_component(FakeEnginePtr _engine, char* builder, char* build_string, char* component_type);
+
 // ================
 
 extern "C" void* // raw (non-owned) pointer to GeneralEvaluator

@@ -240,6 +240,13 @@ using CBLocal = optframe::LocalSearchBuilder<
   //X2ESolution<XES> X2ES = MultiESolution<XES>>
   >;
 
+using CB = optframe::ComponentBuilder<
+  FCoreLibSolution,             //XSolution S,
+  optframe::Evaluation<double>, // XEvaluation XEv = Evaluation<>,
+  FCoreLibESolution             //  XESolution XES = pair<S, XEv>,
+  //X2ESolution<XES> X2ES = MultiESolution<XES>>
+  >;
+
 class FCoreApi1Engine
 {
 public:
@@ -676,6 +683,42 @@ fcore_api1_build_local_search(FakeEnginePtr _engine, char* builder, char* build_
    sptr<optframe::Component> sptrLocal{ clocal };
 
    int id = engine->loader.factory.addComponent(sptrLocal, "OptFrame:LocalSearch");
+   return id;
+}
+
+extern "C" int // index of Component
+fcore_api1_build_component(FakeEnginePtr _engine, char* builder, char* build_string, char* component_type)
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+   // =============================
+   //     build_component
+   // =============================
+   std::string strBuilder{ builder };
+   std::string strBuildString{ build_string };
+   std::string strComponentType{ component_type };
+
+   //
+   // Example: "OptFrame:ComponentBuilder:ILS:LevelPert:LPlus2"
+   //
+   std::string sbuilder = strBuilder;
+   CB* cb = engine->loader.factory.getBuilder(sbuilder);
+   if (!cb) {
+      std::cout << "WARNING! OptFrame builder '" << strBuilder << "' for Component not found!" << std::endl;
+      return -1;
+   }
+
+   //
+   // Example: "OptFrame:GeneralEvaluator:Direction:Evaluator 0 OptFrame:NS 0";
+   //
+   std::string scan_params = strBuildString;
+   scannerpp::Scanner scanner{ scan_params };
+   optframe::Component* c = cb->buildComponent(scanner, engine->loader.factory);
+   std::cout << "component =" << c << std::endl;
+   c->print();
+   //
+   sptr<optframe::Component> sptrComp{ c };
+
+   int id = engine->loader.factory.addComponent(sptrComp, strComponentType);
    return id;
 }
 

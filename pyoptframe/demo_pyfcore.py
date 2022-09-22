@@ -142,6 +142,10 @@ fcore_lib.fcore_api1_build_local_search.argtypes = [
     ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p]
 fcore_lib.fcore_api1_build_local_search.restype = ctypes.c_int32
 
+# for Component
+fcore_lib.fcore_api1_build_component.argtypes = [
+    ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+fcore_lib.fcore_api1_build_component.restype = ctypes.c_int32
 
 # ====================================
 #        OptFrame GET Component
@@ -370,10 +374,14 @@ class OptFrameEngine(object):
         if(not isinstance(str_type, str)):
             assert(False)
         b_type = str_type.encode('ascii')
-        #print("create_initial_search begins")
+        #
         idx_list = fcore_lib.fcore_api1_create_component_list(
             self.hf, b_list, b_type)
         return idx_list
+
+    # =========================
+    #         BUILD
+    # =========================
 
     def build_single_obj_search(self, str_builder, str_params):
         if(not isinstance(str_builder, str)):
@@ -382,7 +390,7 @@ class OptFrameEngine(object):
         if(not isinstance(str_params, str)):
             assert(False)
         b_params = str_params.encode('ascii')
-        #print("create_initial_search begins")
+        #
         idx_list = fcore_lib.fcore_api1_build_single(
             self.hf, b_builder, b_params)
         return idx_list
@@ -394,10 +402,25 @@ class OptFrameEngine(object):
         if(not isinstance(str_params, str)):
             assert(False)
         b_params = str_params.encode('ascii')
-        #print("create_initial_search begins")
+        #
         idx_list = fcore_lib.fcore_api1_build_local_search(
             self.hf, b_builder, b_params)
         return idx_list
+
+    def build_component(self, str_builder, str_params, str_component_type):
+        if(not isinstance(str_builder, str)):
+            assert(False)
+        b_builder = str_builder.encode('ascii')
+        if(not isinstance(str_params, str)):
+            assert(False)
+        b_params = str_params.encode('ascii')
+        if(not isinstance(str_component_type, str)):
+            assert(False)
+        b_ctype = str_component_type.encode('ascii')
+        #
+        idx_comp = fcore_lib.fcore_api1_build_component(
+            self.hf, b_builder, b_params, b_ctype)
+        return idx_comp
 
     # ===================== GET =======================
 
@@ -963,6 +986,18 @@ print("ls_idx=", ls_idx)
 
 engine.list_components("OptFrame:")
 
+print("")
+print("testing builder (build_component) for ILSLevels...")
+print("")
+
+pert_idx = engine.build_component(
+    "OptFrame:ComponentBuilder:ILS:LevelPert:LPlus2",
+    "OptFrame:GeneralEvaluator:Direction:Evaluator 0  OptFrame:NS 0",
+    "OptFrame:ILS:LevelPert")
+print("pert_idx=", pert_idx)
+
+engine.list_components("OptFrame:")
+
 
 print("")
 print("testing builder (build_single_obj_search) for ILS...")
@@ -970,14 +1005,14 @@ print("")
 
 sos_idx = engine.build_single_obj_search(
     "OptFrame:ComponentBuilder:SingleObjSearch:ILS:ILSLevels",
-    "OptFrame:GeneralEvaluator:Direction:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999")
+    "OptFrame:GeneralEvaluator:Direction:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:LocalSearch 0 OptFrame:ILS:LevelPert 0  50  3")
 print("sos_idx=", sos_idx)
 
 print("")
-print("testing execution of SingleObjSearch (run_sos_search) for SA...")
+print("testing execution of SingleObjSearch (run_sos_search) for ILS...")
 print("")
 
-lout = engine.run_sos_search(sos_idx, 4.0)
+lout = engine.run_sos_search(sos_idx, 4.5)
 print('lout=', lout)
 
 # engine.run_test() # run generic test on C++... just for debugging
