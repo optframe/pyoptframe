@@ -10,18 +10,18 @@
 from setuptools import setup, Extension
 # from setuptools import find_packages # NO GOOD, YET...
 import subprocess  # IMPORTANT FOR LOCAL GIT CLONE, OR 'ls -la'...
-
-# trying this... https://stackoverflow.com/questions/59772476/how-to-write-setup-py-to-include-a-specific-git-repo-as-a-dependency
-# this seems to require 'find_packages' and install_requires for remote git.... let's see!
-
-
 #  https://stackoverflow.com/questions/4529555/building-a-ctypes-based-c-library-with-distutils
 from distutils.command.build_ext import build_ext as build_ext_orig
-
-
+# Why?
 import os
 
+#
+# trying this... https://stackoverflow.com/questions/59772476/how-to-write-setup-py-to-include-a-specific-git-repo-as-a-dependency
+# this seems to require 'find_packages' and install_requires for remote git.... let's see!
+# TOO BAD! Only seem to work for Python packages, not a remote C++ git repo... let's do manually then.
+#
 
+# WHY???
 # from distutils import sysconfig
 
 
@@ -32,6 +32,7 @@ class CTypesExtension(Extension):
 class MyBuildExt(build_ext_orig):
     # 'run' from: https://stackoverflow.com/questions/45599346/ask-setuptools-to-git-clone-c-repository
     def run(self):
+        # ==== clone optframe from remote git repo ====
         subprocess.check_call(
             ['git', 'clone', '--depth', '1', '--branch', 'master', 'https://github.com/optframe/optframe', 'optframe-git'])
         # ===== check that clone() was done fine ======
@@ -61,32 +62,50 @@ this_directory = os.path.abspath(os.path.dirname(__file__))
 #subprocess.run(["ls", "-l", this_directory+"/src"])
 # ============================================================
 
+# WHY?????
 # destination_path = sysconfig.get_python_lib()
 # => /usr/lib/python3/dist-packages
 # print("DEST PATH: ", destination_path)
 
 setup(
-    name="pyoptframe",
-    version="1.0.0",
-    py_modules=["pyoptframe.demo_pyfcore"],
+    name="optframe",
+    version="5.0.0-preview",
+    py_modules=["optframe.engine"],
     ext_modules=[
         CTypesExtension(
-            "cpplib.fcore_lib",
-            ["cpplib/fcore_lib.cpp"],
-            #include_dirs=[os.path.join(this_directory, "./src/optframe-src/")],
+            "optframe.fcore_lib",
+            ["optframe/fcore_lib.cpp"],
+            #
+            # ========== ONLY IF LOCAL TESTING IS USED ===========
             include_dirs=[os.path.join(
-                this_directory, "./optframe-git/include")],
+                this_directory, "./src/optframe-src/include")],
+            #
+            # ============ ONLY IF REMOTE GIT IS USED ============
+            # include_dirs=[os.path.join(
+            #    this_directory, "./optframe-git/include")],
+            #
+            # ====================================================
+            # TODO: we should start using c++20 ASAP...
+            # Are Ubuntu / Windows / WSL2 users ready?
+            #
             extra_compile_args=['--std=c++17', '-fconcepts']
         ),
     ],
     # package_data includes data from 'src/' folder, by default
     package_data={
-        # , 'OptFCore/*', 'OptFCore/FCore.hpp', '*/*', '*/*/*'
+        # =========================================================
+        #           THIS IS USEFUL FOR LOCAL TESTING
+        # CREATE SYMBOLIC LINK ON src/ POINTING TO OPTFRAME PROJECT
+        # EX: ln -s my/FULL/local/optframe/folder src/optframe-src
+        # =========================================================
         'optframe-src': ['*'],
+        #
+        # OTHER LOCAL FILES ON src/ FOLDER
         # 'Potato': ['*.txt']
     },
     cmdclass={'build_ext': MyBuildExt},
     # packages=find_packages(),  # WHY???
+    # THIS DOES NOT WORK FOR C++ REMOTE DEPENDENCY, ONLY PYTHON...
     # install_requires=[
     #    'optframe @ git+https://github.com/optframe/optframe@v4.4', # ONLY WORKS FOR PYTHON PKGS, I GUESS...
     # ]
