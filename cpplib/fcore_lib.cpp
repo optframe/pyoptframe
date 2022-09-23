@@ -556,7 +556,7 @@ fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timel
 
    // will try to get evaluator to build InitialSolution component...
    std::shared_ptr<MyEval> _ev;
-   engine->loader.factory.assign(_ev, id_evaluator, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+   engine->loader.factory.assign(_ev, id_evaluator, "OptFrame:GeneralEvaluator:Evaluator");
    assert(_ev);
    sref<MyEval> single_ev{ _ev };
    //
@@ -631,7 +631,7 @@ fcore_api1_build_single(FakeEnginePtr _engine, char* builder, char* build_string
    CBSingle* cbsingle = (CBSingle*)cb;
 
    //
-   // Example: "OptFrame:GeneralEvaluator:Direction:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999";
+   // Example: "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999";
    //
    std::string scan_params = strBuildString;
    scannerpp::Scanner scanner{ scan_params };
@@ -670,7 +670,7 @@ fcore_api1_build_local_search(FakeEnginePtr _engine, char* builder, char* build_
    CBLocal* cblocal = (CBLocal*)cb;
 
    //
-   // Example: "OptFrame:GeneralEvaluator:Direction:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999";
+   // Example: "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999";
    //
    std::string scan_params = strBuildString;
    scannerpp::Scanner scanner{ scan_params };
@@ -708,7 +708,7 @@ fcore_api1_build_component(FakeEnginePtr _engine, char* builder, char* build_str
    }
 
    //
-   // Example: "OptFrame:GeneralEvaluator:Direction:Evaluator 0 OptFrame:NS 0";
+   // Example: "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:NS 0";
    //
    std::string scan_params = strBuildString;
    scannerpp::Scanner scanner{ scan_params };
@@ -757,7 +757,7 @@ fcore_api1_engine_test(FakeEnginePtr _engine)
 
    // will try to get evaluator to build InitialSolution component...
    std::shared_ptr<MyEval> ev;
-   engine->loader.factory.assign(ev, 0, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+   engine->loader.factory.assign(ev, 0, "OptFrame:GeneralEvaluator:Evaluator");
    assert(ev);
    sref<MyEval> ev2{ ev };
    //
@@ -824,7 +824,7 @@ fcore_api1_add_float64_evaluator(FakeEnginePtr _engine,
       //std::cout << "created FEvaluator<MIN> ptr=" << &eval.get() << std::endl;
       id = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator");
       // double add to prevent future down-casts
-      int id2 = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+      int id2 = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator:Evaluator");
       assert(id == id2);
       // also add to check module
       engine->check.addEvaluator(eval2);
@@ -836,7 +836,7 @@ fcore_api1_add_float64_evaluator(FakeEnginePtr _engine,
 
       id = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator");
       // double add to prevent future down-casts
-      int id2 = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+      int id2 = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator:Evaluator");
       assert(id == id2);
       // also add to check module
       engine->check.addEvaluator(eval2);
@@ -896,7 +896,7 @@ fcore_api1_add_constructive(FakeEnginePtr _engine,
 
    // will try to get evaluator to build InitialSolution component...
    std::shared_ptr<MyEval> ev;
-   engine->loader.factory.assign(ev, 0, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+   engine->loader.factory.assign(ev, 0, "OptFrame:GeneralEvaluator:Evaluator");
    assert(ev);
    //
    if (!ev)
@@ -1190,7 +1190,7 @@ fcore_api1_create_initial_search(FakeEnginePtr _engine, int ev_idx, int c_idx)
 
    // will try to get evaluator to build InitialSolution component...
    std::shared_ptr<MyEval> _ev;
-   engine->loader.factory.assign(_ev, ev_idx, "OptFrame:GeneralEvaluator:Direction:Evaluator");
+   engine->loader.factory.assign(_ev, ev_idx, "OptFrame:GeneralEvaluator:Evaluator");
    assert(_ev);
    sref<MyEval> single_ev{ _ev };
    //
@@ -1223,7 +1223,7 @@ fcore_api1_get_float64_evaluator(FakeEnginePtr _engine, int idx_ev)
 
    std::shared_ptr<optframe::GeneralEvaluator<FCoreLibESolution, FCoreLibESolution::second_type>> component;
 
-   engine->loader.factory.assignGE(component, idx_ev, "OptFrame:GeneralEvaluator");
+   engine->loader.factory.assign(component, idx_ev, "OptFrame:GeneralEvaluator");
    if (!component)
       assert(false);
    void* ptr = component.get();
@@ -1287,12 +1287,49 @@ fcore_api1_fconstructive_gensolution(FakeFConstructivePtr _fconstructive)
 
 // ==============
 
+// RAW METHOD (SHOULD WE KEEP IT?)
 extern "C" void
-fcore_component_print(void* component)
+fcore_raw_component_print(void* component)
 {
    auto* c = (optframe::Component*)component;
    //std::cout << "fcore_component_print ptr=" << c << " => ";
    c->print();
+}
+
+extern "C" bool
+fcore_api1_engine_component_set_loglevel(FakeEnginePtr _engine, char* _scomponent, int loglevel, bool recursive)
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+
+   std::string scomponent{ _scomponent };
+   scannerpp::Scanner scanner{ scomponent };
+
+   sptr<optframe::Component> c = engine->loader.factory.getNextComponent(scanner);
+
+   if (!c)
+      return false;
+
+   assert(loglevel >= 0);
+   assert(loglevel <= 5);
+
+   /*
+   enum LogLevel
+   {
+      Silent = 0,
+      Error = 1,
+      Warning = 2,
+      Info = 3, (DEFAULT)
+      Debug = 4
+   };
+   */
+
+   auto ll = (optframe::LogLevel)loglevel;
+
+   assert(!recursive); // TODO: Must create 'setMessageLevelR'
+
+   c->setMessageLevel(ll);
+
+   return true;
 }
 
 // ==============================================

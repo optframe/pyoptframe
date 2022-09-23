@@ -184,8 +184,12 @@ fcore_lib.fcore_api1_engine_check.argtypes = [
 fcore_lib.fcore_api1_engine_check.restype = ctypes.c_bool
 ###
 
-#fcore_component_print(void* component);
-fcore_lib.fcore_component_print.argtypes = [c_void_p]
+#fcore_raw_component_print(void* component);
+fcore_lib.fcore_raw_component_print.argtypes = [c_void_p]
+
+fcore_lib.fcore_api1_engine_component_set_loglevel.argtypes = [
+    ctypes.c_void_p,  ctypes.c_char_p, ctypes.c_int, ctypes.c_bool]
+fcore_lib.fcore_api1_engine_component_set_loglevel.restype = ctypes.c_bool
 
 
 class SearchOutput(ctypes.Structure):
@@ -251,7 +255,13 @@ class OptFrameEngine(object):
         fcore_lib.fcore_api1_destroy_engine(self.hf)
 
     def print_component(self, component):
-        fcore_lib.fcore_component_print(component)
+        fcore_lib.fcore_raw_component_print(component)
+
+    def component_set_loglevel(self, scomponent, loglevel, recursive):
+        if(not isinstance(scomponent, str)):
+            assert(False)
+        b_comp = scomponent.encode('ascii')
+        return fcore_lib.fcore_api1_engine_component_set_loglevel(self.hf, b_comp, loglevel, recursive)
 
     def list_builders(self, pattern: str):
         if(not isinstance(pattern, str)):
@@ -965,7 +975,7 @@ print("")
 
 sos_idx = engine.build_single_obj_search(
     "OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA",
-    "OptFrame:GeneralEvaluator:Direction:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999")
+    "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999")
 print("sos_idx=", sos_idx)
 
 print("")
@@ -980,8 +990,8 @@ print("testing builder (build_local_search) for BI...")
 print("")
 
 ls_idx = engine.build_local_search(
-    "OptFrame:ComponentBuilder:LocalSearch:BI",
-    "OptFrame:GeneralEvaluator:Direction:Evaluator 0  OptFrame:NS:NSFind:NSSeq 0")
+    "OptFrame:ComponentBuilder:LocalSearch:FI",
+    "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:NS:NSFind:NSSeq 0")
 print("ls_idx=", ls_idx)
 
 engine.list_components("OptFrame:")
@@ -992,7 +1002,7 @@ print("")
 
 pert_idx = engine.build_component(
     "OptFrame:ComponentBuilder:ILS:LevelPert:LPlus2",
-    "OptFrame:GeneralEvaluator:Direction:Evaluator 0  OptFrame:NS 0",
+    "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:NS 0",
     "OptFrame:ILS:LevelPert")
 print("pert_idx=", pert_idx)
 
@@ -1005,12 +1015,19 @@ print("")
 
 sos_idx = engine.build_single_obj_search(
     "OptFrame:ComponentBuilder:SingleObjSearch:ILS:ILSLevels",
-    "OptFrame:GeneralEvaluator:Direction:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:LocalSearch 0 OptFrame:ILS:LevelPert 0  50  3")
+    "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:LocalSearch 0 OptFrame:ILS:LevelPert 0  50  3")
 print("sos_idx=", sos_idx)
 
 print("")
 print("testing execution of SingleObjSearch (run_sos_search) for ILS...")
 print("")
+
+# r = engine.component_set_loglevel(
+#    "OptFrame:GlobalSearch:SingleObjSearch "+str(sos_idx), 4, False)
+#print("r=", r)
+# r = engine.component_set_loglevel(
+#    "OptFrame:LocalSearch "+str(0), 4, False)
+#print("r=", r)
 
 lout = engine.run_sos_search(sos_idx, 4.5)
 print('lout=', lout)

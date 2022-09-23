@@ -3,7 +3,7 @@ all: mylib
 mylib:
 	mkdir -p build/
 	# -Wextra
-	g++ -std=c++17 -g -I../optframe/src -fconcepts -Wfatal-errors -Wall -pedantic -Ofast --shared cpplib/fcore_lib.cpp -o build/fcore_lib.so -fPIC
+	g++ -std=c++17 -g -I../optframe/src -fconcepts -Wall -pedantic -Ofast --shared cpplib/fcore_lib.cpp -o build/fcore_lib.so -fPIC
 	#readelf -s build/fcore_lib.so | grep fcore
 
 test:

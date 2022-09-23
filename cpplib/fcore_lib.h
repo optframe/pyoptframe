@@ -116,8 +116,14 @@ extern "C" LibSearchOutput // SearchOutput for XSH "best-type"
 fcore_api1_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelimit);
 
 // ============================ COMPONENT ===========================
+//
+// RAW METHOD: SHOULD WE KEEP IT?
 extern "C" void
-fcore_component_print(void* component);
+fcore_raw_component_print(void* component);
+
+// STANDARD METHOD FOR API1
+extern "C" bool
+fcore_api1_engine_component_set_loglevel(FakeEnginePtr _engine, char* _scomponent, int loglevel, bool recursive);
 
 // ============================
 
