@@ -11,6 +11,10 @@ This is a 10-year project with several practical applications in industry and ac
 
 `make test`
 
+## Example with 0-1 Knapsack Problem
+
+Please see file `tests/test_engine_kp.py` for an example with 0-1 Knapsack Problem.
+
 ## Known Issues
 
 All known issues fixed :)
