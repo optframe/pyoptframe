@@ -3,9 +3,9 @@
 import ctypes
 from ctypes import *
 #
-#from functools import total_ordering
+# from functools import total_ordering
 from typing import TypeVar, Type
-#T = TypeVar('T', bound='BigInteger')
+# T = TypeVar('T', bound='BigInteger')
 
 # too many options for handling resources in python libs... trying atexit
 # https://stackoverflow.com/questions/865115/how-do-i-correctly-clean-up-a-python-object
@@ -162,7 +162,7 @@ fcore_lib.fcore_api1_get_constructive.restype = ctypes.c_void_p
 ###
 
 
-### Engine: HeuristicFactory
+# Engine: HeuristicFactory
 fcore_lib.fcore_api1_create_engine.argtypes = []
 fcore_lib.fcore_api1_create_engine.restype = ctypes.c_void_p
 #
@@ -186,7 +186,7 @@ fcore_lib.fcore_api1_engine_check.argtypes = [
 fcore_lib.fcore_api1_engine_check.restype = ctypes.c_bool
 ###
 
-#fcore_raw_component_print(void* component);
+# fcore_raw_component_print(void* component);
 fcore_lib.fcore_raw_component_print.argtypes = [c_void_p]
 
 fcore_lib.fcore_api1_engine_component_set_loglevel.argtypes = [
@@ -241,7 +241,7 @@ fcore_lib.fcore_api1_fconstructive_gensolution.restype = ctypes.py_object
 # =========================
 
 def callback_sol_deepcopy_utils(sol):
-    #print("invoking 'callback_sol_deepcopy'... sol=", sol)
+    # print("invoking 'callback_sol_deepcopy'... sol=", sol)
     if(isinstance(sol, ctypes.py_object)):
         # this should never happen!
         assert(False)
@@ -258,7 +258,17 @@ class OptFrameEngine(object):
             callback_sol_tostring)
         self.callback_utils_decref_ptr = FUNC_UTILS_DECREF(
             callback_utils_decref)
+        # keep callbacks in memory
+        self.callback_list = []
         atexit.register(self.cleanup)
+
+    def register_callback(self, func):
+        # expects 'func' to be of ctypes.CFUNCTYPE
+        # must keep callbacks in memory, otherwise Python cleans them...
+        # TODO: pass callbacks with IncRef, so that we can keep them on C++ counterpart objects...
+        # TODO: think if unique_ptr<std::function<...>> is an interesting pattern of OptFCore C++
+        # TODO: for now, just keep them here.
+        self.callback_list.append(func)
 
     def cleanup(self):
         print("Running optframe cleanup...")
@@ -278,7 +288,7 @@ class OptFrameEngine(object):
             assert(False)
         b_pattern = pattern.encode('ascii')
         # type of b_pattern is 'bytes'
-        #print("bytes type: ", type(b_pattern))
+        # print("bytes type: ", type(b_pattern))
         return fcore_lib.fcore_api1_engine_builders(self.hf, ctypes.c_char_p(b_pattern))
 
     def list_components(self, pattern: str):
@@ -286,7 +296,7 @@ class OptFrameEngine(object):
             assert(False)
         b_pattern = pattern.encode('ascii')
         # type of b_pattern is 'bytes'
-        #print("bytes type: ", type(b_pattern))
+        # print("bytes type: ", type(b_pattern))
         return fcore_lib.fcore_api1_engine_list_components(self.hf, ctypes.c_char_p(b_pattern))
 
     def run_sa(self):
@@ -316,53 +326,80 @@ class OptFrameEngine(object):
     # =================== ADD =========================
 
     # register GeneralEvaluator (as FEvaluator) for min_callback
-    def minimize(self, problemCtx, min_callback_ptr):
-        #print("min_callback=", min_callback_ptr)
+    def minimize(self, problemCtx, min_callback):
+        min_callback_ptr = FUNC_FEVALUATE(min_callback)
+        self.register_callback(min_callback_ptr)
+        #
         idx_ev = fcore_lib.fcore_api1_add_float64_evaluator(
-            # self.hf,     FUNC_FEVALUATE(min_callback), True)
             self.hf,     min_callback_ptr, True, problemCtx)
         return idx_ev
 
-    def maximize(self, problemCtx, max_callback_ptr):
+    def maximize(self, problemCtx, max_callback):
+        max_callback_ptr = FUNC_FEVALUATE(max_callback)
+        self.register_callback(max_callback_ptr)
+        #
         idx_ev = fcore_lib.fcore_api1_add_float64_evaluator(
-            # self.hf,     FUNC_FEVALUATE(max_callback), False)
             self.hf,     max_callback_ptr, False, problemCtx)
         return idx_ev
 
-    def add_constructive(self, problemCtx, constructive_callback_ptr):
-        #print("add_constructive begins")
+    def add_constructive(self, problemCtx, constructive_callback):
+        constructive_callback_ptr = FUNC_FCONSTRUCTIVE(constructive_callback)
+        self.register_callback(constructive_callback_ptr)
+        #
         idx_c = fcore_lib.fcore_api1_add_constructive(
-            #self.hf,     FUNC_FCONSTRUCTIVE(constructive_callback), problemCtx,
             self.hf,  constructive_callback_ptr, problemCtx,
             self.callback_sol_deepcopy_ptr,
-            # FUNC_SOL_DEEPCOPY(callback_sol_deepcopy),
             self.callback_sol_tostring_ptr,
-            # FUNC_SOL_TOSTRING(callback_sol_tostring),
             self.callback_utils_decref_ptr)
-        # FUNC_UTILS_DECREF(callback_utils_decref))
-        #print("add_constructive is finishing")
         return idx_c
 
-    def add_ns(self, problemCtx, ns_rand_callback_ptr, move_apply_callback_ptr, move_eq_callback_ptr, move_cba_callback_ptr):
-        #print("add_ns begins")
+    def add_ns(self, problemCtx, ns_rand_callback, move_apply_callback, move_eq_callback, move_cba_callback):
+        ns_rand_callback_ptr = FUNC_FNS_RAND(ns_rand_callback)
+        self.register_callback(ns_rand_callback_ptr)
+        #
+        move_apply_callback_ptr = FUNC_FMOVE_APPLY(move_apply_callback)
+        self.register_callback(move_apply_callback_ptr)
+        move_eq_callback_ptr = FUNC_FMOVE_EQ(move_eq_callback)
+        self.register_callback(move_eq_callback_ptr)
+        move_cba_callback_ptr = FUNC_FMOVE_CBA(move_cba_callback)
+        self.register_callback(move_cba_callback_ptr)
+        #
         idx_ns = fcore_lib.fcore_api1_add_ns(
             self.hf,  ns_rand_callback_ptr, move_apply_callback_ptr,
             move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
             self.callback_utils_decref_ptr)
-        # FUNC_UTILS_DECREF(callback_utils_decref))
-        #print("add_ns is finishing")
         return idx_ns
 
     def add_nsseq(self, problemCtx,
-                  ns_rand_callback_ptr,
-                  nsseq_it_init_callback_ptr,
-                  nsseq_it_first_callback_ptr,
-                  nsseq_it_next_callback_ptr,
-                  nsseq_it_isdone_callback_ptr,
-                  nsseq_it_current_callback_ptr,
-                  ###########
-                  move_apply_callback_ptr, move_eq_callback_ptr, move_cba_callback_ptr):
-        #print("add_ns begins")
+                  ns_rand_callback,
+                  nsseq_it_init_callback, nsseq_it_first_callback, nsseq_it_next_callback, nsseq_it_isdone_callback, nsseq_it_current_callback,
+                  move_apply_callback, move_eq_callback, move_cba_callback):
+        ns_rand_callback_ptr = FUNC_FNS_RAND(ns_rand_callback)
+        self.register_callback(ns_rand_callback_ptr)
+        #
+        nsseq_it_init_callback_ptr = FUNC_FNSSEQ_IT_INIT(
+            nsseq_it_init_callback)
+        self.register_callback(nsseq_it_init_callback_ptr)
+        nsseq_it_first_callback_ptr = FUNC_FNSSEQ_IT_FIRST(
+            nsseq_it_first_callback)
+        self.register_callback(nsseq_it_first_callback_ptr)
+        nsseq_it_next_callback_ptr = FUNC_FNSSEQ_IT_NEXT(
+            nsseq_it_next_callback)
+        self.register_callback(nsseq_it_next_callback_ptr)
+        nsseq_it_isdone_callback_ptr = FUNC_FNSSEQ_IT_ISDONE(
+            nsseq_it_isdone_callback)
+        self.register_callback(nsseq_it_isdone_callback_ptr)
+        nsseq_it_current_callback_ptr = FUNC_FNSSEQ_IT_CURRENT(
+            nsseq_it_current_callback)
+        self.register_callback(nsseq_it_current_callback_ptr)
+        #
+        move_apply_callback_ptr = FUNC_FMOVE_APPLY(move_apply_callback)
+        self.register_callback(move_apply_callback_ptr)
+        move_eq_callback_ptr = FUNC_FMOVE_EQ(move_eq_callback)
+        self.register_callback(move_eq_callback_ptr)
+        move_cba_callback_ptr = FUNC_FMOVE_CBA(move_cba_callback)
+        self.register_callback(move_cba_callback_ptr)
+        #
         idx_nsseq = fcore_lib.fcore_api1_add_nsseq(
             self.hf,  ns_rand_callback_ptr,
             nsseq_it_init_callback_ptr,
@@ -373,8 +410,7 @@ class OptFrameEngine(object):
             move_apply_callback_ptr,
             move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
             self.callback_utils_decref_ptr)
-        # FUNC_UTILS_DECREF(callback_utils_decref))
-        #print("add_ns is finishing")
+
         return idx_nsseq
 
     # =============================
@@ -382,7 +418,6 @@ class OptFrameEngine(object):
     # =============================
 
     def create_initial_search(self, ev_idx, c_idx):
-        #print("create_initial_search begins")
         idx_is = fcore_lib.fcore_api1_create_initial_search(
             self.hf, ev_idx, c_idx)
         return idx_is
@@ -459,79 +494,71 @@ class OptFrameEngine(object):
     # ==================================================
 
     def fevaluator_evaluate(self, fevaluator_ptr: ctypes.py_object, min_or_max: bool, py_sol):
-        #print("invoking 'fcore_lib.fcore_api1_float64_fevaluator_evaluate' with fevaluator_ptr=", fevaluator_ptr)
+        # print("invoking 'fcore_lib.fcore_api1_float64_fevaluator_evaluate' with fevaluator_ptr=", fevaluator_ptr)
         self.print_component(fevaluator_ptr)
         pyo_view = ctypes.py_object(py_sol)
-        #print("begin fevaluator_evaluate with pyo_view=", pyo_view)
+        # print("begin fevaluator_evaluate with pyo_view=", pyo_view)
         z = fcore_lib.fcore_api1_float64_fevaluator_evaluate(
             fevaluator_ptr, min_or_max, pyo_view)
-        #print("'fevaluator_evaluate' final z=", z)
+        # print("'fevaluator_evaluate' final z=", z)
         return z
 
     def fconstructive_gensolution(self, fconstructive_ptr: ctypes.py_object) -> ctypes.py_object:
-        #print("XXXXX BEGIN 'fconstructive_gensolution'")
-        #print("invoking 'fcore_lib.fcore_api1_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
-        #print("printing component... => ")
+        # print("XXXXX BEGIN 'fconstructive_gensolution'")
+        # print("invoking 'fcore_lib.fcore_api1_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
+        # print("printing component... => ")
         self.print_component(fconstructive_ptr)
 
-        #print("begin fconstructive_gensolution")
+        # print("begin fconstructive_gensolution")
         pyo_sol = fcore_lib.fcore_api1_fconstructive_gensolution(
             fconstructive_ptr)
-        #print("finished invoking 'fcore_lib.fcore_api1_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
+        # print("finished invoking 'fcore_lib.fcore_api1_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
 
-        #print("pyo_sol=", pyo_sol, " count=", sys.getrefcount(pyo_sol))
+        # print("pyo_sol=", pyo_sol, " count=", sys.getrefcount(pyo_sol))
         #
         # I THINK we must decref it... because it was once boxed into C++ solution and incref'ed somewhere...
         #
         cast_pyo = ctypes.py_object(pyo_sol)
-        #print("cast_pyo=", cast_pyo, " count=", sys.getrefcount(cast_pyo))
+        # print("cast_pyo=", cast_pyo, " count=", sys.getrefcount(cast_pyo))
         # ERROR: when decref, it segfaults... don't know why
         # ctypes.pythonapi.Py_DecRef(cast_pyo)
-        ###print("finished invoking 'fcore_lib.fcore_api1_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
+        # print("finished invoking 'fcore_lib.fcore_api1_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
         #
         #
-        #print("XXXXX FINISHED 'fconstructive_gensolution'!")
+        # print("XXXXX FINISHED 'fconstructive_gensolution'!")
         return cast_pyo.value
 
     def run_sos_search(self, sos_idx, timelimit) -> SearchOutput:
         lout = fcore_lib.fcore_api1_run_sos_search(self.hf, sos_idx, timelimit)
-        #l2out = SearchOutput(lout)
+        # l2out = SearchOutput(lout)
         return lout
 
 
 # ==============================
 
-
-def callback_utils_incref(pyo: ctypes.py_object):
-    print("callback_utils_incref: ", sys.getrefcount(pyo), " will get +1")
-    ctypes.pythonapi.Py_IncRef(pyo)
-    return sys.getrefcount(pyo)
-
+# def callback_utils_incref(pyo: ctypes.py_object):
+#    # print("callback_utils_incref: ", sys.getrefcount(pyo), " will get +1")
+#    ctypes.pythonapi.Py_IncRef(pyo)
+#    return sys.getrefcount(pyo)
 
 def callback_utils_decref(pyo):
     if(isinstance(pyo, ctypes.py_object)):
-        #print("WARNING DECREF: IS ctypes.py_object")
         pyo = pyo.value
-        #print("pyo:", pyo)
-    #print("callback_utils_decref: ", sys.getrefcount(pyo), " will get -1")
+        print("pyo:", pyo)
+    # print("callback_utils_decref: ", sys.getrefcount(pyo), " will get -1")
     # IMPORTANT: 'pyo' may come as a Real Python Object, not a 'ctypes.py_object'
     cast_pyo = ctypes.py_object(pyo)
+    #
     ctypes.pythonapi.Py_DecRef(cast_pyo)
     x = sys.getrefcount(pyo)
-    #print("x=", x, "force delete object = ", pyo)
-    # if x <= 4:
-    #    print("x=", x, "strange object = ", pyo)
-    #del pyo
-    #    print(gc.is_finalized(pyo))
     return x
 
 
 def callback_sol_tostring(sol, pt: ctypes.c_char_p, ptsize: ctypes.c_size_t):
-    mystr = sol.__str__()  # + '\0'
-    mystr_bytes = mystr.encode()  # str.encode(mystr)
+    mystr = sol.__str__()
+    mystr_bytes = mystr.encode()
     pa = cast(pt, POINTER(c_char * ptsize))
     pa.contents.value = mystr_bytes
-    #print("\tPYTHON TOSTRING callback_sol_tostring: '", mystr, "'")
     return len(mystr)
 
 # ==============================

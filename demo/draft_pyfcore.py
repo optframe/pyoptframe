@@ -248,7 +248,12 @@ class OptFrameEngine(object):
             callback_sol_tostring)
         self.callback_utils_decref_ptr = FUNC_UTILS_DECREF(
             callback_utils_decref)
+        self.callback_list = []
         atexit.register(self.cleanup)
+
+    def register_callback(self, func):
+        # expects 'func' to be of ctypes.CFUNCTYPE
+        self.callback_list.append(func)
 
     def cleanup(self):
         print("Running optframe cleanup...")
@@ -313,7 +318,15 @@ class OptFrameEngine(object):
             self.hf,     min_callback_ptr, True, problemCtx)
         return idx_ev
 
-    def maximize(self, problemCtx, max_callback_ptr):
+    def maximize(self, problemCtx, max_callback):
+        print("CALLBACK TYPE = ", type(max_callback))
+        # if(not isinstance(max_callback, FUNC_FEVALUATE)):
+        #    assert(False)
+        # if(not inspect.isfunction(max_callback)):
+        #    assert(False)
+        max_callback_ptr = FUNC_FEVALUATE(max_callback)
+        self.register_callback(max_callback_ptr)
+
         idx_ev = fcore_lib.fcore_api1_add_float64_evaluator(
             # self.hf,     FUNC_FEVALUATE(max_callback), False)
             self.hf,     max_callback_ptr, False, problemCtx)
@@ -821,7 +834,7 @@ pKP.p = [5, 4, 3, 2, 1]
 pKP.Q = 6.0
 print(pKP)
 
-ev_idx = engine.maximize(pKP, call_fev)
+ev_idx = engine.maximize(pKP, mycallback_fevaluate)
 print("evaluator id:", ev_idx)
 fev = engine.get_evaluator()
 engine.print_component(fev)

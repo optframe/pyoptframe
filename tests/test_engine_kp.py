@@ -7,7 +7,7 @@ import random  # TODO: get from hf engine ?
 from optframe.engine import OptFrameEngine
 # helpers
 #from optframe.engine import callback_sol_deepcopy
-from optframe.engine import *  # FUNC_FEVALUATE, FUNC_FCONSTRUCTIVE, FUNC_FNS_RAND
+# from optframe.engine import *  # FUNC_FEVALUATE, FUNC_FCONSTRUCTIVE, FUNC_FNS_RAND
 
 
 # =========================
@@ -61,13 +61,6 @@ class ExampleKP(object):
 
 
 def mycallback_fevaluate(pKP: ExampleKP, sol: ExampleSol):
-    #print("python: invoking 'mycallback_fevaluate' with problem and solution sol=", sol)
-    if(isinstance(sol, ctypes.py_object)):
-        # this should never happen!
-        assert(False)
-        if FCORE_WARN_ISSUES == True:
-            print("WARNING2: IS ctypes.py_object")
-        sol = sol.value
     assert(sol.n == pKP.n)
     assert(len(sol.bag) == sol.n)
     #
@@ -182,17 +175,9 @@ def mycallback_nsseq_it_current_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
 print("=========================")
 print("BEGIN with OptFrameEngine")
 print("=========================")
-print("")
-print("Create Callbacks KP object")
-print("")
-call_fev = FUNC_FEVALUATE(mycallback_fevaluate)
-call_c = FUNC_FCONSTRUCTIVE(mycallback_constructive)
-print("call_fev=", call_fev)
-print("call_c=", call_c)
 
 engine = OptFrameEngine()
-print("call_ev:", call_fev)
-print("call_c:", call_c)
+
 pKP = ExampleKP()
 pKP.n = 5
 pKP.w = [1, 2, 3, 4, 5]
@@ -200,50 +185,39 @@ pKP.p = [5, 4, 3, 2, 1]
 pKP.Q = 6.0
 print(pKP)
 
-ev_idx = engine.maximize(pKP, call_fev)
+ev_idx = engine.maximize(pKP, mycallback_fevaluate)
 print("evaluator id:", ev_idx)
 
-c_idx = engine.add_constructive(pKP, call_c)
+c_idx = engine.add_constructive(pKP, mycallback_constructive)
 print("c_idx=", c_idx)
 
 is_idx = engine.create_initial_search(ev_idx, c_idx)
 print("is_idx=", is_idx)
 
 
-call_ns_bitflip = FUNC_FNS_RAND(mycallback_ns_rand_bitflip)
-call_move_apply = FUNC_FMOVE_APPLY(mycallback_move_apply_bitflip)
-call_move_eq = FUNC_FMOVE_EQ(mycallback_move_eq_bitflip)
-call_move_cba = FUNC_FMOVE_CBA(mycallback_move_cba_bitflip)
-
 # get index of new NS
-ns_idx = engine.add_ns(pKP, call_ns_bitflip,
-                       call_move_apply, call_move_eq, call_move_cba)
+ns_idx = engine.add_ns(pKP,
+                       mycallback_ns_rand_bitflip,
+                       mycallback_move_apply_bitflip,
+                       mycallback_move_eq_bitflip,
+                       mycallback_move_cba_bitflip)
 print("ns_idx=", ns_idx)
 
 list_idx = engine.create_component_list("[ OptFrame:NS 0 ]", "OptFrame:NS[]")
 print("list_idx=", list_idx)
 
 
-call_nsseq_it_init_bitflip = FUNC_FNSSEQ_IT_INIT(
-    mycallback_nsseq_it_init_bitflip)
-call_nsseq_it_first_bitflip = FUNC_FNSSEQ_IT_FIRST(
-    mycallback_nsseq_it_first_bitflip)
-call_nsseq_it_next_bitflip = FUNC_FNSSEQ_IT_NEXT(
-    mycallback_nsseq_it_next_bitflip)
-call_nsseq_it_isdone_bitflip = FUNC_FNSSEQ_IT_ISDONE(
-    mycallback_nsseq_it_isdone_bitflip)
-call_nsseq_it_current_bitflip = FUNC_FNSSEQ_IT_CURRENT(
-    mycallback_nsseq_it_current_bitflip)
-
 # get index of new NSSeq
 nsseq_idx = engine.add_nsseq(pKP,
-                             call_ns_bitflip,
-                             call_nsseq_it_init_bitflip,
-                             call_nsseq_it_first_bitflip,
-                             call_nsseq_it_next_bitflip,
-                             call_nsseq_it_isdone_bitflip,
-                             call_nsseq_it_current_bitflip,
-                             call_move_apply, call_move_eq, call_move_cba)
+                             mycallback_ns_rand_bitflip,
+                             mycallback_nsseq_it_init_bitflip,
+                             mycallback_nsseq_it_first_bitflip,
+                             mycallback_nsseq_it_next_bitflip,
+                             mycallback_nsseq_it_isdone_bitflip,
+                             mycallback_nsseq_it_current_bitflip,
+                             mycallback_move_apply_bitflip,
+                             mycallback_move_eq_bitflip,
+                             mycallback_move_cba_bitflip)
 print("nsseq_idx=", nsseq_idx)
 
 # ============= CHECK =============
@@ -318,16 +292,4 @@ print("")
 lout = engine.run_sos_search(sos_idx, 4.5)
 print('lout=', lout)
 
-# must keep callback variables alive until the end... for now
-print(call_fev)
-print(call_c)
-print(call_ns_bitflip)
-print(call_move_apply)
-print(call_move_eq)
-print(call_move_cba)
-
-print(call_nsseq_it_init_bitflip)
-print(call_nsseq_it_first_bitflip)
-print(call_nsseq_it_next_bitflip)
-print(call_nsseq_it_isdone_bitflip)
-print(call_nsseq_it_current_bitflip)
+print("FINISHED!")
