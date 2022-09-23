@@ -1,31 +1,33 @@
 #!/usr/bin/python3
 
-# for problem
 import random  # TODO: get from hf engine ?
 
-
 from optframe.engine import OptFrameEngine
-# helpers
-#from optframe.engine import callback_sol_deepcopy
-# from optframe.engine import *  # FUNC_FEVALUATE, FUNC_FCONSTRUCTIVE, FUNC_FNS_RAND
 
+# ==========================================
+# THIS IS AN EXAMPLE OF THE KNAPSACK PROBLEM
+# ==========================================
 
 # =========================
 #       Solution KP
 # =========================
 
+# this is the definition of a single solution on the knapsack problem
+
+
 class ExampleSol(object):
 
     def __init__(self):
+        # number of items in solution
         self.n = 0
+        # selected items in solution
         self.bag = []
 
+    # MUST provide some printing mechanism
     def __str__(self):
         return f"ExampleSol(n={self.n};bag={self.bag})"
 
-    def __copy__(self):
-        assert(False)
-
+    # MUST provide some deepcopy mechanism
     def __deepcopy__(self, memo):
         sol2 = ExampleSol()
         sol2.n = self.n
@@ -41,10 +43,10 @@ class ExampleSol(object):
 #       Problem KP
 # =========================
 
+# this is the definition of a Knapsack Problem instance
 
 class ExampleKP(object):
-    # def __init__(self, param=0):
-    #    self.p = param
+
     def __init__(self):
         print('Init KP')
         # number of items
@@ -59,6 +61,10 @@ class ExampleKP(object):
     def __str__(self):
         return f"ExampleKP(n={self.n};Q={self.Q};w={self.w};p={self.p})"
 
+
+# Definition of an evaluation function
+# MUST receive two inputs: Problem and Solution
+# MUST return a double representing the evaluation value of this solution
 
 def mycallback_fevaluate(pKP: ExampleKP, sol: ExampleSol):
     assert(sol.n == pKP.n)
@@ -79,6 +85,10 @@ def mycallback_fevaluate(pKP: ExampleKP, sol: ExampleSol):
     #print("result is: ", sum_p)
     return sum_p
 
+# Definition of a constructive method
+# MUST receive one input: Problem
+# MUST return a valid Solution for this Problem (it CAN be Infeasible)
+
 
 def mycallback_constructive(problemCtx: ExampleKP) -> ExampleSol:
     #print("\tinvoking mycallback_constructive for problem: ", problemCtx)
@@ -95,6 +105,12 @@ def mycallback_constructive(problemCtx: ExampleKP) -> ExampleSol:
 # while on C++ it only represents a Move Structure...
 # It will work fine, anyway. What pleases the user most ;)
 # ========================================================
+
+# Definition of a Neighborhood Structure and Move
+# There are four types of Neighborhood Structures in OptFrame: NS, NSFind, NSSeq and NSEnum
+# A Move MUST receive perform three actions: Apply, Equality and CanBeApplied
+# A NS MUST return a Random Move for the given neighborhood
+
 class MoveBitFlip(object):
     def __init__(self):
         #print('__init__ MoveBitFlip')
@@ -104,18 +120,16 @@ class MoveBitFlip(object):
         # print("~MoveBitFlip")
         pass
 
+# Generating a Random Move
 
-# C++: uptr<Move<XES>> (*fRandom)(const XES&);
 
-
-# TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
 def mycallback_ns_rand_bitflip(pKP: ExampleKP, sol: ExampleSol) -> MoveBitFlip:
     k = random.randint(0, pKP.n-1)
     mv = MoveBitFlip()
     mv.k = k
     return mv
 
-# TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
+# Move Apply MUST return an Undo Move or Reverse Move (a Move that can undo current application)
 
 
 def mycallback_move_apply_bitflip(problemCtx: ExampleKP, m: MoveBitFlip, sol: ExampleSol) -> MoveBitFlip:
@@ -126,13 +140,20 @@ def mycallback_move_apply_bitflip(problemCtx: ExampleKP, m: MoveBitFlip, sol: Ex
     mv.k = k
     return mv
 
+# Moves can be applied or not (best performance is to have a True here)
+
 
 def mycallback_move_cba_bitflip(problemCtx: ExampleKP, m: MoveBitFlip, sol: ExampleSol) -> bool:
     return True
 
 
+# Move equality must be provided
+
 def mycallback_move_eq_bitflip(problemCtx: ExampleKP, m1: MoveBitFlip, m2: MoveBitFlip) -> bool:
     return m1.k == m2.k
+
+# For NSSeq, one must provide a Move Iterator
+# A Move Iterator has five actions: Init, First, Next, IsDone and Current
 
 
 class IteratorBitFlip(object):
@@ -176,8 +197,10 @@ print("=========================")
 print("BEGIN with OptFrameEngine")
 print("=========================")
 
+# initializes optframe engine
 engine = OptFrameEngine()
 
+# creates a Toy problem with 5 items
 pKP = ExampleKP()
 pKP.n = 5
 pKP.w = [1, 2, 3, 4, 5]
