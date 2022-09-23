@@ -11,7 +11,7 @@ test:
 	(cd tests/ && python3 test_engine_kp.py)
 	
 
-make_pip:
+install:
 	#pip install  --global-option=build_ext --global-option="-I/home/imcoelho/git-reps/optframe/src" .
 	pip install .
 
