@@ -11,6 +11,16 @@ This is a 10-year project with several practical applications in industry and ac
 
 `make test`
 
+## C++ Standard
+
+We love Concepts and Optionals, so we require `C++20` as default. 
+However, it is possible to adapt `setup.py` in order to allow for `C++17` with `-fconcepts` on GCC. 
+If necessary (only C++17 is available), add this line on `setup.py`:
+
+```
+extra_compile_args=['--std=c++17', '-fconcepts']
+```
+
 ## Example with 0-1 Knapsack Problem
 
 Please see file `tests/test_engine_kp.py` for an example with 0-1 Knapsack Problem.

@@ -77,18 +77,20 @@ setup(
             ["optframe/fcore_lib.cpp"],
             #
             # ========== ONLY IF LOCAL TESTING IS USED ===========
-            include_dirs=[os.path.join(
-                this_directory, "./src/optframe-src/include")],
+            # include_dirs=[os.path.join(
+            #    this_directory, "./src/optframe-src/include")],
             #
             # ============ ONLY IF REMOTE GIT IS USED ============
-            # include_dirs=[os.path.join(
-            #    this_directory, "./optframe-git/include")],
+            include_dirs=[os.path.join(
+                this_directory, "./optframe-git/include")],
             #
             # ====================================================
             # TODO: we should start using c++20 ASAP...
             # Are Ubuntu / Windows / WSL2 users ready?
             #
-            extra_compile_args=['--std=c++17', '-fconcepts']
+            extra_compile_args=['--std=c++20']
+            # IF ONLY C++17 IS SUPPORTED, ON GCC, USE THIS (WE NEED CONCEPTS):
+            # extra_compile_args=['--std=c++17', '-fconcepts']
         ),
     ],
     # package_data includes data from 'src/' folder, by default
