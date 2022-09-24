@@ -29,7 +29,17 @@ Please see file `tests/test_engine_kp.py` for an example with 0-1 Knapsack Probl
 
 All known issues fixed :)
 
+## Thanks
+
+Thanks to the general help from Internet posts, this project could be packaged on Python (there are many links all around the source code mentioning the respective authors).
+
+Also thanks for the encouragement and fruitful discussions with my students, specially, Rafael Albuquerque, Marcos Souza, Victor Silva and Fellipe Pessanha.
+
 ## License
 
-MIT License - 2022
+MIT License || LGPLv3 License  (at your choice)
+
+Copyleft 2022
+
+Igor Machado Coelho
 
