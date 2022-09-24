@@ -163,7 +163,7 @@ fcore_lib.fcore_api1_get_constructive.restype = ctypes.c_void_p
 
 
 # Engine: HeuristicFactory
-fcore_lib.fcore_api1_create_engine.argtypes = []
+fcore_lib.fcore_api1_create_engine.argtypes = [ctypes.c_int]
 fcore_lib.fcore_api1_create_engine.restype = ctypes.c_void_p
 #
 fcore_lib.fcore_api1_destroy_engine.argtypes = [ctypes.c_void_p]
@@ -250,8 +250,8 @@ def callback_sol_deepcopy_utils(sol):
 
 
 class OptFrameEngine(object):
-    def __init__(self):
-        self.hf = fcore_lib.fcore_api1_create_engine()
+    def __init__(self, loglevel=3):
+        self.hf = fcore_lib.fcore_api1_create_engine(loglevel)
         self.callback_sol_deepcopy_ptr = FUNC_SOL_DEEPCOPY(
             callback_sol_deepcopy_utils)
         self.callback_sol_tostring_ptr = FUNC_SOL_TOSTRING(

@@ -198,7 +198,7 @@ print("BEGIN with OptFrameEngine")
 print("=========================")
 
 # initializes optframe engine
-engine = OptFrameEngine()
+engine = OptFrameEngine(4)
 
 # creates a Toy problem with 5 items
 pKP = ExampleKP()

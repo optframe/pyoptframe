@@ -33,6 +33,15 @@ class MyBuildExt(build_ext_orig):
     # 'run' from: https://stackoverflow.com/questions/45599346/ask-setuptools-to-git-clone-c-repository
     def run(self):
         # ==== clone optframe from remote git repo ====
+        # TODO: MUST FIND A BETTER WAY! NOT GOOD TO HAVE 'rm' COMMAND HERE!
+        # fatal: destination path 'optframe-git' already exists and is not an empty directory.
+        #
+        # PLAN B
+        # mkdir -p ...
+        # git init
+        # git remote add origin [my-repo]
+        # git fetch
+        # git checkout origin/master -ft
         subprocess.check_call(
             ['git', 'clone', '--depth', '1', '--branch', 'master', 'https://github.com/optframe/optframe', 'optframe-git'])
         # ===== check that clone() was done fine ======
@@ -69,7 +78,7 @@ this_directory = os.path.abspath(os.path.dirname(__file__))
 
 setup(
     name="optframe",
-    version="5.0.0-preview",
+    version="5.0.0rc0",
     py_modules=["optframe.engine"],
     ext_modules=[
         CTypesExtension(

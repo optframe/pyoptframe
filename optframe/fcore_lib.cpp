@@ -470,9 +470,15 @@ public:
 // ==================
 
 extern "C" FakeEnginePtr
-fcore_api1_create_engine()
+fcore_api1_create_engine(int ll)
 {
-   FakeEnginePtr engine_ptr = new FCoreApi1Engine;
+   auto l = (optframe::LogLevel)ll;
+   auto* _eng = new FCoreApi1Engine;
+   if (l == optframe::LogLevel::Debug)
+      std::cout << "Debug: will set OptFrame Engine loglevel to Debug" << std::endl;
+   _eng->loader.factory.setLogLevel(l);
+   //
+   FakeEnginePtr engine_ptr = _eng;
    return engine_ptr;
 }
 
@@ -622,6 +628,7 @@ fcore_api1_build_single(FakeEnginePtr _engine, char* builder, char* build_string
    // Example: "OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA"
    //
    std::string sbuilder = strBuilder;
+   std::cout << "OptFrame Engine GET BUILDER: " << sbuilder << std::endl;
    CB* cb = engine->loader.factory.getBuilder(sbuilder);
    if (!cb) {
       std::cout << "WARNING! OptFrame builder for SingleObjSearch not found!" << std::endl;
@@ -634,6 +641,7 @@ fcore_api1_build_single(FakeEnginePtr _engine, char* builder, char* build_string
    // Example: "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999";
    //
    std::string scan_params = strBuildString;
+   std::cout << "OptFrame Engine BUILD: " << scan_params << std::endl;
    scannerpp::Scanner scanner{ scan_params };
    optframe::SingleObjSearch<FCoreLibESolution>* single = cbsingle->build(scanner, engine->loader.factory);
    std::cout << "single =" << single << std::endl;
@@ -822,9 +830,12 @@ fcore_api1_add_float64_evaluator(FakeEnginePtr _engine,
       sref<optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>> eval2(ev_ptr);
       sref<optframe::Component> eval(eval2);
       //std::cout << "created FEvaluator<MIN> ptr=" << &eval.get() << std::endl;
-      id = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator");
-      // double add to prevent future down-casts
-      int id2 = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator:Evaluator");
+      //id = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator");
+      //
+      // double add to prevent future down-casts (NOT ANYMORE)
+      //
+      id = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator:Evaluator");
+      int id2 = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator");
       assert(id == id2);
       // also add to check module
       engine->check.addEvaluator(eval2);
@@ -834,9 +845,10 @@ fcore_api1_add_float64_evaluator(FakeEnginePtr _engine,
       sref<optframe::Evaluator<FCoreLibSolution, optframe::Evaluation<double>, FCoreLibESolution>> eval2(ev_ptr);
       sref<optframe::Component> eval(eval2);
 
-      id = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator");
-      // double add to prevent future down-casts
-      int id2 = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator:Evaluator");
+      //id = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator");
+      // double add to prevent future down-casts (NOT ANYMORE)
+      id = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator:Evaluator");
+      int id2 = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator");
       assert(id == id2);
       // also add to check module
       engine->check.addEvaluator(eval2);

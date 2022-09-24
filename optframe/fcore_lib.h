@@ -23,7 +23,7 @@ extern "C" struct LibSearchOutput
 // ============================ Engine: HeuristicFactory ===========================
 
 extern "C" FakeEnginePtr
-fcore_api1_create_engine();
+fcore_api1_create_engine(int LogLevel);
 
 extern "C" bool
 fcore_api1_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose);

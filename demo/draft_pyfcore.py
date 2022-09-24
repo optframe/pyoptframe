@@ -161,7 +161,7 @@ fcore_lib.fcore_api1_get_constructive.restype = ctypes.c_void_p
 
 
 ### Engine: HeuristicFactory
-fcore_lib.fcore_api1_create_engine.argtypes = []
+fcore_lib.fcore_api1_create_engine.argtypes = [ctypes.c_int]
 fcore_lib.fcore_api1_create_engine.restype = ctypes.c_void_p
 #
 fcore_lib.fcore_api1_destroy_engine.argtypes = [ctypes.c_void_p]
@@ -240,8 +240,8 @@ fcore_lib.fcore_api1_fconstructive_gensolution.restype = ctypes.py_object
 
 
 class OptFrameEngine(object):
-    def __init__(self):
-        self.hf = fcore_lib.fcore_api1_create_engine()
+    def __init__(self, loglevel=3):
+        self.hf = fcore_lib.fcore_api1_create_engine(loglevel)
         self.callback_sol_deepcopy_ptr = FUNC_SOL_DEEPCOPY(
             callback_sol_deepcopy)
         self.callback_sol_tostring_ptr = FUNC_SOL_TOSTRING(
@@ -410,6 +410,7 @@ class OptFrameEngine(object):
         if(not isinstance(str_builder, str)):
             assert(False)
         b_builder = str_builder.encode('ascii')
+        #
         if(not isinstance(str_params, str)):
             assert(False)
         b_params = str_params.encode('ascii')
@@ -824,7 +825,7 @@ call_c = FUNC_FCONSTRUCTIVE(mycallback_constructive)
 print("call_fev=", call_fev)
 print("call_c=", call_c)
 
-engine = OptFrameEngine()
+engine = OptFrameEngine(4)
 print("call_ev:", call_fev)
 print("call_c:", call_c)
 pKP = ExampleKP()
@@ -836,6 +837,10 @@ print(pKP)
 
 ev_idx = engine.maximize(pKP, mycallback_fevaluate)
 print("evaluator id:", ev_idx)
+
+print("Listing components:")
+engine.list_components("OptFrame:")
+
 fev = engine.get_evaluator()
 engine.print_component(fev)
 #
@@ -963,7 +968,8 @@ else:
 print("")
 print("Engine: will check")
 print("")
-engine.check(100, 10, False)
+if False:
+    engine.check(100, 10, False)
 print("pass...")
 
 print()
