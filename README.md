@@ -21,6 +21,12 @@ If necessary (only C++17 is available), add this line on `setup.py`:
 extra_compile_args=['--std=c++17', '-fconcepts']
 ```
 
+## Tutorials
+
+Please read the official tutorials for OptFrame C++: https://optframe.readthedocs.io/
+
+Tutorials specific for OptFrame Python is coming!
+
 ## Example with 0-1 Knapsack Problem
 
 Please see file `tests/test_engine_kp.py` for an example with 0-1 Knapsack Problem.
