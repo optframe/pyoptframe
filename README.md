@@ -71,8 +71,8 @@ In the future, we can also use greater API number to implement possible compatib
 
 Versioning should follow OptFrame C++ project on MAJOR and MINOR, leaving PATCH field to be different, if necessary. Examples: 
 
-- v 5 dot 1 dot 3 should include OptFrame C++ `v5.1`.
-- v 5 dot 4 dot 5 could include OptFrame C++ `v5.0.4rc0` or `v5.4.1`, but not `v5.6.x`.
+- v 5 dot 1 dot 3 should include OptFrame C++ 5 dot 1.
+- v 5 dot 4 dot 5 could include OptFrame C++ 5 dot 4 dot 8 OR 5 dot 4 dot 1, but NOT 5 dot 6 dot x.
 
 ### Packaging instructions
 
