@@ -1,4 +1,4 @@
-# myproject.toml
+# pyproject.toml
 # some advices from: https://realpython.com/pypi-publish-python-package/
 
 [build-system]
