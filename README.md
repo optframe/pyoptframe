@@ -96,7 +96,7 @@ For versioning:
 
 `bumpver init`
 
-To increase PATCH number:
+**To increase PATCH number:**
 
 `bumpver update --patch`
 
