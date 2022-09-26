@@ -1,5 +1,5 @@
-#ifndef optframe_LIB_H
-#define optframe_LIB_H
+#ifndef OPTFRAME_PYTHON_LIB_H
+#define OPTFRAME_PYTHON_LIB_H
 
 #include <cstdint> // int32_t
 #include <stdio.h>
@@ -127,4 +127,4 @@ optframe_api1d_engine_component_set_loglevel(FakeEnginePtr _engine, char* _scomp
 
 // ============================
 
-#endif // optframe_LIB_H
+#endif // OPTFRAME_PYTHON_LIB_H

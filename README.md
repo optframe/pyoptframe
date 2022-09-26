@@ -7,11 +7,32 @@ This is a 10-year project with several practical applications in industry and ac
 
 ## How to test
 
+### With Package Manager
+
 `make install` or `pip install .`
 
 `make test`
 
-## C++ Standard and Compiler Support
+### Without Package Manager (local only)
+
+```
+make optframe_lib
+make demo_local
+```
+
+
+## Tutorials
+
+Please read the official tutorials for OptFrame C++: https://optframe.readthedocs.io/
+
+Tutorials specific for OptFrame Python is coming!
+
+### Example with 0-1 Knapsack Problem
+
+Please see file `tests/test_engine_kp.py` for an example with 0-1 Knapsack Problem.
+
+## Technical discussions
+### C++ Standard and Compiler Support
 
 We love Concepts and Optionals, so we require `C++20` as default. 
 However, it is possible to adapt `setup.py` in order to allow for `C++17` with `-fconcepts` on GCC. 
@@ -23,17 +44,8 @@ extra_compile_args=['--std=c++17', '-fconcepts']
 
 For the moment, GCC and CLANG are officially supported, but more compilers can be added to the list, if demand exists.
 
-## Tutorials
 
-Please read the official tutorials for OptFrame C++: https://optframe.readthedocs.io/
-
-Tutorials specific for OptFrame Python is coming!
-
-## Example with 0-1 Knapsack Problem
-
-Please see file `tests/test_engine_kp.py` for an example with 0-1 Knapsack Problem.
-
-## `optframe_lib` API Organization
+### `optframe_lib` API Organization
 
 The API on `optframe_lib` is organized in distict **API levels**.
 
@@ -52,6 +64,14 @@ and to all basic examples
 - level 3+ (???): maybe we can use this to split advanced functionalities from API2, but only future can tell
 
 In the future, we can also use greater API number to implement possible compatibility breaking features... only future will tell.
+
+### Versioning Strategy
+
+Versioning should follow OptFrame C++ project on MAJOR and MINOR, leaving BUGFIX to be different, if necessary. Examples: 
+
+- `pyoptframe v5.1.3` should include OptFrame C++ `v5.1`.
+- `pyoptframe v5.4.5` could include OptFrame C++ `v5.4.8` or `v5.4.1`, but not `v5.6.x`.
+
 
 ## Known Issues
 
