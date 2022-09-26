@@ -51,7 +51,7 @@ The API on `optframe_lib` is organized in distict **API levels**.
 
 Every function on `optframe_lib` API starts with the prefix `optframe_apiXy`, where
 `X` represents the level and `y` represents the main evaluation type considered.
-For now, we adopt `y=d`, meaning that API is meant for `float32` (or `double`) evaluation
+For now, we support `X=1` and `y=d`, meaning that API is meant for `float64` (or `double`) evaluation
 spaces (but we certainly plan to add support for `i32`, `i64` and other types).
 
 Regarding the API level strategy:
