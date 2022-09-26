@@ -18,12 +18,15 @@ import sys
 
 import pathlib
 
-# ==================== fcore_lib.so ===================
+from enum import Enum, IntEnum
+
+
+# ==================== optframe_lib.so ===================
 
 libfile = pathlib.Path(__file__).parent / "optframe_lib.so"
 
 # manual setup ?
-if(False):
+if (False):
     optframe_lib = ctypes.cdll.LoadLibrary('../build/optframe_lib.so')
 else:
     optframe_lib = ctypes.CDLL(str(libfile))
@@ -174,11 +177,11 @@ optframe_lib.optframe_api0d_engine_test.restype = ctypes.c_bool
 
 #
 optframe_lib.optframe_api1d_engine_list_builders.argtypes = [
-    ctypes.c_void_p,  ctypes.c_char_p]
+    ctypes.c_void_p, ctypes.c_char_p]
 optframe_lib.optframe_api1d_engine_list_builders.restype = ctypes.c_int
 #
 optframe_lib.optframe_api1d_engine_list_components.argtypes = [
-    ctypes.c_void_p,  ctypes.c_char_p]
+    ctypes.c_void_p, ctypes.c_char_p]
 optframe_lib.optframe_api1d_engine_list_components.restype = ctypes.c_int
 #
 optframe_lib.optframe_api1d_engine_check.argtypes = [
@@ -190,12 +193,24 @@ optframe_lib.optframe_api1d_engine_check.restype = ctypes.c_bool
 optframe_lib.optframe_api0_component_print.argtypes = [c_void_p]
 
 optframe_lib.optframe_api1d_engine_component_set_loglevel.argtypes = [
-    ctypes.c_void_p,  ctypes.c_char_p, ctypes.c_int, ctypes.c_bool]
+    ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int, ctypes.c_bool]
 optframe_lib.optframe_api1d_engine_component_set_loglevel.restype = ctypes.c_bool
 
 
+class SearchStatus(Enum):
+    NO_REPORT = 0x00
+    FAILED = 0x01
+    RUNNING = 0x02
+    # RESERVED = 0x04
+    IMPOSSIBLE = 0x08
+    NO_SOLUTION = 0x10
+    IMPROVEMENT = 0x20
+    LOCAL_OPT = 0x40
+    GLOBAL_OPT = 0x80
+
+
 class SearchOutput(ctypes.Structure):
-    _fields_ = [("status", c_int),
+    _fields_ = [("status", ctypes.c_int),  # optframe.SearchStatus
                 ("has_best", ctypes.c_bool),
                 ("best_s", ctypes.py_object),
                 ("best_e", ctypes.c_double)]
@@ -210,7 +225,7 @@ optframe_lib.optframe_api0d_engine_simulated_annealing.argtypes = [
 optframe_lib.optframe_api0d_engine_simulated_annealing.restype = SearchOutput
 #
 optframe_lib.optframe_api0d_engine_simulated_annealing_params.argtypes = [
-    ctypes.c_void_p,  ctypes.c_double, ctypes.c_int, ctypes.c_int, ctypes.c_int,
+    ctypes.c_void_p, ctypes.c_double, ctypes.c_int, ctypes.c_int, ctypes.c_int,
     ctypes.c_double, ctypes.c_int, ctypes.c_double]
 optframe_lib.optframe_api0d_engine_simulated_annealing_params.restype = SearchOutput
 
@@ -243,16 +258,37 @@ optframe_lib.optframe_api0_fconstructive_gensolution.restype = ctypes.py_object
 
 def callback_sol_deepcopy_utils(sol):
     # print("invoking 'callback_sol_deepcopy'... sol=", sol)
-    if(isinstance(sol, ctypes.py_object)):
+    if (isinstance(sol, ctypes.py_object)):
         # this should never happen!
-        assert(False)
+        assert (False)
     sol2 = deepcopy(sol)
     return sol2
 
 
-class OptFrameEngine(object):
-    def __init__(self, loglevel=3):
-        self.hf = optframe_lib.optframe_api1d_create_engine(loglevel)
+# optframe.APILevel
+class APILevel(Enum):
+    API1d = "1d"  # API 1 for double type
+
+
+# optframe.LogLevel
+class LogLevel(IntEnum):
+    Silent = 0
+    Error = 1
+    Warning = 2
+    Info = 3
+    Debug = 4
+# example:
+# if (loglevel >= LogLevel::Warning) { ... }
+
+
+# optframe.Engine
+class Engine(object):
+    def __init__(self, apilevel: APILevel = APILevel.API1d, loglevel: LogLevel = LogLevel.Info):
+        ll_int = int(loglevel)
+        assert (apilevel == APILevel.API1d)
+        if (loglevel >= LogLevel.Debug):
+            print("Debug: Engine using API level API1d")
+        self.hf = optframe_lib.optframe_api1d_create_engine(ll_int)
         self.callback_sol_deepcopy_ptr = FUNC_SOL_DEEPCOPY(
             callback_sol_deepcopy_utils)
         self.callback_sol_tostring_ptr = FUNC_SOL_TOSTRING(
@@ -279,22 +315,22 @@ class OptFrameEngine(object):
         optframe_lib.optframe_api0_component_print(component)
 
     def component_set_loglevel(self, scomponent, loglevel, recursive):
-        if(not isinstance(scomponent, str)):
-            assert(False)
+        if (not isinstance(scomponent, str)):
+            assert (False)
         b_comp = scomponent.encode('ascii')
         return optframe_lib.optframe_api1d_engine_component_set_loglevel(self.hf, b_comp, loglevel, recursive)
 
     def list_builders(self, pattern: str):
-        if(not isinstance(pattern, str)):
-            assert(False)
+        if (not isinstance(pattern, str)):
+            assert (False)
         b_pattern = pattern.encode('ascii')
         # type of b_pattern is 'bytes'
         # print("bytes type: ", type(b_pattern))
         return optframe_lib.optframe_api1d_engine_list_builders(self.hf, ctypes.c_char_p(b_pattern))
 
     def list_components(self, pattern: str):
-        if(not isinstance(pattern, str)):
-            assert(False)
+        if (not isinstance(pattern, str)):
+            assert (False)
         b_pattern = pattern.encode('ascii')
         # type of b_pattern is 'bytes'
         # print("bytes type: ", type(b_pattern))
@@ -332,7 +368,7 @@ class OptFrameEngine(object):
         self.register_callback(min_callback_ptr)
         #
         idx_ev = optframe_lib.optframe_api1d_add_evaluator(
-            self.hf,     min_callback_ptr, True, problemCtx)
+            self.hf, min_callback_ptr, True, problemCtx)
         return idx_ev
 
     def maximize(self, problemCtx, max_callback):
@@ -340,7 +376,7 @@ class OptFrameEngine(object):
         self.register_callback(max_callback_ptr)
         #
         idx_ev = optframe_lib.optframe_api1d_add_evaluator(
-            self.hf,     max_callback_ptr, False, problemCtx)
+            self.hf, max_callback_ptr, False, problemCtx)
         return idx_ev
 
     def add_constructive(self, problemCtx, constructive_callback):
@@ -348,7 +384,7 @@ class OptFrameEngine(object):
         self.register_callback(constructive_callback_ptr)
         #
         idx_c = optframe_lib.optframe_api1d_add_constructive(
-            self.hf,  constructive_callback_ptr, problemCtx,
+            self.hf, constructive_callback_ptr, problemCtx,
             self.callback_sol_deepcopy_ptr,
             self.callback_sol_tostring_ptr,
             self.callback_utils_decref_ptr)
@@ -366,7 +402,7 @@ class OptFrameEngine(object):
         self.register_callback(move_cba_callback_ptr)
         #
         idx_ns = optframe_lib.optframe_api1d_add_ns(
-            self.hf,  ns_rand_callback_ptr, move_apply_callback_ptr,
+            self.hf, ns_rand_callback_ptr, move_apply_callback_ptr,
             move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
             self.callback_utils_decref_ptr)
         return idx_ns
@@ -402,7 +438,7 @@ class OptFrameEngine(object):
         self.register_callback(move_cba_callback_ptr)
         #
         idx_nsseq = optframe_lib.optframe_api1d_add_nsseq(
-            self.hf,  ns_rand_callback_ptr,
+            self.hf, ns_rand_callback_ptr,
             nsseq_it_init_callback_ptr,
             nsseq_it_first_callback_ptr,
             nsseq_it_next_callback_ptr,
@@ -424,11 +460,11 @@ class OptFrameEngine(object):
         return idx_is
 
     def create_component_list(self, str_list, str_type):
-        if(not isinstance(str_list, str)):
-            assert(False)
+        if (not isinstance(str_list, str)):
+            assert (False)
         b_list = str_list.encode('ascii')
-        if(not isinstance(str_type, str)):
-            assert(False)
+        if (not isinstance(str_type, str)):
+            assert (False)
         b_type = str_type.encode('ascii')
         #
         idx_list = optframe_lib.optframe_api1d_create_component_list(
@@ -440,11 +476,11 @@ class OptFrameEngine(object):
     # =========================
 
     def build_single_obj_search(self, str_builder, str_params):
-        if(not isinstance(str_builder, str)):
-            assert(False)
+        if (not isinstance(str_builder, str)):
+            assert (False)
         b_builder = str_builder.encode('ascii')
-        if(not isinstance(str_params, str)):
-            assert(False)
+        if (not isinstance(str_params, str)):
+            assert (False)
         b_params = str_params.encode('ascii')
         #
         idx_list = optframe_lib.optframe_api1d_build_single(
@@ -452,11 +488,11 @@ class OptFrameEngine(object):
         return idx_list
 
     def build_local_search(self, str_builder, str_params):
-        if(not isinstance(str_builder, str)):
-            assert(False)
+        if (not isinstance(str_builder, str)):
+            assert (False)
         b_builder = str_builder.encode('ascii')
-        if(not isinstance(str_params, str)):
-            assert(False)
+        if (not isinstance(str_params, str)):
+            assert (False)
         b_params = str_params.encode('ascii')
         #
         idx_list = optframe_lib.optframe_api1d_build_local_search(
@@ -464,14 +500,14 @@ class OptFrameEngine(object):
         return idx_list
 
     def build_component(self, str_builder, str_params, str_component_type):
-        if(not isinstance(str_builder, str)):
-            assert(False)
+        if (not isinstance(str_builder, str)):
+            assert (False)
         b_builder = str_builder.encode('ascii')
-        if(not isinstance(str_params, str)):
-            assert(False)
+        if (not isinstance(str_params, str)):
+            assert (False)
         b_params = str_params.encode('ascii')
-        if(not isinstance(str_component_type, str)):
-            assert(False)
+        if (not isinstance(str_component_type, str)):
+            assert (False)
         b_ctype = str_component_type.encode('ascii')
         #
         idx_comp = optframe_lib.optframe_api1d_build_component(
@@ -544,7 +580,7 @@ class OptFrameEngine(object):
 #    return sys.getrefcount(pyo)
 
 def callback_utils_decref(pyo):
-    if(isinstance(pyo, ctypes.py_object)):
+    if (isinstance(pyo, ctypes.py_object)):
         pyo = pyo.value
         print("pyo:", pyo)
     # print("callback_utils_decref: ", sys.getrefcount(pyo), " will get -1")

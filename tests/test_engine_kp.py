@@ -2,7 +2,8 @@
 
 import random  # TODO: get from hf engine ?
 
-from optframe.engine import OptFrameEngine
+#from optframe.engine import OptFrameEngine
+import optframe
 
 # ==========================================
 # THIS IS AN EXAMPLE OF THE KNAPSACK PROBLEM
@@ -67,8 +68,8 @@ class ExampleKP(object):
 # MUST return a double representing the evaluation value of this solution
 
 def mycallback_fevaluate(pKP: ExampleKP, sol: ExampleSol):
-    assert(sol.n == pKP.n)
-    assert(len(sol.bag) == sol.n)
+    assert (sol.n == pKP.n)
+    assert (len(sol.bag) == sol.n)
     #
     sum_w = 0.0
     sum_p = 0.0
@@ -81,7 +82,7 @@ def mycallback_fevaluate(pKP: ExampleKP, sol: ExampleSol):
     if sum_w > pKP.Q:
         # excess is penalized
         #print("will penalize: Q=", pKP.Q, "sum_w=", sum_w)
-        sum_p += W_INF * (sum_w-pKP.Q)
+        sum_p += W_INF * (sum_w - pKP.Q)
     #print("result is: ", sum_p)
     return sum_p
 
@@ -124,7 +125,7 @@ class MoveBitFlip(object):
 
 
 def mycallback_ns_rand_bitflip(pKP: ExampleKP, sol: ExampleSol) -> MoveBitFlip:
-    k = random.randint(0, pKP.n-1)
+    k = random.randint(0, pKP.n - 1)
     mv = MoveBitFlip()
     mv.k = k
     return mv
@@ -177,7 +178,7 @@ def mycallback_nsseq_it_first_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
 
 
 def mycallback_nsseq_it_next_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
-    it.k = it.k+1
+    it.k = it.k + 1
 
 
 def mycallback_nsseq_it_isdone_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
@@ -198,7 +199,7 @@ print("BEGIN with OptFrameEngine")
 print("=========================")
 
 # initializes optframe engine
-engine = OptFrameEngine(4)
+engine = optframe.Engine(optframe.APILevel.API1d)
 
 # creates a Toy problem with 5 items
 pKP = ExampleKP()

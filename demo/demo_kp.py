@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import random  # TODO: get from hf engine ?
 import os
 
 # DO NOT REORDER 'import sys ...'
@@ -8,8 +7,16 @@ import sys
 sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')))
 
+# THIS PACKAGE IS LOCAL (../optframe), NOT FROM PACKAGE MANAGER...
+# GOOD FOR LOCAL TESTING!
+
 # DO NOT REORDER 'from optframe.engine ...'
-from optframe.engine import OptFrameEngine
+#from optframe.engine import OptFrameEngine
+
+import optframe
+
+# DO NOT REORDER 'from optframe.engine ...'
+import random  # TODO: get from hf engine ?
 
 
 # ==========================================
@@ -44,8 +51,8 @@ class ExampleSol(object):
         self.bag = []
         global count_solkp
         global count_plus_solkp
-        count_solkp = count_solkp+1
-        count_plus_solkp = count_plus_solkp+1
+        count_solkp = count_solkp + 1
+        count_plus_solkp = count_plus_solkp + 1
 
     # MUST provide some printing mechanism
     def __str__(self):
@@ -64,10 +71,9 @@ class ExampleSol(object):
         # print("~ExampleSol")
         global count_solkp
         global count_minus_solkp
-        count_solkp = count_solkp-1
-        count_minus_solkp = count_minus_solkp-1
+        count_solkp = count_solkp - 1
+        count_minus_solkp = count_minus_solkp - 1
         pass
-
 
 
 # =========================
@@ -96,8 +102,8 @@ class ExampleKP(object):
 def mycallback_fevaluate(pKP: ExampleKP, sol: ExampleSol):
     #print("python: invoking 'mycallback_fevaluate' with problem and solution sol=", sol)
 
-    assert(sol.n == pKP.n)
-    assert(len(sol.bag) == sol.n)
+    assert (sol.n == pKP.n)
+    assert (len(sol.bag) == sol.n)
     #
     sum_w = 0.0
     sum_p = 0.0
@@ -110,7 +116,7 @@ def mycallback_fevaluate(pKP: ExampleKP, sol: ExampleSol):
     if sum_w > pKP.Q:
         # excess is penalized
         #print("will penalize: Q=", pKP.Q, "sum_w=", sum_w)
-        sum_p += W_INF * (sum_w-pKP.Q)
+        sum_p += W_INF * (sum_w - pKP.Q)
     #print("result is: ", sum_p)
     return sum_p
 
@@ -137,15 +143,15 @@ class MoveBitFlip(object):
         self.k = 0
         global count_move_bitflip
         global count_plus_move_bitflip
-        count_move_bitflip = count_move_bitflip+1
-        count_plus_move_bitflip = count_plus_move_bitflip+1
+        count_move_bitflip = count_move_bitflip + 1
+        count_plus_move_bitflip = count_plus_move_bitflip + 1
 
     def __del__(self):
         # print("~MoveBitFlip")
         global count_move_bitflip
         global count_minus_move_bitflip
-        count_move_bitflip = count_move_bitflip-1
-        count_minus_move_bitflip = count_minus_move_bitflip-1
+        count_move_bitflip = count_move_bitflip - 1
+        count_minus_move_bitflip = count_minus_move_bitflip - 1
         pass
 
 
@@ -154,7 +160,7 @@ class MoveBitFlip(object):
 
 # TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
 def mycallback_ns_rand_bitflip(pKP: ExampleKP, sol: ExampleSol) -> MoveBitFlip:
-    k = random.randint(0, pKP.n-1)
+    k = random.randint(0, pKP.n - 1)
     mv = MoveBitFlip()
     mv.k = k
     # TODO: should we IncRef this? probably...
@@ -198,12 +204,12 @@ class IteratorBitFlip(object):
         # print('__init__ IteratorBitFlip')
         self.k = 0
         global count_it_bitflip
-        count_it_bitflip = count_it_bitflip+1
+        count_it_bitflip = count_it_bitflip + 1
 
     def __del__(self):
         # print("__del__ IteratorBitFlip")
         global count_it_bitflip
-        count_it_bitflip = count_it_bitflip-1
+        count_it_bitflip = count_it_bitflip - 1
         pass
 
 
@@ -218,7 +224,7 @@ def mycallback_nsseq_it_first_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
 
 
 def mycallback_nsseq_it_next_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
-    it.k = it.k+1
+    it.k = it.k + 1
 
 
 def mycallback_nsseq_it_isdone_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
@@ -238,7 +244,7 @@ print("=========================")
 print("BEGIN with OptFrameEngine")
 print("=========================")
 
-engine = OptFrameEngine(4)
+engine = optframe.Engine(optframe.APILevel.API1d, optframe.LogLevel.Debug)
 
 #
 pKP = ExampleKP()
@@ -446,6 +452,8 @@ print("")
 
 lout = engine.run_sos_search(sos_idx, 4.5)
 print('lout=', lout)
+ss = optframe.SearchStatus(lout.status)
+print(ss)
 
 #
 
