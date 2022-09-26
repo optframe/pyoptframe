@@ -8,3 +8,5 @@ __pycache__
 *.pyc
 *.egg-info
 requirements.txt
+optframe-git
+dist/

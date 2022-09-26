@@ -836,7 +836,10 @@ optframe_api1d_add_evaluator(FakeEnginePtr _engine,
       //
       id = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator:Evaluator");
       int id2 = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator");
-      assert(id == id2);
+
+      if (!(id == id2)) {
+         return -1;
+      }
       // also add to check module
       engine->check.addEvaluator(eval2);
    } else {
@@ -849,7 +852,9 @@ optframe_api1d_add_evaluator(FakeEnginePtr _engine,
       // double add to prevent future down-casts (NOT ANYMORE)
       id = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator:Evaluator");
       int id2 = engine->loader.factory.addComponent(eval, "OptFrame:GeneralEvaluator");
-      assert(id == id2);
+      if (!(id == id2)) {
+         return -1;
+      }
       // also add to check module
       engine->check.addEvaluator(eval2);
    }

@@ -100,6 +100,18 @@ For versioning:
 
 `bumpver update --patch`
 
+Test locally:
+
+`python -m pip install -e .`
+
+Build:
+
+`python -m pip install build twine`
+
+`python -m build`
+
+
+
 ## Known Issues
 
 All known issues fixed :)
