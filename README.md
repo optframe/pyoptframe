@@ -1,7 +1,7 @@
 # pyoptframe
 Python bindings for OptFrame Functional Core
 
-Version: `pyoptframe v5.0.4rc0`
+Version: `pyoptframe v5.0.5rc0`
 
 [OptFrame](https://github.com/optframe/optframe) is a C++ framework for optimization problems, including techniques such as classic metaheuristics Simulated Annealing, Genetic Algorithm, 
 Variable Neighborhood Search, Iterated Local Search, Tabu Search, Particle Swarm Optimization, NSGA-II, and other single and multi-objective methods.
