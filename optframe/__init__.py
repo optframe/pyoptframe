@@ -1,4 +1,4 @@
-__version__ = '5.0.0'
+__version__ = '5.0.1rc0'
 from optframe.engine import Engine
 from optframe.engine import SearchOutput
 from optframe.engine import SearchStatus
