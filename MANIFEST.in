@@ -1,0 +1,9 @@
+# MANIFEST.in
+
+include *.toml
+include demo/*.py
+include optframe/*.h
+include optframe/*.cpp
+include CPPLINT.cfg
+include makefile
+include .clang-format
