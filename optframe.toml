@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "optframe"
-version = "5.0.5rc0"
+version = "5.0.6rc0"
 description = "Python bindings for OptFrame Functional Core"
 readme = "README.md"
 authors = [{ name = "Igor Machado Coelho", email = "igormcoelho@proton.me" }]
