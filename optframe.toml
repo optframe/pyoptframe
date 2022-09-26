@@ -1,0 +1,30 @@
+# myproject.toml
+# some advices from: https://realpython.com/pypi-publish-python-package/
+
+[build-system]
+requires = ["setuptools>=53.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "optframe"
+version = "5.0.0"
+description = "Python bindings for OptFrame Functional Core"
+readme = "README.md"
+authors = [{ name = "Igor Machado Coelho", email = "igormcoelho@proton.me" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["optframe", "optimization", "metaheuristics"]
+dependencies = [
+#    "ctypes"
+]
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+dev = ["black", "bumpver", "isort", "pip-tools", "pytest"]
+
+[project.urls]
+Homepage = "https://github.com/optframe/pyoptframe"

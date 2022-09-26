@@ -72,6 +72,27 @@ Versioning should follow OptFrame C++ project on MAJOR and MINOR, leaving BUGFIX
 - `pyoptframe v5.1.3` should include OptFrame C++ `v5.1`.
 - `pyoptframe v5.4.5` could include OptFrame C++ `v5.4.8` or `v5.4.1`, but not `v5.6.x`.
 
+### Packaging instructions
+
+Edit `setup.py`.
+
+Edit `pyproject.toml`.
+
+`virtualenv venv`
+
+`source venv/bin/activate`
+
+`python -m pip install pip-tools`
+
+`pip-compile pyproject.toml`
+
+`pip-sync`
+
+For versioning:
+
+`python -m pip install bumpver`
+
+`bumpver init`
 
 ## Known Issues
 

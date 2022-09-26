@@ -6,3 +6,5 @@ optframe_lib.so
 *.so
 __pycache__
 *.pyc
+*.egg-info
+requirements.txt

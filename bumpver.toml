@@ -1,0 +1,24 @@
+[bumpver]
+current_version = "5.0.0"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message = "bump version {old_version} -> {new_version}"
+commit = true
+tag = true
+push = true
+
+[bumpver.file_patterns]
+"setup.py" = [
+    "{version}",
+    "{pep440_version}",
+]
+"README.md" = [
+    "{version}",
+    "{pep440_version}",
+]
+"bumpver.toml" = [
+    'current_version = "{version}"',
+]
+"optframe.toml" = [
+    'version = "{version}"',
+]
+"optframe/__init__.py" = ["{version}"]
