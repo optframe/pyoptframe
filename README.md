@@ -71,8 +71,8 @@ In the future, we can also use greater API number to implement possible compatib
 
 Versioning should follow OptFrame C++ project on MAJOR and MINOR, leaving PATCH field to be different, if necessary. Examples: 
 
-- pyoptframe `5.0.2rc0` should include OptFrame C++ `v5.1`.
-- pyoptframe `5.0.2rc0` could include OptFrame C++ `v5.4.8` or `v5.4.1`, but not `v5.6.x`.
+- v 5 dot 1 dot 3 should include OptFrame C++ `v5.1`.
+- v 5 dot 4 dot 5 could include OptFrame C++ `v5.4.8` or `v5.4.1`, but not `v5.6.x`.
 
 ### Packaging instructions
 
