@@ -20,13 +20,13 @@ import pathlib
 
 # ==================== fcore_lib.so ===================
 
-libfile = pathlib.Path(__file__).parent / "fcore_lib.so"
+libfile = pathlib.Path(__file__).parent / "optframe_lib.so"
 
 # manual setup ?
 if(False):
-    fcore_lib = ctypes.cdll.LoadLibrary('../build/fcore_lib.so')
+    optframe_lib = ctypes.cdll.LoadLibrary('../build/optframe_lib.so')
 else:
-    fcore_lib = ctypes.CDLL(str(libfile))
+    optframe_lib = ctypes.CDLL(str(libfile))
 
 FCORE_WARN_ISSUES = True
 
@@ -54,9 +54,9 @@ FUNC_SOL_TOSTRING = CFUNCTYPE(
 FUNC_FEVALUATE = CFUNCTYPE(ctypes.c_double, ctypes.py_object, ctypes.py_object)
 
 # fcore_float64_fevaluator(void* hf, double (*_fevaluate)(void*), bool min_or_max) -> int (index)
-fcore_lib.fcore_api1_add_float64_evaluator.argtypes = [
+optframe_lib.optframe_api1d_add_evaluator.argtypes = [
     ctypes.c_void_p, FUNC_FEVALUATE, c_bool, ctypes.py_object]
-fcore_lib.fcore_api1_add_float64_evaluator.restype = ctypes.c_int32
+optframe_lib.optframe_api1d_add_evaluator.restype = ctypes.c_int32
 
 # ----------
 
@@ -64,10 +64,10 @@ fcore_lib.fcore_api1_add_float64_evaluator.restype = ctypes.c_int32
 FUNC_FCONSTRUCTIVE = CFUNCTYPE(
     ctypes.py_object, ctypes.py_object)
 
-fcore_lib.fcore_api1_add_constructive.argtypes = [
+optframe_lib.optframe_api1d_add_constructive.argtypes = [
     ctypes.c_void_p, FUNC_FCONSTRUCTIVE, ctypes.py_object,
     FUNC_SOL_DEEPCOPY, FUNC_SOL_TOSTRING, FUNC_UTILS_DECREF]
-fcore_lib.fcore_api1_add_constructive.restype = ctypes.c_int32
+optframe_lib.optframe_api1d_add_constructive.restype = ctypes.c_int32
 
 # ----------
 
@@ -108,90 +108,90 @@ FUNC_FNSSEQ_IT_CURRENT = CFUNCTYPE(
     ctypes.py_object, ctypes.py_object, ctypes.py_object)
 
 # fns: hf*, func_ns, func_mv1, func_mv2, func_mv3, problem* -> int
-fcore_lib.fcore_api1_add_ns.argtypes = [
+optframe_lib.optframe_api1d_add_ns.argtypes = [
     ctypes.c_void_p, FUNC_FNS_RAND, FUNC_FMOVE_APPLY, FUNC_FMOVE_EQ, FUNC_FMOVE_CBA, ctypes.py_object, FUNC_UTILS_DECREF]
-fcore_lib.fcore_api1_add_ns.restype = ctypes.c_int32
+optframe_lib.optframe_api1d_add_ns.restype = ctypes.c_int32
 
 # fns: hf*, func_ns, func_mv1, func_mv2, func_mv3, problem* -> int
-fcore_lib.fcore_api1_add_nsseq.argtypes = [
+optframe_lib.optframe_api1d_add_nsseq.argtypes = [
     ctypes.c_void_p, FUNC_FNS_RAND,
     FUNC_FNSSEQ_IT_INIT, FUNC_FNSSEQ_IT_FIRST, FUNC_FNSSEQ_IT_NEXT, FUNC_FNSSEQ_IT_ISDONE, FUNC_FNSSEQ_IT_CURRENT,
     FUNC_FMOVE_APPLY, FUNC_FMOVE_EQ, FUNC_FMOVE_CBA, ctypes.py_object, FUNC_UTILS_DECREF]
-fcore_lib.fcore_api1_add_nsseq.restype = ctypes.c_int32
+optframe_lib.optframe_api1d_add_nsseq.restype = ctypes.c_int32
 
 # ================================
 #              CREATE
 # ================================
-fcore_lib.fcore_api1_create_initial_search.argtypes = [
+optframe_lib.optframe_api1d_create_initial_search.argtypes = [
     ctypes.c_void_p, ctypes.c_int32, ctypes.c_int32]
-fcore_lib.fcore_api1_create_initial_search.restype = ctypes.c_int32
+optframe_lib.optframe_api1d_create_initial_search.restype = ctypes.c_int32
 #
-fcore_lib.fcore_api1_create_component_list.argtypes = [
+optframe_lib.optframe_api1d_create_component_list.argtypes = [
     ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p]
-fcore_lib.fcore_api1_create_component_list.restype = ctypes.c_int32
+optframe_lib.optframe_api1d_create_component_list.restype = ctypes.c_int32
 
 # =================================
 #            BUILD
 # =================================
 
 # for SingleObjSearch
-fcore_lib.fcore_api1_build_single.argtypes = [
+optframe_lib.optframe_api1d_build_single.argtypes = [
     ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p]
-fcore_lib.fcore_api1_build_single.restype = ctypes.c_int32
+optframe_lib.optframe_api1d_build_single.restype = ctypes.c_int32
 
 # for LocalSearch
-fcore_lib.fcore_api1_build_local_search.argtypes = [
+optframe_lib.optframe_api1d_build_local_search.argtypes = [
     ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p]
-fcore_lib.fcore_api1_build_local_search.restype = ctypes.c_int32
+optframe_lib.optframe_api1d_build_local_search.restype = ctypes.c_int32
 
 # for Component
-fcore_lib.fcore_api1_build_component.argtypes = [
+optframe_lib.optframe_api1d_build_component.argtypes = [
     ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
-fcore_lib.fcore_api1_build_component.restype = ctypes.c_int32
+optframe_lib.optframe_api1d_build_component.restype = ctypes.c_int32
 
 # ====================================
 #        OptFrame GET Component
 # ====================================
-fcore_lib.fcore_api1_get_float64_evaluator.argtypes = [
+optframe_lib.optframe_api0d_get_evaluator.argtypes = [
     ctypes.c_void_p, c_int32]
-fcore_lib.fcore_api1_get_float64_evaluator.restype = ctypes.c_void_p
+optframe_lib.optframe_api0d_get_evaluator.restype = ctypes.c_void_p
 #
-fcore_lib.fcore_api1_get_constructive.argtypes = [
+optframe_lib.optframe_api0d_get_constructive.argtypes = [
     ctypes.c_void_p, c_int32]
-fcore_lib.fcore_api1_get_constructive.restype = ctypes.c_void_p
+optframe_lib.optframe_api0d_get_constructive.restype = ctypes.c_void_p
 ###
 
 
 # Engine: HeuristicFactory
-fcore_lib.fcore_api1_create_engine.argtypes = [ctypes.c_int]
-fcore_lib.fcore_api1_create_engine.restype = ctypes.c_void_p
+optframe_lib.optframe_api1d_create_engine.argtypes = [ctypes.c_int]
+optframe_lib.optframe_api1d_create_engine.restype = ctypes.c_void_p
 #
-fcore_lib.fcore_api1_destroy_engine.argtypes = [ctypes.c_void_p]
-fcore_lib.fcore_api1_destroy_engine.restype = ctypes.c_bool
+optframe_lib.optframe_api1d_destroy_engine.argtypes = [ctypes.c_void_p]
+optframe_lib.optframe_api1d_destroy_engine.restype = ctypes.c_bool
 #
-fcore_lib.fcore_api1_engine_test.argtypes = [ctypes.c_void_p]
-fcore_lib.fcore_api1_engine_test.restype = ctypes.c_bool
+optframe_lib.optframe_api0d_engine_test.argtypes = [ctypes.c_void_p]
+optframe_lib.optframe_api0d_engine_test.restype = ctypes.c_bool
 
 #
-fcore_lib.fcore_api1_engine_builders.argtypes = [
+optframe_lib.optframe_api1d_engine_list_builders.argtypes = [
     ctypes.c_void_p,  ctypes.c_char_p]
-fcore_lib.fcore_api1_engine_builders.restype = ctypes.c_int
+optframe_lib.optframe_api1d_engine_list_builders.restype = ctypes.c_int
 #
-fcore_lib.fcore_api1_engine_list_components.argtypes = [
+optframe_lib.optframe_api1d_engine_list_components.argtypes = [
     ctypes.c_void_p,  ctypes.c_char_p]
-fcore_lib.fcore_api1_engine_list_components.restype = ctypes.c_int
+optframe_lib.optframe_api1d_engine_list_components.restype = ctypes.c_int
 #
-fcore_lib.fcore_api1_engine_check.argtypes = [
+optframe_lib.optframe_api1d_engine_check.argtypes = [
     ctypes.c_void_p]
-fcore_lib.fcore_api1_engine_check.restype = ctypes.c_bool
+optframe_lib.optframe_api1d_engine_check.restype = ctypes.c_bool
 ###
 
 # fcore_raw_component_print(void* component);
-fcore_lib.fcore_raw_component_print.argtypes = [c_void_p]
+optframe_lib.optframe_api0_component_print.argtypes = [c_void_p]
 
-fcore_lib.fcore_api1_engine_component_set_loglevel.argtypes = [
+optframe_lib.optframe_api1d_engine_component_set_loglevel.argtypes = [
     ctypes.c_void_p,  ctypes.c_char_p, ctypes.c_int, ctypes.c_bool]
-fcore_lib.fcore_api1_engine_component_set_loglevel.restype = ctypes.c_bool
+optframe_lib.optframe_api1d_engine_component_set_loglevel.restype = ctypes.c_bool
 
 
 class SearchOutput(ctypes.Structure):
@@ -205,20 +205,21 @@ class SearchOutput(ctypes.Structure):
 
 
 #
-fcore_lib.fcore_api1_engine_simulated_annealing.argtypes = [ctypes.c_void_p]
-fcore_lib.fcore_api1_engine_simulated_annealing.restype = SearchOutput
+optframe_lib.optframe_api0d_engine_simulated_annealing.argtypes = [
+    ctypes.c_void_p]
+optframe_lib.optframe_api0d_engine_simulated_annealing.restype = SearchOutput
 #
-fcore_lib.fcore_api1_engine_simulated_annealing_params.argtypes = [
+optframe_lib.optframe_api0d_engine_simulated_annealing_params.argtypes = [
     ctypes.c_void_p,  ctypes.c_double, ctypes.c_int, ctypes.c_int, ctypes.c_int,
     ctypes.c_double, ctypes.c_int, ctypes.c_double]
-fcore_lib.fcore_api1_engine_simulated_annealing_params.restype = SearchOutput
+optframe_lib.optframe_api0d_engine_simulated_annealing_params.restype = SearchOutput
 
 # extern "C" LibSearchOutput
 # fcore_api1_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelimit);
 
-fcore_lib.fcore_api1_run_sos_search.argtypes = [
+optframe_lib.optframe_api1d_run_sos_search.argtypes = [
     ctypes.c_void_p, ctypes.c_int, ctypes.c_double]
-fcore_lib.fcore_api1_run_sos_search.restype = SearchOutput
+optframe_lib.optframe_api1d_run_sos_search.restype = SearchOutput
 
 
 # ======================================
@@ -226,14 +227,14 @@ fcore_lib.fcore_api1_run_sos_search.restype = SearchOutput
 # ======================================
 
 # fcore_float64_fevaluator_evaluate(void* _fevaluator, bool min_or_max, void* solution_ptr) -> double
-fcore_lib.fcore_api1_float64_fevaluator_evaluate.argtypes = [
+optframe_lib.optframe_api0d_fevaluator_evaluate.argtypes = [
     c_void_p, c_bool, ctypes.py_object]
-fcore_lib.fcore_api1_float64_fevaluator_evaluate.restype = ctypes.c_double
+optframe_lib.optframe_api0d_fevaluator_evaluate.restype = ctypes.c_double
 
 # fcore_api1_fconstructive_gensolution(void* _fconstructive) -> py_object solution
-fcore_lib.fcore_api1_fconstructive_gensolution.argtypes = [
+optframe_lib.optframe_api0_fconstructive_gensolution.argtypes = [
     c_void_p]
-fcore_lib.fcore_api1_fconstructive_gensolution.restype = ctypes.py_object
+optframe_lib.optframe_api0_fconstructive_gensolution.restype = ctypes.py_object
 
 
 # =========================
@@ -251,7 +252,7 @@ def callback_sol_deepcopy_utils(sol):
 
 class OptFrameEngine(object):
     def __init__(self, loglevel=3):
-        self.hf = fcore_lib.fcore_api1_create_engine(loglevel)
+        self.hf = optframe_lib.optframe_api1d_create_engine(loglevel)
         self.callback_sol_deepcopy_ptr = FUNC_SOL_DEEPCOPY(
             callback_sol_deepcopy_utils)
         self.callback_sol_tostring_ptr = FUNC_SOL_TOSTRING(
@@ -272,16 +273,16 @@ class OptFrameEngine(object):
 
     def cleanup(self):
         print("Running optframe cleanup...")
-        fcore_lib.fcore_api1_destroy_engine(self.hf)
+        optframe_lib.optframe_api1d_destroy_engine(self.hf)
 
     def print_component(self, component):
-        fcore_lib.fcore_raw_component_print(component)
+        optframe_lib.optframe_api0_component_print(component)
 
     def component_set_loglevel(self, scomponent, loglevel, recursive):
         if(not isinstance(scomponent, str)):
             assert(False)
         b_comp = scomponent.encode('ascii')
-        return fcore_lib.fcore_api1_engine_component_set_loglevel(self.hf, b_comp, loglevel, recursive)
+        return optframe_lib.optframe_api1d_engine_component_set_loglevel(self.hf, b_comp, loglevel, recursive)
 
     def list_builders(self, pattern: str):
         if(not isinstance(pattern, str)):
@@ -289,7 +290,7 @@ class OptFrameEngine(object):
         b_pattern = pattern.encode('ascii')
         # type of b_pattern is 'bytes'
         # print("bytes type: ", type(b_pattern))
-        return fcore_lib.fcore_api1_engine_builders(self.hf, ctypes.c_char_p(b_pattern))
+        return optframe_lib.optframe_api1d_engine_list_builders(self.hf, ctypes.c_char_p(b_pattern))
 
     def list_components(self, pattern: str):
         if(not isinstance(pattern, str)):
@@ -297,31 +298,31 @@ class OptFrameEngine(object):
         b_pattern = pattern.encode('ascii')
         # type of b_pattern is 'bytes'
         # print("bytes type: ", type(b_pattern))
-        return fcore_lib.fcore_api1_engine_list_components(self.hf, ctypes.c_char_p(b_pattern))
+        return optframe_lib.optframe_api1d_engine_list_components(self.hf, ctypes.c_char_p(b_pattern))
 
     def run_sa(self):
         print("DEPRECATED")
         print("Will Begin SA")
-        r = fcore_lib.fcore_api1_engine_simulated_annealing(self.hf)
+        r = optframe_lib.optframe_api1d_engine_simulated_annealing(self.hf)
         print("Finished SA")
         return r
 
     def run_sa_params(self, timelimit, id_ev, id_c, id_ns, alpha, iter, T):
         print("Will Begin SA Params")
-        r = fcore_lib.fcore_api1_engine_simulated_annealing_params(self.hf,
-                                                                   timelimit, id_ev, id_c, id_ns,
-                                                                   alpha, iter, T)
+        r = optframe_lib.optframe_api1d_engine_simulated_annealing_params(self.hf,
+                                                                          timelimit, id_ev, id_c, id_ns,
+                                                                          alpha, iter, T)
         print("Finished SA Params")
         return r
 
     def run_test(self):
         print("Will Begin Test")
-        r = fcore_lib.fcore_api1_engine_test(self.hf)
+        r = optframe_lib.optframe_api1d_engine_test(self.hf)
         print("Finished Test")
         return r
 
     def check(self, p1: int, p2: int, verbose=False) -> bool:
-        return fcore_lib.fcore_api1_engine_check(self.hf, p1, p2, verbose)
+        return optframe_lib.optframe_api1d_engine_check(self.hf, p1, p2, verbose)
 
     # =================== ADD =========================
 
@@ -330,7 +331,7 @@ class OptFrameEngine(object):
         min_callback_ptr = FUNC_FEVALUATE(min_callback)
         self.register_callback(min_callback_ptr)
         #
-        idx_ev = fcore_lib.fcore_api1_add_float64_evaluator(
+        idx_ev = optframe_lib.optframe_api1d_add_evaluator(
             self.hf,     min_callback_ptr, True, problemCtx)
         return idx_ev
 
@@ -338,7 +339,7 @@ class OptFrameEngine(object):
         max_callback_ptr = FUNC_FEVALUATE(max_callback)
         self.register_callback(max_callback_ptr)
         #
-        idx_ev = fcore_lib.fcore_api1_add_float64_evaluator(
+        idx_ev = optframe_lib.optframe_api1d_add_evaluator(
             self.hf,     max_callback_ptr, False, problemCtx)
         return idx_ev
 
@@ -346,7 +347,7 @@ class OptFrameEngine(object):
         constructive_callback_ptr = FUNC_FCONSTRUCTIVE(constructive_callback)
         self.register_callback(constructive_callback_ptr)
         #
-        idx_c = fcore_lib.fcore_api1_add_constructive(
+        idx_c = optframe_lib.optframe_api1d_add_constructive(
             self.hf,  constructive_callback_ptr, problemCtx,
             self.callback_sol_deepcopy_ptr,
             self.callback_sol_tostring_ptr,
@@ -364,7 +365,7 @@ class OptFrameEngine(object):
         move_cba_callback_ptr = FUNC_FMOVE_CBA(move_cba_callback)
         self.register_callback(move_cba_callback_ptr)
         #
-        idx_ns = fcore_lib.fcore_api1_add_ns(
+        idx_ns = optframe_lib.optframe_api1d_add_ns(
             self.hf,  ns_rand_callback_ptr, move_apply_callback_ptr,
             move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
             self.callback_utils_decref_ptr)
@@ -400,7 +401,7 @@ class OptFrameEngine(object):
         move_cba_callback_ptr = FUNC_FMOVE_CBA(move_cba_callback)
         self.register_callback(move_cba_callback_ptr)
         #
-        idx_nsseq = fcore_lib.fcore_api1_add_nsseq(
+        idx_nsseq = optframe_lib.optframe_api1d_add_nsseq(
             self.hf,  ns_rand_callback_ptr,
             nsseq_it_init_callback_ptr,
             nsseq_it_first_callback_ptr,
@@ -418,7 +419,7 @@ class OptFrameEngine(object):
     # =============================
 
     def create_initial_search(self, ev_idx, c_idx):
-        idx_is = fcore_lib.fcore_api1_create_initial_search(
+        idx_is = optframe_lib.optframe_api1d_create_initial_search(
             self.hf, ev_idx, c_idx)
         return idx_is
 
@@ -430,7 +431,7 @@ class OptFrameEngine(object):
             assert(False)
         b_type = str_type.encode('ascii')
         #
-        idx_list = fcore_lib.fcore_api1_create_component_list(
+        idx_list = optframe_lib.optframe_api1d_create_component_list(
             self.hf, b_list, b_type)
         return idx_list
 
@@ -446,7 +447,7 @@ class OptFrameEngine(object):
             assert(False)
         b_params = str_params.encode('ascii')
         #
-        idx_list = fcore_lib.fcore_api1_build_single(
+        idx_list = optframe_lib.optframe_api1d_build_single(
             self.hf, b_builder, b_params)
         return idx_list
 
@@ -458,7 +459,7 @@ class OptFrameEngine(object):
             assert(False)
         b_params = str_params.encode('ascii')
         #
-        idx_list = fcore_lib.fcore_api1_build_local_search(
+        idx_list = optframe_lib.optframe_api1d_build_local_search(
             self.hf, b_builder, b_params)
         return idx_list
 
@@ -473,19 +474,19 @@ class OptFrameEngine(object):
             assert(False)
         b_ctype = str_component_type.encode('ascii')
         #
-        idx_comp = fcore_lib.fcore_api1_build_component(
+        idx_comp = optframe_lib.optframe_api1d_build_component(
             self.hf, b_builder, b_params, b_ctype)
         return idx_comp
 
     # ===================== GET =======================
 
     def get_evaluator(self, idx_ev=0):
-        fevaluator = fcore_lib.fcore_api1_get_float64_evaluator(
+        fevaluator = optframe_lib.optframe_api0d_get_evaluator(
             self.hf, idx_ev)
         return fevaluator
 
     def get_constructive(self, idx_c=0):
-        fconstructive = fcore_lib.fcore_api1_get_constructive(
+        fconstructive = optframe_lib.optframe_api0d_get_constructive(
             self.hf, idx_c)
         return fconstructive
 
@@ -494,25 +495,25 @@ class OptFrameEngine(object):
     # ==================================================
 
     def fevaluator_evaluate(self, fevaluator_ptr: ctypes.py_object, min_or_max: bool, py_sol):
-        # print("invoking 'fcore_lib.fcore_api1_float64_fevaluator_evaluate' with fevaluator_ptr=", fevaluator_ptr)
+        # print("invoking 'optframe_lib.optframe_api1d_float64_fevaluator_evaluate' with fevaluator_ptr=", fevaluator_ptr)
         self.print_component(fevaluator_ptr)
         pyo_view = ctypes.py_object(py_sol)
         # print("begin fevaluator_evaluate with pyo_view=", pyo_view)
-        z = fcore_lib.fcore_api1_float64_fevaluator_evaluate(
+        z = optframe_lib.optframe_api0d_fevaluator_evaluate(
             fevaluator_ptr, min_or_max, pyo_view)
         # print("'fevaluator_evaluate' final z=", z)
         return z
 
     def fconstructive_gensolution(self, fconstructive_ptr: ctypes.py_object) -> ctypes.py_object:
         # print("XXXXX BEGIN 'fconstructive_gensolution'")
-        # print("invoking 'fcore_lib.fcore_api1_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
+        # print("invoking 'optframe_lib.optframe_api1d_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
         # print("printing component... => ")
         self.print_component(fconstructive_ptr)
 
         # print("begin fconstructive_gensolution")
-        pyo_sol = fcore_lib.fcore_api1_fconstructive_gensolution(
+        pyo_sol = optframe_lib.optframe_api0_fconstructive_gensolution(
             fconstructive_ptr)
-        # print("finished invoking 'fcore_lib.fcore_api1_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
+        # print("finished invoking 'optframe_lib.optframe_api1d_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
 
         # print("pyo_sol=", pyo_sol, " count=", sys.getrefcount(pyo_sol))
         #
@@ -522,14 +523,15 @@ class OptFrameEngine(object):
         # print("cast_pyo=", cast_pyo, " count=", sys.getrefcount(cast_pyo))
         # ERROR: when decref, it segfaults... don't know why
         # ctypes.pythonapi.Py_DecRef(cast_pyo)
-        # print("finished invoking 'fcore_lib.fcore_api1_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
+        # print("finished invoking 'optframe_lib.optframe_api1d_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
         #
         #
         # print("XXXXX FINISHED 'fconstructive_gensolution'!")
         return cast_pyo.value
 
     def run_sos_search(self, sos_idx, timelimit) -> SearchOutput:
-        lout = fcore_lib.fcore_api1_run_sos_search(self.hf, sos_idx, timelimit)
+        lout = optframe_lib.optframe_api1d_run_sos_search(
+            self.hf, sos_idx, timelimit)
         # l2out = SearchOutput(lout)
         return lout
 

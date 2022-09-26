@@ -82,8 +82,8 @@ setup(
     py_modules=["optframe.engine"],
     ext_modules=[
         CTypesExtension(
-            "optframe.fcore_lib",
-            ["optframe/fcore_lib.cpp"],
+            "optframe.optframe_lib",
+            ["optframe/optframe_lib.cpp"],
             #
             # ========== ONLY IF LOCAL TESTING IS USED ===========
             # include_dirs=[os.path.join(

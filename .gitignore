@@ -2,3 +2,7 @@ build/
 .vscode
 venv
 src/optframe-src
+optframe_lib.so
+*.so
+__pycache__
+*.pyc

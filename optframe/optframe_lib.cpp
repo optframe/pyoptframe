@@ -1,4 +1,4 @@
-#include "fcore_lib.h"
+#include "optframe_lib.h"
 //
 
 #include <assert.h>
@@ -470,7 +470,7 @@ public:
 // ==================
 
 extern "C" FakeEnginePtr
-fcore_api1_create_engine(int ll)
+optframe_api1d_create_engine(int ll)
 {
    auto l = (optframe::LogLevel)ll;
    auto* _eng = new FCoreApi1Engine;
@@ -483,7 +483,7 @@ fcore_api1_create_engine(int ll)
 }
 
 extern "C" bool
-fcore_api1_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose)
+optframe_api1d_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
    engine->check.setParameters(verbose);
@@ -493,13 +493,13 @@ fcore_api1_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose)
 }
 
 extern "C" LibSearchOutput
-fcore_api1_engine_simulated_annealing(FakeEnginePtr _engine)
+optframe_api0d_engine_simulated_annealing(FakeEnginePtr _engine)
 {
-   return fcore_api1_engine_simulated_annealing_params(_engine, 3.0, 0, 0, 0, 0.99, 100, 9999);
+   return optframe_api0d_engine_simulated_annealing_params(_engine, 3.0, 0, 0, 0, 0.99, 100, 9999);
 }
 
 extern "C" int
-fcore_api1_engine_builders(FakeEnginePtr _engine, char* prefix)
+optframe_api1d_engine_list_builders(FakeEnginePtr _engine, char* prefix)
 {
    std::string sprefix{ prefix };
    auto* engine = (FCoreApi1Engine*)_engine;
@@ -514,7 +514,7 @@ fcore_api1_engine_builders(FakeEnginePtr _engine, char* prefix)
 }
 
 extern "C" int
-fcore_api1_engine_list_components(FakeEnginePtr _engine, char* prefix)
+optframe_api1d_engine_list_components(FakeEnginePtr _engine, char* prefix)
 {
    std::string sprefix{ prefix };
    auto* engine = (FCoreApi1Engine*)_engine;
@@ -525,7 +525,7 @@ fcore_api1_engine_list_components(FakeEnginePtr _engine, char* prefix)
 }
 
 extern "C" int // index of ComponentList
-fcore_api1_create_component_list(FakeEnginePtr _engine, char* clist, char* list_type)
+optframe_api1d_create_component_list(FakeEnginePtr _engine, char* clist, char* list_type)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
    //
@@ -553,7 +553,7 @@ fcore_api1_create_component_list(FakeEnginePtr _engine, char* clist, char* list_
 }
 
 extern "C" LibSearchOutput
-fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timelimit, int id_evaluator, int id_constructive, int id_ns, double alpha, int iter, double T)
+optframe_api0d_engine_simulated_annealing_params(FakeEnginePtr _engine, double timelimit, int id_evaluator, int id_constructive, int id_ns, double alpha, int iter, double T)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
 
@@ -615,7 +615,7 @@ fcore_api1_engine_simulated_annealing_params(FakeEnginePtr _engine, double timel
 }
 
 extern "C" int // index of SingleObjSearch
-fcore_api1_build_single(FakeEnginePtr _engine, char* builder, char* build_string)
+optframe_api1d_build_single(FakeEnginePtr _engine, char* builder, char* build_string)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
    // =============================
@@ -656,7 +656,7 @@ fcore_api1_build_single(FakeEnginePtr _engine, char* builder, char* build_string
 }
 
 extern "C" int // index of LocalSearch
-fcore_api1_build_local_search(FakeEnginePtr _engine, char* builder, char* build_string)
+optframe_api1d_build_local_search(FakeEnginePtr _engine, char* builder, char* build_string)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
    // =============================
@@ -695,7 +695,7 @@ fcore_api1_build_local_search(FakeEnginePtr _engine, char* builder, char* build_
 }
 
 extern "C" int // index of Component
-fcore_api1_build_component(FakeEnginePtr _engine, char* builder, char* build_string, char* component_type)
+optframe_api1d_build_component(FakeEnginePtr _engine, char* builder, char* build_string, char* component_type)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
    // =============================
@@ -731,9 +731,9 @@ fcore_api1_build_component(FakeEnginePtr _engine, char* builder, char* build_str
 }
 
 extern "C" LibSearchOutput // SearchOutput for XSH "best-type"
-fcore_api1_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelimit)
+optframe_api1d_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelimit)
 {
-   std::cout << "begin C++ fcore_api1_run_sos_search: sos_idx=" << sos_idx << " timelimit=" << timelimit << std::endl;
+   std::cout << "begin C++ optframe_api1d_run_sos_search: sos_idx=" << sos_idx << " timelimit=" << timelimit << std::endl;
    auto* engine = (FCoreApi1Engine*)_engine;
    //
    sptr<optframe::SingleObjSearch<FCoreLibESolution>> sos;
@@ -757,7 +757,7 @@ fcore_api1_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelimit)
 }
 
 extern "C" bool
-fcore_api1_engine_test(FakeEnginePtr _engine)
+optframe_api0d_engine_test(FakeEnginePtr _engine)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
    //
@@ -793,7 +793,7 @@ fcore_api1_engine_test(FakeEnginePtr _engine)
 }
 
 extern "C" bool
-fcore_api1_destroy_engine(FakeEnginePtr _engine)
+optframe_api1d_destroy_engine(FakeEnginePtr _engine)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
    delete engine;
@@ -808,10 +808,10 @@ fcore_api1_destroy_engine(FakeEnginePtr _engine)
 // min_or_max is needed to correctly cast template on FEvaluator
 extern "C" int // index of generalevaluator
 
-fcore_api1_add_float64_evaluator(FakeEnginePtr _engine,
-                                 double (*_fevaluate)(FakePythonObjPtr, FakePythonObjPtr),
-                                 bool min_or_max,
-                                 FakePythonObjPtr problem_view)
+optframe_api1d_add_evaluator(FakeEnginePtr _engine,
+                             double (*_fevaluate)(FakePythonObjPtr, FakePythonObjPtr),
+                             bool min_or_max,
+                             FakePythonObjPtr problem_view)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
    //printf("hf=%p\n", (void*)hf);
@@ -866,17 +866,17 @@ fcore_api1_add_float64_evaluator(FakeEnginePtr _engine,
 // On Python, storing it on the engine (or the opposite) may do the job for us, so, no worry for now.
 
 extern "C" int // index of constructive
-fcore_api1_add_constructive(FakeEnginePtr _engine,
-                            FakePythonObjPtr (*_fconstructive)(FakePythonObjPtr),
-                            FakePythonObjPtr problem_view,
-                            // Support necessary for Solution construction and maintainance
-                            FakePythonObjPtr (*f_sol_deepcopy)(FakePythonObjPtr),
-                            size_t (*f_sol_tostring)(FakePythonObjPtr, char*, size_t),
-                            int (*f_utils_decref)(FakePythonObjPtr))
+optframe_api1d_add_constructive(FakeEnginePtr _engine,
+                                FakePythonObjPtr (*_fconstructive)(FakePythonObjPtr),
+                                FakePythonObjPtr problem_view,
+                                // Support necessary for Solution construction and maintainance
+                                FakePythonObjPtr (*f_sol_deepcopy)(FakePythonObjPtr),
+                                size_t (*f_sol_tostring)(FakePythonObjPtr, char*, size_t),
+                                int (*f_utils_decref)(FakePythonObjPtr))
 {
    auto* engine = (FCoreApi1Engine*)_engine;
 
-   //std::cout << "invoking 'fcore_api1_add_constructive' with "
+   //std::cout << "invoking 'optframe_api1d_add_constructive' with "
    //          << "_hf=" << _hf << " _fconstructive and problem_view=" << problem_view << std::endl;
 
    auto fconstructive = [_fconstructive,
@@ -886,10 +886,10 @@ fcore_api1_add_constructive(FakeEnginePtr _engine,
                          f_utils_decref]() -> FCoreLibSolution {
       // IMPORTANT: _fconstructive must IncRef solution on python before returning! I think so...
       FakePythonObjPtr vobj_owned = _fconstructive(problem_view);
-      //std::cout << "'fcore_api1_add_constructive' -> _fconstructive generated pointer: " << vobj_owned << std::endl;
+      //std::cout << "'optframe_api1d_add_constructive' -> _fconstructive generated pointer: " << vobj_owned << std::endl;
       assert(vobj_owned); // check void* (TODO: for FxConstructive, return nullopt)
       FCoreLibSolution sol(vobj_owned, f_sol_deepcopy, f_sol_tostring, f_utils_decref);
-      //std::cout << "'fcore_api1_add_constructive' -> solution created!" << std::endl;
+      //std::cout << "'optframe_api1d_add_constructive' -> solution created!" << std::endl;
       return sol;
    };
 
@@ -898,7 +898,7 @@ fcore_api1_add_constructive(FakeEnginePtr _engine,
    sref<optframe::Constructive<FCoreLibSolution>> fc2(c_ptr);
    sref<optframe::Component> fc(fc2);
 
-   //std::cout << "'fcore_api1_add_constructive' will add component on hf" << std::endl;
+   //std::cout << "'optframe_api1d_add_constructive' will add component on hf" << std::endl;
 
    int id = engine->loader.factory.addComponent(fc, "OptFrame:Constructive");
 
@@ -931,17 +931,17 @@ fcore_api1_add_constructive(FakeEnginePtr _engine,
 }
 
 extern "C" int // index of ns
-fcore_api1_add_ns(FakeEnginePtr _engine,
-                  FakePythonObjPtr (*_fns_rand)(FakePythonObjPtr, FakePythonObjPtr),
-                  FakePythonObjPtr (*_fmove_apply)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
-                  bool (*_fmove_eq)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
-                  bool (*_fmove_cba)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
-                  FakePythonObjPtr problem_view,
-                  int (*_f_utils_decref)(FakePythonObjPtr))
+optframe_api1d_add_ns(FakeEnginePtr _engine,
+                      FakePythonObjPtr (*_fns_rand)(FakePythonObjPtr, FakePythonObjPtr),
+                      FakePythonObjPtr (*_fmove_apply)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                      bool (*_fmove_eq)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                      bool (*_fmove_cba)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                      FakePythonObjPtr problem_view,
+                      int (*_f_utils_decref)(FakePythonObjPtr))
 {
    auto* engine = (FCoreApi1Engine*)_engine;
 
-   //std::cout << "invoking 'fcore_api1_add_constructive' with "
+   //std::cout << "invoking 'optframe_api1d_add_constructive' with "
    //          << "_hf=" << _hf << " _fconstructive and problem_view=" << problem_view << std::endl;
 
    // ======== preparing move functions ========
@@ -993,7 +993,7 @@ fcore_api1_add_ns(FakeEnginePtr _engine,
       //
       // vobj_owned should come IncRef'ed before! I guess...
       FakePythonObjPtr vobj_owned = _fns_rand(problem_view, se.first.solution_ptr);
-      //std::cout << "'fcore_api1_add_ns' -> _fns_rand generated pointer: " << vobj_owned << std::endl;
+      //std::cout << "'optframe_api1d_add_ns' -> _fns_rand generated pointer: " << vobj_owned << std::endl;
       assert(vobj_owned); // check void* (TODO: allow non-existing move, return nullptr)
 
       //
@@ -1003,7 +1003,7 @@ fcore_api1_add_ns(FakeEnginePtr _engine,
                                  func_fmove_eq,
                                  func_utils_decref);
 
-      //std::cout << "'fcore_api1_add_ns' -> move created!" << std::endl;
+      //std::cout << "'optframe_api1d_add_ns' -> move created!" << std::endl;
       return optframe::uptr<optframe::Move<FCoreLibESolution>>(m_ptr);
    };
 
@@ -1013,7 +1013,7 @@ fcore_api1_add_ns(FakeEnginePtr _engine,
    sref<optframe::Component> fns_comp(fns);
    //new optframe::FNS<FCoreLibESolution>{ func_fns });
 
-   //std::cout << "'fcore_api1_add_ns' will add component on hf" << std::endl;
+   //std::cout << "'optframe_api1d_add_ns' will add component on hf" << std::endl;
 
    int id = engine->loader.factory.addComponent(fns_comp, "OptFrame:NS");
    //
@@ -1025,23 +1025,23 @@ fcore_api1_add_ns(FakeEnginePtr _engine,
 // FOR NOW, WE IGNORE 'const XES' AND JUST USE 'const S'.... LET'S SEE!
 
 extern "C" int // index of ns
-fcore_api1_add_nsseq(FakeEnginePtr _engine,
-                     FakePythonObjPtr (*_fns_rand)(FakePythonObjPtr, FakePythonObjPtr),
-                     FakePythonObjPtr (*_fIterator)(FakePythonObjPtr, FakePythonObjPtr), // fIterator (just initializes IMS)
-                     // problem*, ims*
-                     void (*_fFirst)(FakePythonObjPtr, FakePythonObjPtr),               // iterator.first()
-                     void (*_fNext)(FakePythonObjPtr, FakePythonObjPtr),                // iterator.next()
-                     bool (*_fIsDone)(FakePythonObjPtr, FakePythonObjPtr),              // iterator.isDone()
-                     FakePythonObjPtr (*_fCurrent)(FakePythonObjPtr, FakePythonObjPtr), // iterator.current()
-                     FakePythonObjPtr (*_fmove_apply)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
-                     bool (*_fmove_eq)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
-                     bool (*_fmove_cba)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
-                     FakePythonObjPtr problem_view,
-                     int (*_f_utils_decref)(FakePythonObjPtr))
+optframe_api1d_add_nsseq(FakeEnginePtr _engine,
+                         FakePythonObjPtr (*_fns_rand)(FakePythonObjPtr, FakePythonObjPtr),
+                         FakePythonObjPtr (*_fIterator)(FakePythonObjPtr, FakePythonObjPtr), // fIterator (just initializes IMS)
+                         // problem*, ims*
+                         void (*_fFirst)(FakePythonObjPtr, FakePythonObjPtr),               // iterator.first()
+                         void (*_fNext)(FakePythonObjPtr, FakePythonObjPtr),                // iterator.next()
+                         bool (*_fIsDone)(FakePythonObjPtr, FakePythonObjPtr),              // iterator.isDone()
+                         FakePythonObjPtr (*_fCurrent)(FakePythonObjPtr, FakePythonObjPtr), // iterator.current()
+                         FakePythonObjPtr (*_fmove_apply)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                         bool (*_fmove_eq)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                         bool (*_fmove_cba)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                         FakePythonObjPtr problem_view,
+                         int (*_f_utils_decref)(FakePythonObjPtr))
 {
    auto* engine = (FCoreApi1Engine*)_engine;
 
-   //std::cout << "invoking 'fcore_api1_add_constructive' with "
+   //std::cout << "invoking 'optframe_api1d_add_constructive' with "
    //          << "_hf=" << _hf << " _fconstructive and problem_view=" << problem_view << std::endl;
 
    // ======== preparing move functions ========
@@ -1088,7 +1088,7 @@ fcore_api1_add_nsseq(FakeEnginePtr _engine,
       //
       // vobj_owned should come IncRef'ed before! I guess...
       FakePythonObjPtr vobj_owned = _fns_rand(problem_view, se.first.solution_ptr);
-      //std::cout << "'fcore_api1_add_ns' -> _fns_rand generated pointer: " << vobj_owned << std::endl;
+      //std::cout << "'optframe_api1d_add_ns' -> _fns_rand generated pointer: " << vobj_owned << std::endl;
       assert(vobj_owned); // check void* (TODO: allow non-existing move, return nullptr)
 
       //
@@ -1098,7 +1098,7 @@ fcore_api1_add_nsseq(FakeEnginePtr _engine,
                                  func_fmove_eq,
                                  func_utils_decref);
 
-      //std::cout << "'fcore_api1_add_ns' -> move created!" << std::endl;
+      //std::cout << "'optframe_api1d_add_ns' -> move created!" << std::endl;
       return optframe::uptr<optframe::Move<FCoreLibESolution>>(m_ptr);
    };
 
@@ -1160,7 +1160,7 @@ fcore_api1_add_nsseq(FakeEnginePtr _engine,
                                  func_fmove_eq,
                                  func_utils_decref);
 
-      //std::cout << "'fcore_api1_add_ns' -> move created!" << std::endl;
+      //std::cout << "'optframe_api1d_add_ns' -> move created!" << std::endl;
       return optframe::uptr<optframe::Move<FCoreLibESolution>>(m_ptr);
    };
    /*
@@ -1184,7 +1184,7 @@ fcore_api1_add_nsseq(FakeEnginePtr _engine,
 
    sref<optframe::Component> fnsseq_comp(fnsseq);
 
-   //std::cout << "'fcore_api1_add_nsseq' will add component on hf" << std::endl;
+   //std::cout << "'optframe_api1d_add_nsseq' will add component on hf" << std::endl;
 
    int id = engine->loader.factory.addComponent(fnsseq_comp, "OptFrame:NS:NSFind:NSSeq");
    //
@@ -1194,7 +1194,7 @@ fcore_api1_add_nsseq(FakeEnginePtr _engine,
 }
 
 extern "C" int // index of InitialSearch
-fcore_api1_create_initial_search(FakeEnginePtr _engine, int ev_idx, int c_idx)
+optframe_api1d_create_initial_search(FakeEnginePtr _engine, int ev_idx, int c_idx)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
 
@@ -1229,7 +1229,7 @@ fcore_api1_create_initial_search(FakeEnginePtr _engine, int ev_idx, int c_idx)
 // ==============================================
 
 extern "C" void* // raw (non-owned) pointer to GeneralEvaluator
-fcore_api1_get_float64_evaluator(FakeEnginePtr _engine, int idx_ev)
+optframe_api0d_get_evaluator(FakeEnginePtr _engine, int idx_ev)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
 
@@ -1243,7 +1243,7 @@ fcore_api1_get_float64_evaluator(FakeEnginePtr _engine, int idx_ev)
 }
 
 extern "C" void* // raw (non-owned) pointer to FConstructive
-fcore_api1_get_constructive(FakeEnginePtr _engine, int idx_c)
+optframe_api0d_get_constructive(FakeEnginePtr _engine, int idx_c)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
 
@@ -1262,7 +1262,7 @@ fcore_api1_get_constructive(FakeEnginePtr _engine, int idx_c)
 
 // min_or_max is needed to correctly cast template on FEvaluator
 extern "C" double //FEvaluator object
-fcore_api1_float64_fevaluator_evaluate(FakeFEvaluatorPtr _fevaluator, bool min_or_max, FakePythonObjPtr solution_ptr_view)
+optframe_api0d_fevaluator_evaluate(FakeFEvaluatorPtr _fevaluator, bool min_or_max, FakePythonObjPtr solution_ptr_view)
 {
    FCoreLibSolution sol(solution_ptr_view);
    optframe::Evaluation<double> ev(0);
@@ -1279,9 +1279,9 @@ fcore_api1_float64_fevaluator_evaluate(FakeFEvaluatorPtr _fevaluator, bool min_o
 }
 
 extern "C" FakePythonObjPtr // Python solution object
-fcore_api1_fconstructive_gensolution(FakeFConstructivePtr _fconstructive)
+optframe_api0_fconstructive_gensolution(FakeFConstructivePtr _fconstructive)
 {
-   //std::cout << "begin 'fcore_api1_fconstructive_gensolution'" << std::endl;
+   //std::cout << "begin 'optframe_api1d_fconstructive_gensolution'" << std::endl;
    auto* fconstructive = (optframe::FConstructive<FCoreLibSolution>*)_fconstructive;
    std::optional<FCoreLibSolution> sol = fconstructive->generateSolution(0.0);
    //std::cout << "will check if optional solution exists: " << !!sol << std::endl;
@@ -1290,7 +1290,7 @@ fcore_api1_fconstructive_gensolution(FakeFConstructivePtr _fconstructive)
    // should IncRef it here?? Perhaps...
    // will move it out from boxed Sol object, and make it a fake is_view=1 object here.
    FakePythonObjPtr ptr = sol->solution_ptr;
-   //std::cout << "finished 'fcore_api1_fconstructive_gensolution'... returning ptr=" << ptr << std::endl;
+   //std::cout << "finished 'optframe_api1d_fconstructive_gensolution'... returning ptr=" << ptr << std::endl;
    // ======= "kill" sol container =======
    sol->solution_ptr = 0;
    sol->is_view = 1;
@@ -1301,15 +1301,15 @@ fcore_api1_fconstructive_gensolution(FakeFConstructivePtr _fconstructive)
 
 // RAW METHOD (SHOULD WE KEEP IT?)
 extern "C" void
-fcore_raw_component_print(void* component)
+optframe_api0_component_print(void* component)
 {
    auto* c = (optframe::Component*)component;
-   //std::cout << "fcore_component_print ptr=" << c << " => ";
+   //std::cout << "optframe_component_print ptr=" << c << " => ";
    c->print();
 }
 
 extern "C" bool
-fcore_api1_engine_component_set_loglevel(FakeEnginePtr _engine, char* _scomponent, int loglevel, bool recursive)
+optframe_api1d_engine_component_set_loglevel(FakeEnginePtr _engine, char* _scomponent, int loglevel, bool recursive)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
 

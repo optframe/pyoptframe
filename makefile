@@ -3,19 +3,22 @@ CC=clang++-12
 CPPSTD=-std=c++20 -Wfatal-errors
 #CPPSTD=--std=c++17 -fconcepts -Wfatal-errors
 
-all: mylib
+all: optframe_lib demo
 
-mylib:
-	mkdir -p build/
+optframe_lib:
+	# mkdir -p build/
 	# -Wextra
-	$(CC) $(CPPSTD) -g -Isrc/optframe-src/include -Wall -pedantic -Ofast --shared optframe/fcore_lib.cpp -o build/fcore_lib.so -fPIC
-	#readelf -s build/fcore_lib.so | grep fcore
+	@echo "IMPORTANT: Remember to point src/optframe-src to optframe project /include directory"
+	@echo "EXAMPLE: ln -s  my/full/optframe/include  src/optframe-src"
+	$(CC) $(CPPSTD) -g -Isrc/optframe-src/include -Wall -pedantic -Ofast --shared optframe/optframe_lib.cpp -o optframe/optframe_lib.so -fPIC
+	#readelf -s build/optframe_lib.so | grep fcore
 
-demo_draft:
-	# (cd demo && valgrind --leak-check=full python3 draft_pyfcore.py)
-	(cd demo && python3 draft_pyfcore.py)
+demo: optframe/optframe_lib.so
+	# valgrind --leak-check=full python3 demo/demo_pyfcore.py 
+	python3 demo/demo_pyfcore.py 
+	
 
-test:
+test:   #install
 	# (cd demo/ && python3 demo_pyfcore.py)
 	(cd tests/ && python3 test_engine_kp.py)
 	
@@ -25,4 +28,4 @@ install:
 	pip install .
 
 clean:
-	rm -f build/*
+	rm -f optframe/*.so
