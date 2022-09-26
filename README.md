@@ -1,6 +1,8 @@
 # pyoptframe
 Python bindings for OptFrame Functional Core
 
+Install: `python -m pip install optframe`
+
 Version: `pyoptframe v5.0.6rc0`
 
 [OptFrame](https://github.com/optframe/optframe) is a C++ framework for optimization problems, including techniques such as classic metaheuristics Simulated Annealing, Genetic Algorithm, 
@@ -110,6 +112,27 @@ Build:
 
 `python -m build`
 
+`twine check dist/*`
+
+`twine upload -r testpypi dist/* --verbose`
+
+Error: Binary wheel 'optframe-5.0.5rc0-cp39-cp39-linux_x86_64.whl' has an unsupported platform tag 'linux_x86_64'. 
+
+`rm -f dist/*.whl`
+
+`twine upload -r testpypi dist/* --verbose`
+
+Test if OK on test package website:
+
+`python -m pip install -i https://test.pypi.org/simple optframe`
+
+Finally:
+
+`twine upload dist/*`
+
+`python -m pip install optframe`
+
+Thanks again to: https://realpython.com/pypi-publish-python-package/
 
 
 ## Known Issues
