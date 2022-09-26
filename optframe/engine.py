@@ -3,17 +3,11 @@
 import ctypes
 from ctypes import *
 #
-# from functools import total_ordering
-from typing import TypeVar, Type
-# T = TypeVar('T', bound='BigInteger')
-
 # too many options for handling resources in python libs... trying atexit
 # https://stackoverflow.com/questions/865115/how-do-i-correctly-clean-up-a-python-object
 import atexit
-
-# perform deepcopy
-# https://stackoverflow.com/questions/1500718/how-to-override-the-copy-deepcopy-operations-for-a-python-object
-from copy import copy, deepcopy
+#
+from copy import deepcopy
 import sys
 
 import pathlib
@@ -24,12 +18,7 @@ from enum import Enum, IntEnum
 # ==================== optframe_lib.so ===================
 
 libfile = pathlib.Path(__file__).parent / "optframe_lib.so"
-
-# manual setup ?
-if (False):
-    optframe_lib = ctypes.cdll.LoadLibrary('../build/optframe_lib.so')
-else:
-    optframe_lib = ctypes.CDLL(str(libfile))
+optframe_lib = ctypes.CDLL(str(libfile))
 
 FCORE_WARN_ISSUES = True
 

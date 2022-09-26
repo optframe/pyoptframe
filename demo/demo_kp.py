@@ -82,10 +82,10 @@ class ExampleSol(object):
 
 
 class ExampleKP(object):
-    # def __init__(self, param=0):
-    #    self.p = param
     def __init__(self):
         print('Init KP')
+        # may store current optframe engine for local usage
+        self.engine = None
         # number of items
         self.n = 0
         # item weights
@@ -244,24 +244,24 @@ print("=========================")
 print("BEGIN with OptFrameEngine")
 print("=========================")
 
-engine = optframe.Engine(optframe.APILevel.API1d, optframe.LogLevel.Debug)
-
 #
 pKP = ExampleKP()
 pKP.n = 5
 pKP.w = [1, 2, 3, 4, 5]
 pKP.p = [5, 4, 3, 2, 1]
 pKP.Q = 6.0
+#
+pKP.engine = optframe.Engine(optframe.APILevel.API1d, optframe.LogLevel.Debug)
 print(pKP)
 
-ev_idx = engine.maximize(pKP, mycallback_fevaluate)
+ev_idx = pKP.engine.maximize(pKP, mycallback_fevaluate)
 print("evaluator id:", ev_idx)
 
 print("Listing components:")
-engine.list_components("OptFrame:")
+pKP.engine.list_components("OptFrame:")
 
-fev = engine.get_evaluator()
-engine.print_component(fev)
+fev = pKP.engine.get_evaluator()
+pKP.engine.print_component(fev)
 #
 # print("")
 # print("=====================")
@@ -273,7 +273,7 @@ engine.print_component(fev)
 # print("====================")
 #print("engine test evaluate")
 # print("====================")
-#z = engine.fevaluator_evaluate(fev, True, sol)
+#z = pKP.engine.fevaluator_evaluate(fev, True, sol)
 #
 print("")
 print("==========================")
@@ -287,20 +287,20 @@ print(s)
 
 print("")
 
-c_idx = engine.add_constructive(pKP, mycallback_constructive)
+c_idx = pKP.engine.add_constructive(pKP, mycallback_constructive)
 print("c_idx=", c_idx)
 
-is_idx = engine.create_initial_search(ev_idx, c_idx)
+is_idx = pKP.engine.create_initial_search(ev_idx, c_idx)
 print("is_idx=", is_idx)
 
-fc = engine.get_constructive(c_idx)
-engine.print_component(fc)
+fc = pKP.engine.get_constructive(c_idx)
+pKP.engine.print_component(fc)
 print("")
 print("========================")
 print("engine generate solution")
 print("========================")
 #
-solxx = engine.fconstructive_gensolution(fc)
+solxx = pKP.engine.fconstructive_gensolution(fc)
 print("")
 print("count=", sys.getrefcount(solxx))
 print("solxx:", solxx)
@@ -317,7 +317,7 @@ print("")
 print("============================")
 print("engine test evaluate (again)")
 print("============================")
-z1 = engine.fevaluator_evaluate(fev, False, solxx)
+z1 = pKP.engine.fevaluator_evaluate(fev, False, solxx)
 print("evaluation:", z1)
 
 
@@ -327,11 +327,12 @@ print("engine add ns bitflip")
 print("=====================")
 
 # get index of new NS
-ns_idx = engine.add_ns(pKP, mycallback_ns_rand_bitflip,
-                       mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
+ns_idx = pKP.engine.add_ns(pKP, mycallback_ns_rand_bitflip,
+                           mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
 print("ns_idx=", ns_idx)
 
-list_idx = engine.create_component_list("[ OptFrame:NS 0 ]", "OptFrame:NS[]")
+list_idx = pKP.engine.create_component_list(
+    "[ OptFrame:NS 0 ]", "OptFrame:NS[]")
 print("list_idx=", list_idx)
 
 
@@ -341,14 +342,14 @@ print("engine add nsseq bitflip")
 print("========================")
 
 # get index of new NSSeq
-nsseq_idx = engine.add_nsseq(pKP,
-                             mycallback_ns_rand_bitflip,
-                             mycallback_nsseq_it_init_bitflip,
-                             mycallback_nsseq_it_first_bitflip,
-                             mycallback_nsseq_it_next_bitflip,
-                             mycallback_nsseq_it_isdone_bitflip,
-                             mycallback_nsseq_it_current_bitflip,
-                             mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
+nsseq_idx = pKP.engine.add_nsseq(pKP,
+                                 mycallback_ns_rand_bitflip,
+                                 mycallback_nsseq_it_init_bitflip,
+                                 mycallback_nsseq_it_first_bitflip,
+                                 mycallback_nsseq_it_next_bitflip,
+                                 mycallback_nsseq_it_isdone_bitflip,
+                                 mycallback_nsseq_it_current_bitflip,
+                                 mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
 print("nsseq_idx=", nsseq_idx)
 
 
@@ -359,9 +360,9 @@ print("============================")
 will_stress = False
 if will_stress:
     while True:
-        sol_inf = engine.fconstructive_gensolution(fc)
+        sol_inf = pKP.engine.fconstructive_gensolution(fc)
         print("sol_inf:", sol_inf)
-        z1 = engine.fevaluator_evaluate(fev, False, sol_inf)
+        z1 = pKP.engine.fevaluator_evaluate(fev, False, sol_inf)
         print("evaluation:", z1)
 else:
     print("OK. no stress...")
@@ -371,15 +372,15 @@ print("")
 print("Engine: will check")
 print("")
 if False:
-    engine.check(100, 10, False)
+    pKP.engine.check(100, 10, False)
 print("pass...")
 
 print()
 print("engine will list builders ")
-print(engine.list_builders("OptFrame:"))
+print("count=", pKP.engine.list_builders("OptFrame:"))
 print()
 print("engine will list builders for :BasicSA ")
-print(engine.list_builders(":BasicSA"))
+print("count=", pKP.engine.list_builders(":BasicSA"))
 print()
 
 print("")
@@ -387,14 +388,14 @@ print("testing handmade SA (run_sa_params) on C++...")
 print("")
 # DISABLED
 if False:
-    engine.run_sa_params(5.0, ev_idx, c_idx, ns_idx, 0.98, 200, 9999999)
+    pKP.engine.run_sa_params(5.0, ev_idx, c_idx, ns_idx, 0.98, 200, 9999999)
 #
 
 print("")
 print("testing builder (build_single_obj_search) for SA...")
 print("")
 
-sos_idx = engine.build_single_obj_search(
+sos_idx = pKP.engine.build_single_obj_search(
     "OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA",
     "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999")
 print("sos_idx=", sos_idx)
@@ -403,38 +404,38 @@ print("")
 print("testing execution of SingleObjSearch (run_sos_search) for SA...")
 print("")
 
-lout = engine.run_sos_search(sos_idx, 4.0)
+lout = pKP.engine.run_sos_search(sos_idx, 4.0)
 print('lout=', lout)
 
 print("")
 print("testing builder (build_local_search) for BI...")
 print("")
 
-ls_idx = engine.build_local_search(
+ls_idx = pKP.engine.build_local_search(
     "OptFrame:ComponentBuilder:LocalSearch:FI",
     "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:NS:NSFind:NSSeq 0")
 print("ls_idx=", ls_idx)
 
-engine.list_components("OptFrame:")
+pKP.engine.list_components("OptFrame:")
 
 print("")
 print("testing builder (build_component) for ILSLevels...")
 print("")
 
-pert_idx = engine.build_component(
+pert_idx = pKP.engine.build_component(
     "OptFrame:ComponentBuilder:ILS:LevelPert:LPlus2",
     "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:NS 0",
     "OptFrame:ILS:LevelPert")
 print("pert_idx=", pert_idx)
 
-engine.list_components("OptFrame:")
+pKP.engine.list_components("OptFrame:")
 
 
 print("")
 print("testing builder (build_single_obj_search) for ILS...")
 print("")
 
-sos_idx = engine.build_single_obj_search(
+sos_idx = pKP.engine.build_single_obj_search(
     "OptFrame:ComponentBuilder:SingleObjSearch:ILS:ILSLevels",
     "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:LocalSearch 0 OptFrame:ILS:LevelPert 0  50  3")
 print("sos_idx=", sos_idx)
@@ -443,14 +444,14 @@ print("")
 print("testing execution of SingleObjSearch (run_sos_search) for ILS...")
 print("")
 
-# r = engine.component_set_loglevel(
+# r = pKP.engine.component_set_loglevel(
 #    "OptFrame:GlobalSearch:SingleObjSearch "+str(sos_idx), 4, False)
 #print("r=", r)
-# r = engine.component_set_loglevel(
+# r = pKP.engine.component_set_loglevel(
 #    "OptFrame:LocalSearch "+str(0), 4, False)
 #print("r=", r)
 
-lout = engine.run_sos_search(sos_idx, 4.5)
+lout = pKP.engine.run_sos_search(sos_idx, 4.5)
 print('lout=', lout)
 ss = optframe.SearchStatus(lout.status)
 print(ss)
