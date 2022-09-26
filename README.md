@@ -116,9 +116,9 @@ Build:
 
 `twine upload -r testpypi dist/* --verbose`
 
-Error: Binary wheel 'optframe-5.0.5rc0-cp39-cp39-linux_x86_64.whl' has an unsupported platform tag 'linux_x86_64'. 
+Error: Binary wheel 'optframe-5.0.5rc0-cp39-cp39-linux_x86_64.whl' has an unsupported platform tag 'linux_x86_64'. See [1](https://stackoverflow.com/questions/59451069/binary-wheel-cant-be-uploaded-on-pypi-using-twine) and [2](https://peps.python.org/pep-0513/#rationale).
 
-`rm -f dist/*.whl`
+Solution: `rm -f dist/*.whl`
 
 `twine upload -r testpypi dist/* --verbose`
 

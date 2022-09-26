@@ -18,7 +18,7 @@ push = false
 "bumpver.toml" = [
     'current_version = "{version}"',
 ]
-"optframe.toml" = [
+"pyproject.toml" = [
     'version = "{version}"',
 ]
 "optframe/__init__.py" = ["{version}"]
