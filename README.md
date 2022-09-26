@@ -1,7 +1,7 @@
 # pyoptframe
 Python bindings for OptFrame Functional Core
 
-Version: `pyoptframe v5.0.1rc0`
+Version: `pyoptframe v5.0.2rc0`
 
 [OptFrame](https://github.com/optframe/optframe) is a C++ framework for optimization problems, including techniques such as classic metaheuristics Simulated Annealing, Genetic Algorithm, 
 Variable Neighborhood Search, Iterated Local Search, Tabu Search, Particle Swarm Optimization, NSGA-II, and other single and multi-objective methods.
@@ -71,8 +71,8 @@ In the future, we can also use greater API number to implement possible compatib
 
 Versioning should follow OptFrame C++ project on MAJOR and MINOR, leaving PATCH field to be different, if necessary. Examples: 
 
-- pyoptframe `5.1.3` should include OptFrame C++ `v5.1`.
-- pyoptframe `5.4.5` could include OptFrame C++ `v5.4.8` or `v5.4.1`, but not `v5.6.x`.
+- pyoptframe `5.0.2rc0` should include OptFrame C++ `v5.1`.
+- pyoptframe `5.0.2rc0` could include OptFrame C++ `v5.4.8` or `v5.4.1`, but not `v5.6.x`.
 
 ### Packaging instructions
 
