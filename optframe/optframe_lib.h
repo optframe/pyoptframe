@@ -22,6 +22,9 @@ extern "C" struct LibSearchOutput
 
 // ============================ Engine: HeuristicFactory ===========================
 
+extern "C" void
+optframe_api0d_engine_welcome(FakeEnginePtr _engine);
+
 extern "C" FakeEnginePtr
 optframe_api1d_create_engine(int LogLevel);
 

@@ -124,13 +124,13 @@ Solution: `rm -f dist/*.whl`
 
 Test if OK on test package website:
 
-`python -m pip install -i https://test.pypi.org/simple optframe`
+`python -m pip install -i https://test.pypi.org/simple optframe --upgrade`
 
 Finally:
 
 `twine upload dist/*`
 
-`python -m pip install optframe`
+`python -m pip install optframe --upgrade`
 
 Thanks again to: https://realpython.com/pypi-publish-python-package/
 

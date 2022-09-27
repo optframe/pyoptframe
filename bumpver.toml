@@ -21,4 +21,9 @@ push = false
 "pyproject.toml" = [
     'version = "{version}"',
 ]
-"optframe/__init__.py" = ["{version}"]
+"optframe/__init__.py" = [
+    "{version}"
+]
+"docs/source/conf.py" = [
+    "{version}",
+]

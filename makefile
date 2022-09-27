@@ -16,7 +16,12 @@ optframe_lib:
 demo_local: optframe/optframe_lib.so
 	# valgrind --leak-check=full python3 demo/demo_kp.py 
 	python3 demo/demo_kp.py 
-	
+
+.PHONY: docs
+
+docs:
+	cd docs && make clean && make html
+
 
 test:   #install
 	# (cd demo/ && python3 demo_pyfcore.py)

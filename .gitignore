@@ -10,3 +10,4 @@ __pycache__
 requirements.txt
 optframe-git
 dist/
+app_*

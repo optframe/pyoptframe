@@ -469,6 +469,12 @@ public:
 
 // ==================
 
+extern "C" void
+optframe_api0d_engine_welcome(FakeEnginePtr _engine)
+{
+   std::cout << optframe::FCore::welcome() << std::endl;
+}
+
 extern "C" FakeEnginePtr
 optframe_api1d_create_engine(int ll)
 {

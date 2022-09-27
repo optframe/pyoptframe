@@ -153,7 +153,6 @@ optframe_lib.optframe_api0d_get_constructive.argtypes = [
 optframe_lib.optframe_api0d_get_constructive.restype = ctypes.c_void_p
 ###
 
-
 # Engine: HeuristicFactory
 optframe_lib.optframe_api1d_create_engine.argtypes = [ctypes.c_int]
 optframe_lib.optframe_api1d_create_engine.restype = ctypes.c_void_p
@@ -163,6 +162,9 @@ optframe_lib.optframe_api1d_destroy_engine.restype = ctypes.c_bool
 #
 optframe_lib.optframe_api0d_engine_test.argtypes = [ctypes.c_void_p]
 optframe_lib.optframe_api0d_engine_test.restype = ctypes.c_bool
+#
+optframe_lib.optframe_api0d_engine_welcome.argtypes = [ctypes.c_void_p]
+optframe_lib.optframe_api0d_engine_welcome.restype = None
 
 #
 optframe_lib.optframe_api1d_engine_list_builders.argtypes = [
@@ -273,7 +275,8 @@ class LogLevel(IntEnum):
 # optframe.Engine
 class Engine(object):
     def __init__(self, apilevel: APILevel = APILevel.API1d, loglevel: LogLevel = LogLevel.Info):
-        ll_int = int(loglevel)
+        self.loglevel = loglevel
+        ll_int = int(self.loglevel)
         assert (apilevel == APILevel.API1d)
         if (loglevel >= LogLevel.Debug):
             print("Debug: Engine using API level API1d")
@@ -297,8 +300,12 @@ class Engine(object):
         self.callback_list.append(func)
 
     def cleanup(self):
-        print("Running optframe cleanup...")
+        if (self.loglevel >= LogLevel.Debug):
+            print("Running optframe cleanup...")
         optframe_lib.optframe_api1d_destroy_engine(self.hf)
+
+    def welcome(self):
+        optframe_lib.optframe_api0d_engine_welcome(self.hf)
 
     def print_component(self, component):
         optframe_lib.optframe_api0_component_print(component)
