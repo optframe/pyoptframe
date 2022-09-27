@@ -1,8 +1,8 @@
 Quick start (Continued)
 =======================
 
-We expand the knowledge from `Quick Start <../quickstart>`_ where the user
-has learned how to `Install <../install>`_ OptFrame, and how to compile and
+We expand the knowledge from `Quick Start <./quickstart.html>`_ where the user
+has learned how to `Install <./install.html>`_ OptFrame, and how to compile and
 test a `Simulated Annealing <https://en.wikipedia.org/wiki/Simulated_annealing>`_ metaheuristic
 for the classic 0-1 Knapsack Problem (01KP).
 
@@ -23,100 +23,50 @@ vector of N integers (example: [0,2,3,1] means that solution starts from city 0,
 then city 3, then city 1, and finally comes back to city 0). 
 Objective is to find a route that minimizes distance between the $N$ visited cities.
 
-We may define ESolutionTSP as a pair, containing a solution and its objective value (double).
+We may define SolutionTSP and its objective value (`double` by default on `API1d`, or `int` on `API1i32`).
 
 ..
     // COMMENTS 
-    using ESolutionTSP = std::pair<
-        std::vector<int>,  // first part of search space element: solution (representation)
-        Evaluation<double> // second part of search space element: evaluation (objective value)
-    >;
+    ... SolutionTSP...
 
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore-part1.hpp
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore-part1.py
     :linenos:
-    :language: c++
+    :language: python
 
 
 Problem Data
 ^^^^^^^^^^^^
 
 We read a matrix of distances between pairs of cities (considering Euclidean distance), and
-store in a structure named ProblemContext. Note that we round the result to int, just to allow
+store in a structure named ProblemContextTSP. Note that we round the result to int, just to allow
 precise value calculation (but one may use float or double, and then manage the floating-point errors).
-Do not forget to #include helpers from optframe namespace, 
-such as Matrix and Scanner.
+Other option would be to adopt a strict int `API1i32`.
 
 ..
     // COMMENTS
-    // TSP problem context and data reads
-    class ProblemContext
-    {
-        public:
-        int n;               // number of clients
-        Matrix<double> dist; // distance matrix (Euclidean)
-        // load data from Scanner
-        void load(Scanner& scanner)
-        {
-            n = *scanner.nextInt();      // reads number of clients
-            dist = Matrix<double>(n, n); // initializes n x n matrix
-            //
-            vector<double> xvalues(n);
-            vector<double> yvalues(n);
-            //
-            for (int i = 0; i < n; i++) {
-                scanner.next();
-                xvalues[i] = *scanner.nextDouble(); // reads x
-                yvalues[i] = *scanner.nextDouble(); // reads y
-            }
-            // calculate distance values, for every client pair (i,j)
-            for (int i = 0; i < n; i++)
-                for (int j = 0; j < n; j++)
-                    dist(i, j) = distance(xvalues.at(i), yvalues.at(i), xvalues.at(j), yvalues.at(j));
-        }
-        // euclidean distance (double as return)
-        double distance(double x1, double y1, double x2, double y2)
-        {
-            return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-        }
-    };
+    ... ProblemContextTSP ..
 
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore-part2.hpp
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore-part2.py
     :linenos:
-    :language: c++
+    :language: python
 
-Finally, we declare a global object :code:`ProblemContext pTSP` (for simplicity), that includes all data.
+Finally, we created a function `load()` to manage de input of data.
 
 
 Evaluation
 ^^^^^^^^^^^
 
-Objective calculation can be done by using Functional Core class FEvaluator, which is a huge
-simplification from OptFrame Core components Evaluator (for single objectives) and 
+Objective calculation can be done by using an evaluator callback, which is 
+compatible to OptFrame Core Evaluator (for single objectives) and 
 GeneralEvaluator (for single and multiple objectives).
 
 ..
     // COMMENTS
-    Evaluation<double>
-    fevaluate(const std::vector<int>& s)
-    {
-        // calculates distance from city to city in solution 's',
-        // according to matrix 'dist'
-        double f = 0;
-        for (int i = 0; i < int(pTSP.n) - 1; i++)
-            f += pTSP.dist(s[i], s[i + 1]);
-        f += pTSP.dist(s[int(pTSP.n) - 1], s[0]);
-        return Evaluation<double>{ f };
-    }
+    ... evaluate
 
-    // Evaluate (also a global object... for simplicity!)
-    FEvaluator<ESolutionTSP, MinOrMax::MINIMIZE>
-    ev{
-        fevaluate
-    };
-
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore-part3.hpp
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore-part3.py
     :linenos:
-    :language: c++
+    :language: python
 
 
 Search methods based on neighborhoods
@@ -131,18 +81,18 @@ Random constructive
 In a similar manner with Knapsack example (on Quickstart part 1), we define
 a random solution generator.
 
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore-part4.hpp
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore-part4.py
     :linenos:
-    :language: c++
+    :language: python
 
 First move operator: Swap
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We start with a Move operator capable of exchanging two elements from a given TSP solution.
 
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore-part5.hpp
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore-part5.py
     :linenos:
-    :language: c++
+    :language: python
 
 We have four types of neighborhood definitions in OptFrame (NS, NSFind, NSSeq and NSEnum), but
 two major are NS and NSSeq.
@@ -152,52 +102,41 @@ visiting all possible neighbors (also useful for continuous or infinite neighbor
 Swap move and NS definition can be seen below.
 
 
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore-part6.hpp
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore-part6.py
     :linenos:
-    :language: c++
+    :language: python
 
 We now define the NSSeq neighborhood with a explicit iterator definition, that requires four
 operations: first (initializes first valid move), next (skips to next valid move), 
 current (returns current move) and isDone (indicates if no move exists).
 
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore-part7.hpp
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore-part7.py
     :linenos:
-    :language: c++
+    :language: python
 
 .. hint::
     According to groundbreaking ideas from Variable Neighborhood Search community, the user 
     should create multiple neighborhoods, with different ideas in each one, in order to better
     explore the solution space.
 
-At this point, we quickly demonstrate how novel C++20 features, such as Coroutines,
-have improved OptFrame in latest versions (named FxCore library). 
-We note that all four iterator operations (first, next, current and isDone) are made
-available quite naturally with a single coroutine generator that executes co_yield for
-each available move.
-
-.. literalinclude:: ../../demo/04_Advanced_TSP_fxcore/TSP-fxcore-nsseq.hpp
-    :linenos:
-    :language: c++
-
-We will explore more of these bleeding-edge tools in an advanced topic.
 
 Complete Example for TSP Components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For simplicity, we separate the main TSP components in a file named :code:`TSP-fcore.hpp`.
+For simplicity, we separate the main TSP components in a file named :code:`TSP-fcore.py`.
 
 .. hint::
-    This example could be made in a single file, to be even simpler. However, we recommend users to have  
-    a clear separation for the header declaration of *FCore components* (on :code:`TSP-fcore.hpp`) 
-    from the :code:`main()` entrypoint depending on method used, e.g., :code:`mainTSP-fcore-ils.cpp` or :code:`mainTSP-fcore-brkga.cpp`.
+    This example could be made in a multiple files as a package, for the separation 
+    of *FCore components* (on :code:`TSP-fcore.py`) and the :code:`main()` entrypoint depending on method used.
+    However, we just merge them into a single file on each application, for simplicity, e.g., :code:`mainTSP-fcore-ils.py` or :code:`mainTSP-fcore-brkga.py`.
 
-*TSP-fcore.hpp*
+*TSP-fcore.py*
 
-:code:`File 'TSP-fcore.hpp' located in 'demo/03_QuickstartTSP_VNS_BRKGA/'`
+:code:`File 'TSP-fcore.py' located in 'demo/03_QuickstartTSP_VNS_BRKGA/'`
 
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore.hpp
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/TSP-fcore.py
     :linenos:
-    :language: c++
+    :language: python
 
 
 Exploring with neighborhood exploration
@@ -208,9 +147,11 @@ First Improvement, Best Improvement, Random Selection and Multi Improvement.
 We can also combine several local search strategies in a multiple strategy
 called Variable Neighborhood Descent (VND).
 
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-ils-part2.cpp
+:code:`File 'mainTSP-fcore-ils-part2.py' located in 'demo/03_QuickstartTSP_VNS_BRKGA/'`
+
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-ils-part2.py
     :linenos:
-    :language: c++
+    :language: python
 
 If one wants to build a complete metaheuristic, the Iterated Local Search (ILS) or a Variable
 Neighborhood Search (VNS).
@@ -219,9 +160,9 @@ Perturbation, that are increased when stuck in a poor quality local optimum. We 
 strategy that tries to escape at level p by applying p+2 random moves, e.g., at level 0,
 2 random moves are applied, and so on.
 
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-ils-part3.cpp
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-ils-part3.py
     :linenos:
-    :language: c++
+    :language: python
 
 
 
@@ -229,18 +170,28 @@ strategy that tries to escape at level p by applying p+2 random moves, e.g., at 
 Complete Example for ILS
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-We provide the main file for TSP ILS :code:`mainTSP-fcore-ils.cpp`.
+We provide the main file for TSP ILS :code:`mainTSP-fcore-ils.py`.
 
-*mainTSP-fcore-ils.cpp*
+*mainTSP-fcore-ils.py*
 
-:code:`File 'mainTSP-fcore-ils.cpp' located in 'demo/03_QuickstartTSP_VNS_BRKGA/'`
+:code:`File 'mainTSP-fcore-ils.py' located in 'demo/03_QuickstartTSP_VNS_BRKGA/'`
 
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-ils.cpp
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-ils.py
     :linenos:
-    :language: c++
+    :language: python
+
+To run it::
+
+    python3 mainTSP-fcore-ils.py 
+
 
 Search methods based on random keys
 -----------------------------------
+
+.. warning::
+    This part is INCOMPLETE! It currently refers to OptFrame C++...
+    Feel free to check folder :code:`OptFrame/Examples` for other examples on FCore and OptFrame Classic.
+
 
 We finish with the Biased Random Key Genetic Algorithm (BRKGA), a simple metaheuristic
 inspired by classic Genetic Algorithm, using the solution representation of $n$ Random Keys, 
