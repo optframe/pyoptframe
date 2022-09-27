@@ -5,6 +5,8 @@ Install: `python -m pip install optframe`
 
 Version: `pyoptframe v5.0.7rc0`
 
+Documentation and Tutorials: see [PyOptFrame Quickstart](https://pyoptframe.readthedocs.io/en/latest/quickstart.html)
+
 [OptFrame](https://github.com/optframe/optframe) is a C++ framework for optimization problems, including techniques such as classic metaheuristics Simulated Annealing, Genetic Algorithm, 
 Variable Neighborhood Search, Iterated Local Search, Tabu Search, Particle Swarm Optimization, NSGA-II, and other single and multi-objective methods.
 This is a 10-year project with several practical applications in industry and academia, so feel free to use it.
