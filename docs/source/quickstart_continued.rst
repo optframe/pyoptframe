@@ -188,10 +188,6 @@ To run it::
 Search methods based on random keys
 -----------------------------------
 
-.. warning::
-    This part is INCOMPLETE! It currently refers to OptFrame C++...
-    Feel free to check folder :code:`OptFrame/Examples` for other examples on FCore and OptFrame Classic.
-
 
 We finish with the Biased Random Key Genetic Algorithm (BRKGA), a simple metaheuristic
 inspired by classic Genetic Algorithm, using the solution representation of $n$ Random Keys, 
@@ -208,46 +204,11 @@ This is good to tune the degree of randomness (number of random digits) and also
 
 ..
     // COMMENTS
-    class MyRandomKeysInitPop : public InitialPopulation<std::pair<std::vector<double>, Evaluation<double>>>
-    {
-        using RSK = std::vector<double>;
+     MyRandomKeysInitPop
 
-        private:
-        int sz;
-        sref<RandGen> rg;
-
-        public:
-        MyRandomKeysInitPop(int size, sref<RandGen> _rg = new RandGen)
-            : sz{ size }
-            , rg{ _rg }
-        {
-        }
-
-        // copy constructor
-        MyRandomKeysInitPop(const MyRandomKeysInitPop& self)
-            : sz{ self.sz }
-            , rg{ self.rg }
-        {
-        }
-
-        Population<std::pair<RSK, Evaluation<double>>> generatePopulation(unsigned populationSize, double timelimit) override
-        {
-            Population<std::pair<RSK, Evaluation<double>>> pop;
-
-            for (unsigned i = 0; i < populationSize; i++) {
-                vector<double>* d = new vector<double>(sz);
-                for (int j = 0; j < sz; j++)
-                    d->at(j) = (rg->rand() % 100000) / 100000.0; // 6 digit precision on random keys
-                pop.push_back(d);
-            }
-
-            return pop;
-        }
-    };
-
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-brkga-part2.cpp
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-brkga-part2.py
     :linenos:
-    :language: c++
+    :language: python
 
 BRKGA decoding
 ^^^^^^^^^^^^^^^

@@ -1,5 +1,5 @@
 
-class MyRandomKeysInitPop : public InitialPopulation<std::pair<std::vector<double>, Evaluation<int>>>
+class MyRandomKeysInitPop : public InitialEPopulation<std::pair<std::vector<double>, Evaluation<int>>>
 {
    using RSK = std::vector<double>;
 
@@ -21,7 +21,12 @@ public:
    {
    }
 
-   VEPopulation<std::pair<RSK, Evaluation<int>>> generatePopulation(unsigned populationSize, double timelimit) override
+   virtual bool canEvaluate() const override
+   {
+      return false; // cannot evaluate
+   }
+
+   VEPopulation<std::pair<RSK, Evaluation<int>>> generateEPopulation(unsigned populationSize, double timelimit) override
    {
       VEPopulation<std::pair<RSK, Evaluation<int>>> pop;
 
