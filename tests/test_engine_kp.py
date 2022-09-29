@@ -264,19 +264,19 @@ print()
 
 
 print("")
-print("testing builder (build_single_obj_search) for SA...")
+print("testing builder (build_global_search) for SA...")
 print("")
 
-sos_idx = pKP.engine.build_single_obj_search(
-    "OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA",
+gs_idx = pKP.engine.build_global_search(
+    "OptFrame:ComponentBuilder:GlobalSearch:SA:BasicSA",
     "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999")
-print("sos_idx=", sos_idx)
+print("sos_idx=", gs_idx)
 
 print("")
-print("testing execution of SingleObjSearch (run_sos_search) for SA...")
+print("testing execution of GlobalSearch (run_global_search) for SA...")
 print("")
 
-lout = pKP.engine.run_sos_search(sos_idx, 4.0)
+lout = pKP.engine.run_global_search(gs_idx, 4.0)
 print('lout=', lout)
 
 print("")

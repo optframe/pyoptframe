@@ -29,7 +29,8 @@ test:   #install
 	
 
 install:
-	#pip install  --global-option=build_ext --global-option="-I/home/imcoelho/git-reps/optframe/src" .
+	#pip install  --global-option=build_ext --global-option="-I$(pwd)/../optframe/include" .
+	rm -rf ./optframe-git/
 	pip install .
 
 clean:
