@@ -126,6 +126,11 @@ optframe_lib.optframe_api1d_create_component_list.restype = ctypes.c_int32
 #            BUILD
 # =================================
 
+# for GlobalSearch
+optframe_lib.optframe_api1d_build_global.argtypes = [
+    ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p]
+optframe_lib.optframe_api1d_build_global.restype = ctypes.c_int32
+
 # for SingleObjSearch
 optframe_lib.optframe_api1d_build_single.argtypes = [
     ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p]
@@ -226,6 +231,10 @@ optframe_lib.optframe_api0d_engine_simulated_annealing_params.restype = SearchOu
 optframe_lib.optframe_api1d_run_sos_search.argtypes = [
     ctypes.c_void_p, ctypes.c_int, ctypes.c_double]
 optframe_lib.optframe_api1d_run_sos_search.restype = SearchOutput
+
+optframe_lib.optframe_api1d_run_global_search.argtypes = [
+    ctypes.c_void_p, ctypes.c_int, ctypes.c_double]
+optframe_lib.optframe_api1d_run_global_search.restype = SearchOutput
 
 
 # ======================================
@@ -471,6 +480,18 @@ class Engine(object):
     #         BUILD
     # =========================
 
+    def build_global_search(self, str_builder, str_params):
+        if (not isinstance(str_builder, str)):
+            assert (False)
+        b_builder = str_builder.encode('ascii')
+        if (not isinstance(str_params, str)):
+            assert (False)
+        b_params = str_params.encode('ascii')
+        #
+        idx_list = optframe_lib.optframe_api1d_build_global(
+            self.hf, b_builder, b_params)
+        return idx_list
+
     def build_single_obj_search(self, str_builder, str_params):
         if (not isinstance(str_builder, str)):
             assert (False)
@@ -560,6 +581,12 @@ class Engine(object):
         #
         # print("XXXXX FINISHED 'fconstructive_gensolution'!")
         return cast_pyo.value
+
+    def run_global_search(self, g_idx, timelimit) -> SearchOutput:
+        lout = optframe_lib.optframe_api1d_run_global_search(
+            self.hf, g_idx, timelimit)
+        # l2out = SearchOutput(lout)
+        return lout
 
     def run_sos_search(self, sos_idx, timelimit) -> SearchOutput:
         lout = optframe_lib.optframe_api1d_run_sos_search(

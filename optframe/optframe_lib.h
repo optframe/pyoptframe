@@ -86,6 +86,9 @@ optframe_api1d_create_initial_search(FakeEnginePtr _engine, int ev_idx, int c_id
 
 // BUILD
 
+extern "C" int // index of GlobalSearch
+optframe_api1d_build_global(FakeEnginePtr _engine, char* builder, char* build_string);
+
 extern "C" int // index of SingleObjSearch
 optframe_api1d_build_single(FakeEnginePtr _engine, char* builder, char* build_string);
 
@@ -114,6 +117,9 @@ extern "C" FakePythonObjPtr // Python solution object (owned??? by who?? maybe n
 optframe_api0_fconstructive_gensolution(FakeFConstructivePtr _fconstructive);
 
 // RUN
+
+extern "C" LibSearchOutput // SearchOutput for XSH "best-type"
+optframe_api1d_run_global_search(FakeEnginePtr _engine, int sos_idx, double timelimit);
 
 extern "C" LibSearchOutput // SearchOutput for XSH "best-type"
 optframe_api1d_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelimit);

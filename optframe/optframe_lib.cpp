@@ -233,6 +233,18 @@ using CBSingle = optframe::SingleObjSearchBuilder<
   //X2ESolution<XES> X2ES = MultiESolution<XES>>
   >;
 
+// =============================================================================
+// adopting GlobalSearch with XSH=XES
+// meaning that, Search component is equals to its base type XES
+// meaning [2] that, our BestType is XESolution (not Pareto, Population, etc)
+// =============================================================================
+using CBGlobal = optframe::GlobalSearchBuilder<
+  FCoreLibESolution, // XES
+  FCoreLibESolution, // XSH = XES, a.k.a, BestType
+  FCoreLibESolution,
+  optframe::MultiESolution<FCoreLibESolution> // adopting generic population type... must see HF for this
+  >;
+
 using CBLocal = optframe::LocalSearchBuilder<
   FCoreLibSolution,             //XSolution S,
   optframe::Evaluation<double>, // XEvaluation XEv = Evaluation<>,
@@ -261,9 +273,7 @@ public:
      */
 
    optframe::Loader<
-     FCoreLibSolution,             //XSolution S,
-     optframe::Evaluation<double>, // XEvaluation XEv = Evaluation<>,
-     FCoreLibESolution             //  XESolution XES = pair<S, XEv>,
+     FCoreLibESolution //  XESolution XES = pair<S, XEv>,
      //X2ESolution<XES> X2ES = MultiESolution<XES>>
      >
      loader;
@@ -620,6 +630,47 @@ optframe_api0d_engine_simulated_annealing_params(FakeEnginePtr _engine, double t
    return lout;
 }
 
+extern "C" int // index of GlobalSearch
+optframe_api1d_build_global(FakeEnginePtr _engine, char* builder, char* build_string)
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+   // =============================
+   //     build_single (TESTING)
+   // =============================
+   std::string strBuilder{ builder };
+   std::string strBuildString{ build_string };
+
+   //
+   // Example: "OptFrame:ComponentBuilder:GlobalSearch:SA:BasicSA"
+   //
+   std::string sbuilder = strBuilder;
+   std::cout << "OptFrame Engine GET BUILDER: " << sbuilder << std::endl;
+   CB* cb = engine->loader.factory.getBuilder(sbuilder);
+   if (!cb) {
+      std::cout << "WARNING! OptFrame builder for GlobalSearch not found!" << std::endl;
+      return -1;
+   }
+   //cb->buildComponent
+   CBGlobal* cbglobal = (CBGlobal*)cb;
+
+   //
+   // Example: "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999";
+   //
+   std::string scan_params = strBuildString;
+   std::cout << "OptFrame Engine BUILD: " << scan_params << std::endl;
+   scannerpp::Scanner scanner{ scan_params };
+   optframe::GlobalSearch<FCoreLibESolution>* global = cbglobal->build(scanner, engine->loader.factory);
+   std::cout << "global_search =" << global << std::endl;
+   global->print();
+   //
+
+   optframe::Component* cglobal = (optframe::Component*)global; // why??
+   sptr<optframe::Component> sptrGlobal{ cglobal };
+
+   int id = engine->loader.factory.addComponent(sptrGlobal, "OptFrame:GlobalSearch");
+   return id;
+}
+
 extern "C" int // index of SingleObjSearch
 optframe_api1d_build_single(FakeEnginePtr _engine, char* builder, char* build_string)
 {
@@ -734,6 +785,32 @@ optframe_api1d_build_component(FakeEnginePtr _engine, char* builder, char* build
 
    int id = engine->loader.factory.addComponent(sptrComp, strComponentType);
    return id;
+}
+
+extern "C" LibSearchOutput // SearchOutput for XSH "best-type"
+optframe_api1d_run_global_search(FakeEnginePtr _engine, int g_idx, double timelimit)
+{
+   std::cout << "begin C++ optframe_api1d_run_global_search: g_idx=" << g_idx << " timelimit=" << timelimit << std::endl;
+   auto* engine = (FCoreApi1Engine*)_engine;
+   //
+   sptr<optframe::GlobalSearch<FCoreLibESolution, FCoreLibESolution>> gs;
+   engine->loader.factory.assign(gs, g_idx, "OptFrame:GlobalSearch");
+   assert(gs);
+   gs->print();
+   //sos->setVerbose();
+   //
+   optframe::SearchOutput<FCoreLibESolution> out = gs->search({ timelimit });
+   std::cout << "out=" << out.status << std::endl;
+
+   LibSearchOutput lout;
+   lout.status = (int)out.status;  // ("status", c_int),
+   lout.has_best = (bool)out.best; // ("has_best", ctypes.c_bool),
+   if (out.best) {
+      // extract pointer from solution container
+      lout.best_s = out.best->first.releasePtr();  // ("best_s", ctypes.py_object),
+      lout.best_e = out.best->second.evaluation(); // ("best_e", ctypes.c_double)]
+   }
+   return lout;
 }
 
 extern "C" LibSearchOutput // SearchOutput for XSH "best-type"
