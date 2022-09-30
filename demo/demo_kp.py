@@ -316,7 +316,7 @@ print("c_idx=", c_idx)
 c_rk_idx = pKP.engine.add_constructive_rk(pKP, mycallback_constructive_rk)
 print("c_rk_idx=", c_rk_idx)
 
-# exit(1)
+###exit(0)
 
 is_idx = pKP.engine.create_initial_search(ev_idx, c_idx)
 print("is_idx=", is_idx)
