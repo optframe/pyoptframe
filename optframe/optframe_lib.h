@@ -89,6 +89,14 @@ optframe_api1d_add_rk_constructive(FakeEnginePtr _engine,
                                    int (*_fconstructive)(FakePythonObjPtr, LibArrayDouble*),
                                    FakePythonObjPtr problem_view);
 
+extern "C" int // index of Decoder (for RK)
+optframe_api1d_add_rk_decoder(FakeEnginePtr _engine,
+                              FakePythonObjPtr (*_fdecoder)(FakePythonObjPtr, LibArrayDouble),
+                              FakePythonObjPtr problem_view,
+                              FakePythonObjPtr (*f_sol_deepcopy)(FakePythonObjPtr),
+                              size_t (*f_sol_tostring)(FakePythonObjPtr, char*, size_t),
+                              int (*f_utils_decref)(FakePythonObjPtr));
+
 extern "C" int // error or not
 optframe_api0_set_array_double(int, double[], LibArrayDouble*);
 

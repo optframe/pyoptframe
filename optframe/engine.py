@@ -66,6 +66,7 @@ optframe_lib.optframe_api1d_add_constructive.argtypes = [
     FUNC_SOL_DEEPCOPY, FUNC_SOL_TOSTRING, FUNC_UTILS_DECREF]
 optframe_lib.optframe_api1d_add_constructive.restype = ctypes.c_int32
 
+
 class LibArrayDouble(ctypes.Structure):
     _fields_ = [("size", ctypes.c_int),  
                 ("v", ctypes.POINTER(ctypes.c_double))]
@@ -79,6 +80,16 @@ optframe_lib.optframe_api0_set_array_double.argtypes = [
     ctypes.c_int, POINTER(ctypes.c_double), POINTER(LibArrayDouble)]
 optframe_lib.optframe_api0_set_array_double.restype = ctypes.c_int32
 
+
+FUNC_FDECODER_RK = CFUNCTYPE(
+    ctypes.py_object, ctypes.py_object, LibArrayDouble)
+
+optframe_lib.optframe_api1d_add_rk_decoder.argtypes = [
+    ctypes.c_void_p, FUNC_FDECODER_RK, ctypes.py_object,
+    FUNC_SOL_DEEPCOPY, FUNC_SOL_TOSTRING, FUNC_UTILS_DECREF]
+optframe_lib.optframe_api1d_add_rk_decoder.restype = ctypes.c_int32
+
+
 # problem* -> LibArrayDouble
 FUNC_FCONSTRUCTIVE_RK = CFUNCTYPE(
     ctypes.c_int, ctypes.py_object, POINTER(LibArrayDouble))
@@ -89,6 +100,7 @@ FUNC_FCONSTRUCTIVE_RK = CFUNCTYPE(
 optframe_lib.optframe_api1d_add_rk_constructive.argtypes = [
     ctypes.c_void_p, FUNC_FCONSTRUCTIVE_RK, ctypes.py_object]
 optframe_lib.optframe_api1d_add_rk_constructive.restype = ctypes.c_int32
+
 
 
 # ----------
@@ -456,6 +468,19 @@ class Engine(object):
         idx_c = optframe_lib.optframe_api1d_add_rk_constructive(
             self.hf, constructive_rk_callback_ptr, problemCtx)
         return idx_c
+
+    def add_decoder_rk(self, problemCtx, decoder_rk_callback):
+        decoder_rk_callback_ptr = FUNC_FDECODER_RK(decoder_rk_callback)
+        self.register_callback(decoder_rk_callback_ptr)
+        #
+        idx_dec = optframe_lib.optframe_api1d_add_rk_decoder(
+            self.hf, decoder_rk_callback_ptr, 
+            problemCtx,
+            self.callback_sol_deepcopy_ptr,
+            self.callback_sol_tostring_ptr,
+            self.callback_utils_decref_ptr)
+        return idx_dec
+
 
 
     def add_ns(self, problemCtx, ns_rand_callback, move_apply_callback, move_eq_callback, move_cba_callback):
