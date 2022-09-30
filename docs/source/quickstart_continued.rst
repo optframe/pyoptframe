@@ -147,6 +147,12 @@ First Improvement, Best Improvement, Random Selection and Multi Improvement.
 We can also combine several local search strategies in a multiple strategy
 called Variable Neighborhood Descent (VND).
 
+.. hint::
+    Note that we will use OptFrame Component Builder syntax, 
+    to automatically generate a native C++ Component based on a build string.
+    For more details, see the (TODO) Component Builder list on OptFrame C++ ReadTheDocs (TODO).
+
+
 :code:`File 'mainTSP-fcore-ils-part2.py' located in 'demo/03_QuickstartTSP_VNS_BRKGA/'`
 
 .. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-ils-part2.py

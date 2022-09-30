@@ -1018,6 +1018,59 @@ optframe_api1d_add_constructive(FakeEnginePtr _engine,
    return id;
 }
 
+extern "C" int // index of Constructive (for RK)
+optframe_api1d_add_rk_constructive(FakeEnginePtr _engine,
+                                   int (*_fconstructive)(FakePythonObjPtr, LibArrayDouble*),
+                                   FakePythonObjPtr problem_view)
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+   //
+   auto fconstructive_vec = [_fconstructive, problem_view]() -> std::vector<double> {
+      //
+      LibArrayDouble vobj_local;
+      vobj_local.size = -1;
+      vobj_local.v = 0;
+      //
+      int ret_sz = _fconstructive(problem_view, &vobj_local);
+      assert(ret_sz >= 0);
+      std::vector<double> vec(vobj_local.v, vobj_local.v + vobj_local.size);
+      //
+      // destroy array .v
+      //  => created by c++ call to 'optframe_api0_set_array_double' inside of _fconstructive
+      delete[] vobj_local.v;
+      //
+      vobj_local.size = 0;
+      vobj_local.v = 0; // nullptr
+      //
+      return vec;
+   };
+
+   auto* c_ptr = new optframe::FConstructiveRK<double>{ fconstructive_vec };
+
+   sref<optframe::Constructive<std::vector<double>>> fc2(c_ptr);
+   sref<optframe::Component> fc(fc2);
+
+   //std::cout << "   ==== optframe_api1d_add_rk_constructive: will try c_ptr=" << c_ptr << " ->generateSolution()" << std::endl;
+   //auto opv = c_ptr->generateSolution({ 0.0 });
+   //std::vector<double> vd = *opv;
+   //std::cout << "   ==== optframe_api1d_add_rk_constructive: vd.size()=" << vd.size() << std::endl;
+
+   int id = engine->loader.factory.addComponent(fc, "OptFrame:Constructive:EA:RK");
+   //
+   return id;
+}
+
+extern "C" int // error or size
+optframe_api0_set_array_double(int sz, double* vec, LibArrayDouble* lad_ptr)
+{
+   (*lad_ptr).size = sz;
+   (*lad_ptr).v = new double[sz];
+   // copy by loop (TODO: improve!)
+   for (unsigned i = 0; i < sz; i++)
+      (*lad_ptr).v[i] = vec[i];
+   return sz;
+}
+
 extern "C" int // index of ns
 optframe_api1d_add_ns(FakeEnginePtr _engine,
                       FakePythonObjPtr (*_fns_rand)(FakePythonObjPtr, FakePythonObjPtr),

@@ -1,4 +1,14 @@
 
+def mycallback_constructive_rsk(problemCtx: ProblemContextTSP) -> RSKSolutionTSP:
+    sol = RKSolutionTSP()
+    for i in range(problemCtx.n):
+        key = random.choice([0, 100000]) / 100000.0
+        sol.rkeys.append(key)
+    sol.n = problemCtx.n
+    return sol
+
+
+
 class MyRandomKeysInitPop : public InitialEPopulation<std::pair<std::vector<double>, Evaluation<int>>>
 {
    using RSK = std::vector<double>;

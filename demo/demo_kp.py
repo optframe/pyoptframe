@@ -237,6 +237,29 @@ def mycallback_nsseq_it_current_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
     return mv
 
 
+# ----------------------
+
+# LibArrayDouble
+def mycallback_constructive_rk(problemCtx: ExampleKP, ptr_array_double) -> int:
+    #
+    rkeys = []
+    for i in range(problemCtx.n):
+        key = random.random() # [0,1] uniform
+        rkeys.append(key)
+    
+    #print(" python 'mycallback_constructive_rk': generated keys (in python): ", rkeys)
+    # set output array
+    ptr_array_double.contents.size = len(rkeys)
+    ptr_array_double.contents.v = optframe.engine.callback_adapter_list_to_vecdouble(rkeys)
+
+    # ======= PRINT CONTENTS OF ARRAY v =======
+    #for i in range(ptr_array_double.contents.size):
+    #    print("i=",i," -> ",ptr_array_double.contents.v[i])
+    # =========================================
+
+    return len(rkeys)
+
+
 # =============================
 #       BEGIN SCRIPT
 # =============================
@@ -289,6 +312,11 @@ print("")
 
 c_idx = pKP.engine.add_constructive(pKP, mycallback_constructive)
 print("c_idx=", c_idx)
+
+c_rk_idx = pKP.engine.add_constructive_rk(pKP, mycallback_constructive_rk)
+print("c_rk_idx=", c_rk_idx)
+
+# exit(1)
 
 is_idx = pKP.engine.create_initial_search(ev_idx, c_idx)
 print("is_idx=", is_idx)

@@ -20,6 +20,12 @@ extern "C" struct LibSearchOutput
    double best_e; // ("best_e", ctypes.c_double)]
 };
 
+extern "C" struct LibArrayDouble
+{
+   int size;  // ("size", c_int),
+   double* v; // ("v", ctypes.c_double_p)]
+};
+
 // ============================ Engine: HeuristicFactory ===========================
 
 extern "C" void
@@ -75,6 +81,16 @@ optframe_api1d_add_ns(FakeEnginePtr _engine,
                       bool (*_fmove_cba)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
                       FakePythonObjPtr problem_view,
                       int (*f_utils_decref)(FakePythonObjPtr));
+
+// ADD (specific)
+
+extern "C" int // index of Constructive (for RK)
+optframe_api1d_add_rk_constructive(FakeEnginePtr _engine,
+                                   int (*_fconstructive)(FakePythonObjPtr, LibArrayDouble*),
+                                   FakePythonObjPtr problem_view);
+
+extern "C" int // error or not
+optframe_api0_set_array_double(int, double[], LibArrayDouble*);
 
 // CREATE
 

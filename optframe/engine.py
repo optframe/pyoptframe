@@ -38,6 +38,11 @@ FUNC_SOL_TOSTRING = CFUNCTYPE(
     ctypes.c_size_t, ctypes.py_object, POINTER(c_char), ctypes.c_size_t)
 
 
+# -------------------------------------
+
+
+
+
 # =====================================
 #        OptFrame ADD Component
 # =====================================
@@ -60,6 +65,31 @@ optframe_lib.optframe_api1d_add_constructive.argtypes = [
     ctypes.c_void_p, FUNC_FCONSTRUCTIVE, ctypes.py_object,
     FUNC_SOL_DEEPCOPY, FUNC_SOL_TOSTRING, FUNC_UTILS_DECREF]
 optframe_lib.optframe_api1d_add_constructive.restype = ctypes.c_int32
+
+class LibArrayDouble(ctypes.Structure):
+    _fields_ = [("size", ctypes.c_int),  
+                ("v", ctypes.POINTER(ctypes.c_double))]
+
+    def __str__(self):
+        return f"LibArrayDouble(size={self.size};v={self.v};)"
+
+# extern "C" int // error or not
+# optframe_api0_set_array_double(int sz, double* vec, LibArrayDouble* lad_ptr)
+optframe_lib.optframe_api0_set_array_double.argtypes = [
+    ctypes.c_int, POINTER(ctypes.c_double), POINTER(LibArrayDouble)]
+optframe_lib.optframe_api0_set_array_double.restype = ctypes.c_int32
+
+# problem* -> LibArrayDouble
+FUNC_FCONSTRUCTIVE_RK = CFUNCTYPE(
+    ctypes.c_int, ctypes.py_object, POINTER(LibArrayDouble))
+
+# RK Constructive
+# int (*_fconstructive)(FakePythonObjPtr, LibArrayDouble*)
+
+optframe_lib.optframe_api1d_add_rk_constructive.argtypes = [
+    ctypes.c_void_p, FUNC_FCONSTRUCTIVE_RK, ctypes.py_object]
+optframe_lib.optframe_api1d_add_rk_constructive.restype = ctypes.c_int32
+
 
 # ----------
 
@@ -215,6 +245,7 @@ class SearchOutput(ctypes.Structure):
         return f"SearchOutput(status={self.status};has_best={self.has_best};best_s={self.best_s};best_e={self.best_e};)"
 
 
+
 #
 optframe_lib.optframe_api0d_engine_simulated_annealing.argtypes = [
     ctypes.c_void_p]
@@ -264,6 +295,17 @@ def callback_sol_deepcopy_utils(sol):
     sol2 = deepcopy(sol)
     return sol2
 
+def callback_adapter_list_to_vecdouble(l: list) -> POINTER(c_double):
+    if (not isinstance(l, list)):
+        assert (False)
+    lad = LibArrayDouble()
+    lad.size = len(l)
+    #
+    seq = ctypes.c_double * len(l)
+    arr = seq(*l)
+    #
+    optframe_lib.optframe_api0_set_array_double(len(l), arr, byref(lad))
+    return lad.v
 
 # optframe.APILevel
 class APILevel(Enum):
@@ -296,6 +338,7 @@ class Engine(object):
             callback_sol_tostring)
         self.callback_utils_decref_ptr = FUNC_UTILS_DECREF(
             callback_utils_decref)
+            
         # keep callbacks in memory
         self.callback_list = []
         atexit.register(self.cleanup)
@@ -394,6 +437,26 @@ class Engine(object):
             self.callback_sol_tostring_ptr,
             self.callback_utils_decref_ptr)
         return idx_c
+
+    def add_constructive_rk(self, problemCtx, constructive_rk_callback):
+        #print("will execute 'add_constructive_rk'")
+        #
+        #print("will create lambda")
+        #     ctypes.py_object -> LibArrayDouble
+        #myfunction = lambda problem : callback_adapter_list_to_vecdouble(constructive_rk_callback(problem))
+        # TODO: create own mapping function here, from List to ctypes double pointer
+        #print("taking pointer from lambda")
+        #constructive_rk_callback_ptr = FUNC_FCONSTRUCTIVE_RK(myfunction)
+        #
+        #
+        #self.register_callback(constructive_rk_callback_ptr)
+        constructive_rk_callback_ptr = FUNC_FCONSTRUCTIVE_RK(constructive_rk_callback)
+        self.register_callback(constructive_rk_callback_ptr)
+        #
+        idx_c = optframe_lib.optframe_api1d_add_rk_constructive(
+            self.hf, constructive_rk_callback_ptr, problemCtx)
+        return idx_c
+
 
     def add_ns(self, problemCtx, ns_rand_callback, move_apply_callback, move_eq_callback, move_cba_callback):
         ns_rand_callback_ptr = FUNC_FNS_RAND(ns_rand_callback)

@@ -254,6 +254,11 @@ Then we test the constructive and evaluator:
 Now we give an example with of the most well-known metaheuristics: the `Simulated Annealing <https://en.wikipedia.org/wiki/Simulated_annealing>`_.
 It has few parameters, including: initial temperature :code:`T0`, cooling factor :code:`alpha`, and iterations per temperature :code:`iterT`.
 
+.. hint::
+    Note that we will use OptFrame Component Builder syntax, 
+    to automatically generate a native C++ Component based on a build string.
+    For more details, see the (TODO) Component Builder list on OptFrame C++ ReadTheDocs (TODO).
+
 .. 
     // COMMENTS
     SAnnealing...

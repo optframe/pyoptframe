@@ -18,11 +18,11 @@ list_idx = pKP.engine.create_component_list(
 print("list_idx=", list_idx)
 
 # build Simulated Annealing with alpha=0.98 T0=99999 and IterMax=100
-sos_idx = pKP.engine.build_single_obj_search(
-    "OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA",
+gs_idx = pKP.engine.build_global_search(
+    "OptFrame:ComponentBuilder:GlobalSearch:SA:BasicSA",
     "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.98 100 99999")
-print("sos_idx=", sos_idx)
+print("gs_idx=", gs_idx)
 
 # run Simulated Annealing for 10.0 seconds
-lout = pKP.engine.run_sos_search(sos_idx, 10.0)
+lout = pKP.engine.run_global_search(gs_idx, 10.0)
 print('lout=', lout)
