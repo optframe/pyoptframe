@@ -2,7 +2,7 @@
 # some advices from: https://realpython.com/pypi-publish-python-package/
 
 [build-system]
-requires = ["setuptools>=53.0.0", "wheel"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
