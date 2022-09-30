@@ -259,17 +259,27 @@ def mycallback_constructive_rk(problemCtx: ExampleKP, ptr_array_double) -> int:
 
     return len(rkeys)
 
-def mycallback_decoder_rk(problemCtx: ExampleKP, ptr_array_double) -> ExampleSol:
+def mycallback_decoder_rk(problemCtx: ExampleKP, array_double : optframe.engine.LibArrayDouble) -> ExampleSol:
     #
-    print("begin decoder with array=",ptr_array_double)
+    #print("begin decoder with array=",array_double)
+    #print("begin decoder with array=",array_double.size)
+    #print("begin decoder with array=",array_double.v)
+    # FOR TSP!!! NOT KP...
+    #lpairs = []
+    #for i in range(array_double.size):
+    #    p = [array_double.v[i], i]
+    #    lpairs.append(p)
+    #print("lpairs: ", lpairs)
+    #sorted_list = sorted(lpairs)
+    #print("sorted_list: ", sorted_list)
     
     sol = ExampleSol()
-    # print("count=", sys.getrefcount(sol)) # count=2
     for i in range(0, problemCtx.n):
-        sol.bag.append(random.choice([0, 1]))
+        if array_double.v[i] <= 0.5:
+            sol.bag.append(0)
+        else:
+            sol.bag.append(1)
     sol.n = problemCtx.n
-    #print("\tfinished mycallback_constructive with sol: ", sol)
-    print("TODO: implement decoder correctly")
     return sol
 
 
@@ -325,34 +335,6 @@ print("")
 
 c_idx = pKP.engine.add_constructive(pKP, mycallback_constructive)
 print("c_idx=", c_idx)
-
-c_rk_idx = pKP.engine.add_constructive_rk(pKP, mycallback_constructive_rk)
-print("c_rk_idx=", c_rk_idx)
-
-pKP.engine.list_components("OptFrame:")
-
-initepop_rk_id = pKP.engine.build_component(
-    "OptFrame:ComponentBuilder:EA:RK:BasicInitialEPopulationRKBuilder", 
-    "OptFrame:Constructive:EA:RK:ConstructiveRK 0",
-    "OptFrame:InitialEPopulation:EA:RK:InitialEPopulationRK")
-print("initepop_rk_id=", initepop_rk_id)
-
-print("")
-print("WILL CREATE DECODER!!")
-dec_rk_idx = pKP.engine.add_decoder_rk(pKP, mycallback_decoder_rk)
-print("dec_rk_idx=", dec_rk_idx)
-
-pKP.engine.list_components("OptFrame:")
-
-print("")
-print("WILL BUILD COMPLETE DECODER WITH EVALUATOR!!")
-drk_rk_id = pKP.engine.build_component(
-    "OptFrame:ComponentBuilder:EA:RK:BasicDecoderRandomKeysBuilder", 
-    "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:EA:RK:DecoderRandomKeysNoEvaluation 0",
-    "OptFrame:EA:RK:DecoderRandomKeys")
-print("drk_rk_id=", drk_rk_id)
-
-#exit(0)
 
 is_idx = pKP.engine.create_initial_search(ev_idx, c_idx)
 print("is_idx=", is_idx)
@@ -497,6 +479,8 @@ print("pert_idx=", pert_idx)
 pKP.engine.list_components("OptFrame:")
 
 
+###########
+
 print("")
 print("testing builder (build_single_obj_search) for ILS...")
 print("")
@@ -522,6 +506,33 @@ print('lout=', lout)
 ss = optframe.SearchStatus(lout.status)
 print(ss)
 
+###########
+
+c_rk_idx = pKP.engine.add_constructive_rk(pKP, mycallback_constructive_rk)
+print("c_rk_idx=", c_rk_idx)
+
+pKP.engine.list_components("OptFrame:")
+
+initepop_rk_id = pKP.engine.build_component(
+    "OptFrame:ComponentBuilder:EA:RK:BasicInitialEPopulationRKBuilder", 
+    "OptFrame:Constructive:EA:RK:ConstructiveRK 0",
+    "OptFrame:InitialEPopulation:EA:RK:InitialEPopulationRK")
+print("initepop_rk_id=", initepop_rk_id)
+
+print("")
+print("WILL CREATE DECODER!!")
+dec_rk_idx = pKP.engine.add_decoder_rk(pKP, mycallback_decoder_rk)
+print("dec_rk_idx=", dec_rk_idx)
+
+pKP.engine.list_components("OptFrame:")
+
+print("")
+print("WILL BUILD COMPLETE DECODER WITH EVALUATOR!!")
+drk_rk_id = pKP.engine.build_component(
+    "OptFrame:ComponentBuilder:EA:RK:BasicDecoderRandomKeysBuilder", 
+    "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:EA:RK:DecoderRandomKeysNoEvaluation 0",
+    "OptFrame:EA:RK:DecoderRandomKeys")
+print("drk_rk_id=", drk_rk_id)
 
 print("")
 print("testing builder (build_global_search) for BRKGA...")
@@ -542,7 +553,6 @@ print("")
 lout = pKP.engine.run_global_search(g_idx, 4.9)
 print('lout=', lout)
 #
-
 
 
 print("")
