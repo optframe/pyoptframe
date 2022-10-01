@@ -267,6 +267,10 @@ We provide the main file for TSP BRKGA :code:`mainTSP-fcore-brkga.py`.
     :linenos:
     :language: python
 
+To run it::
+
+    python3 mainTSP-fcore-brkga.py 
+
 More Examples 
 -------------
 
