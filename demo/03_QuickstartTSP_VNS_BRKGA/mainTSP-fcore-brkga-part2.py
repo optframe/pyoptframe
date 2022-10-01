@@ -1,53 +1,14 @@
 
-def mycallback_constructive_rsk(problemCtx: ProblemContextTSP) -> RSKSolutionTSP:
-    sol = RKSolutionTSP()
+#
+# random constructive: updates parameter ptr_array_double of type (LibArrayDouble*)
+#
+def mycallback_constructive_rk(problemCtx: ProblemContextTSP, ptr_array_double) -> int:
+    rkeys = []
     for i in range(problemCtx.n):
-        key = random.choice([0, 100000]) / 100000.0
-        sol.rkeys.append(key)
-    sol.n = problemCtx.n
-    return sol
+        key = random.random() # [0,1] uniform
+        rkeys.append(key)
+    #
+    ptr_array_double.contents.size = len(rkeys)
+    ptr_array_double.contents.v = optframe.engine.callback_adapter_list_to_vecdouble(rkeys)
+    return len(rkeys)
 
-
-
-class MyRandomKeysInitPop : public InitialEPopulation<std::pair<std::vector<double>, Evaluation<int>>>
-{
-   using RSK = std::vector<double>;
-
-private:
-   int sz;
-   sref<RandGen> rg;
-
-public:
-   MyRandomKeysInitPop(int size, sref<RandGen> _rg = new RandGen)
-     : sz{ size }
-     , rg{ _rg }
-   {
-   }
-
-   // copy constructor
-   MyRandomKeysInitPop(const MyRandomKeysInitPop& self)
-     : sz{ self.sz }
-     , rg{ self.rg }
-   {
-   }
-
-   virtual bool canEvaluate() const override
-   {
-      return false; // cannot evaluate
-   }
-
-   VEPopulation<std::pair<RSK, Evaluation<int>>> generateEPopulation(unsigned populationSize, double timelimit) override
-   {
-      VEPopulation<std::pair<RSK, Evaluation<int>>> pop;
-
-      for (unsigned i = 0; i < populationSize; i++) {
-         vector<double> vd(sz);
-         for (int j = 0; j < sz; j++)
-            vd[j] = (rg->rand() % 100000) / 100000.0;
-         std::pair<RSK, Evaluation<int>> ind{ vd, Evaluation<int>{} };
-         pop.push_back(ind);
-      }
-
-      return pop;
-   }
-};

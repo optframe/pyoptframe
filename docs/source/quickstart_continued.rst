@@ -210,7 +210,7 @@ This is good to tune the degree of randomness (number of random digits) and also
 
 ..
     // COMMENTS
-     MyRandomKeysInitPop
+    ... initial random population
 
 .. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-brkga-part2.py
     :linenos:
@@ -226,37 +226,12 @@ on sorting the keys, related to a predefined indexing of each key.
 
 ..
     // COMMENTS
-    pair<Evaluation<double>, vector<int>>
-    fDecode(const vector<double>& rk)
-    {
-        vector<pair<double, int>> v(rk.size());
-        int k = 0;
-        for (unsigned i = 0; i < v.size(); i++)
-            v[k] = pair<double, int>(rk[i], i);
-
-        // sort the pairs according to the random key value 
-        sort(v.begin(), v.end(), [](const pair<double, int>& i, const pair<double, int>& j) -> bool {
-            return i.first < j.first;
-        });
-
-        // TSP representation is vector<int>
-        vector<int> p(v.size());
-        for (unsigned i = 0; i < v.size(); i++)
-            p[i] = v[i].second;
-
-        Evaluation<double> e = ev.evaluate(p);
-        return make_pair(e, p);
-    }
-
-    // evaluator random keys (for TSP)
-    FDecoderRK<std::vector<int>, Evaluation<>, double, MinOrMax::MINIMIZE> decoder{
-        fDecode 
-    };
+    ... decoder
 
 
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-brkga-part3.cpp
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-brkga-part3.py
     :linenos:
-    :language: c++
+    :language: python
 
 BRKGA with TSP
 ^^^^^^^^^^^^^^^
@@ -269,32 +244,11 @@ also rates for mutation (randomness), elite (best solutions), preference for eli
 
 ..
    // COMMENTS
-   sref<RandGen> rg = new RandGen;
+   ... brkga
 
-   // load data into problem context 'pTSP'
-   Scanner scanner{ "3\n1 10 10\n2 20 20\n3 30 30\n" };
-   pTSP.load(scanner);
-   std::cout << pTSP.dist << std::endl;
-
-   sref<DecoderRandomKeys<ESolutionTSP::first_type, ESolutionTSP::second_type, double>> _decoder = decoder;
-   sref<InitialPopulation<std::pair<vector<double>, ESolutionTSP::second_type>>> _initPop = new MyRandomKeysInitPop(pTSP.n); // passing key_size
-
-   //eprk, pTSP.n, 1000, 30, 0.4, 0.3, 0.6
-   BRKGA<ESolutionTSP, double> brkga(
-     _decoder,
-     MyRandomKeysInitPop(pTSP.n, rg), // key_size = pTSP.n
-     30,
-     1000,
-     0.4,
-     0.3,
-     0.6,
-     rg);
-
-   auto searchOut = brkga.search(10.0); // 10.0 seconds max
-
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-brkga-part4.cpp
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-brkga-part4.py
     :linenos:
-    :language: c++
+    :language: python
 
 The result from searchOut can be split in two parts, an error code and the returned solution 
 (the same as in Simulated Annealing or any other OptFrame search method).
@@ -303,21 +257,21 @@ The result from searchOut can be split in two parts, an error code and the retur
 Complete Example for BRKGA
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We provide the main file for TSP BRKGA :code:`mainTSP-fcore-brkga.cpp`.
+We provide the main file for TSP BRKGA :code:`mainTSP-fcore-brkga.py`.
 
 *mainTSP-fcore-brkga.cpp*
 
-:code:`File 'mainTSP-fcore-brkga.cpp' located in 'demo/03_QuickstartTSP_VNS_BRKGA/'`
+:code:`File 'mainTSP-fcore-brkga.py' located in 'demo/03_QuickstartTSP_VNS_BRKGA/'`
 
-.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-brkga.cpp
+.. literalinclude:: ../../demo/03_QuickstartTSP_VNS_BRKGA/mainTSP-fcore-brkga.py
     :linenos:
-    :language: c++
+    :language: python
 
 More Examples 
 -------------
 
-For a other examples, see folder Examples/FCore-BRKGA and execute :code:`bazel build ...`
+For a other examples, see folder Examples/FCore-BRKGA  on OptFrame C++ project.
 
 .. warning::
-    Feel free to check folder :code:`OptFrame/Examples` for other examples on FCore and OptFrame Classic.
+    Feel free to check folder :code:`OptFrame/Examples` for other examples on FCore and OptFrame C++.
 

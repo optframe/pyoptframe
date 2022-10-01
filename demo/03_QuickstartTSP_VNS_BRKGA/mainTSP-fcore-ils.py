@@ -169,10 +169,9 @@ def mycallback_nsseq_it_current_swap(pTSP: ProblemContextTSP, it: IteratorSwap):
     mv.i = it.i
     mv.j = it.j
     return mv
-
-# ===========================
-# begins main() python script
-# ===========================
+# ===========================================
+# begins main() python script for TSP ILS/VNS
+# ===========================================
 
 # set random seed for system
 random.seed(0) # bad generator, just an example..
@@ -213,23 +212,6 @@ print("solxx:", solxx)
 
 z1 = pTSP.engine.fevaluator_evaluate(fev, False, solxx)
 print("evaluation:", z1)
-
-# NOT Possible for now... needs more "testing" API0 features...
-
-#   // swap 0 with 1
-#   MoveSwap move{ make_pair(0, 1), fApplySwap };
-#   move.print();
-#   // NSSwap nsswap;
-#   // move for solution 'esol'
-#   auto m1 = nsswap.randomMove(esol);
-#   m1->print();
-#   std::cout << std::endl;
-#   std::cout << "begin listing NSSeqSwapFancy" << std::endl;
-#   //
-#   auto it1 = nsseq2->getIterator(esol);
-#   for (it1->first(); !it1->isDone(); it1->next())
-#      it1->current()->print();
-#   std::cout << "end listing NSSeqSwapFancy" << std::endl;
 
 
 # list the required parameters for OptFrame ComponentBuilder
