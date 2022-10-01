@@ -1,5 +1,5 @@
-#CC=g++
-CC=clang++-12
+CC=g++
+#CC=clang++
 CPPSTD=-std=c++20 -Wfatal-errors
 #CPPSTD=--std=c++17 -fconcepts -Wfatal-errors
 
