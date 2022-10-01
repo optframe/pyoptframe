@@ -13,6 +13,13 @@ Installing `optframe` package in Python is quite easy with pip.
 
    python -m pip install optframe
 
+.. warning::
+    The standard configuration will require a modern c++ compiler with C++20 support.
+    Note that, by 2022, this is already standard on recent MacOS software and Ubuntu 22.04 (g++ v11 is recommended... g++ v9 will not work!).
+    On Windows/WSL environment, it is possible to upgrade WSL and g++. 
+    Native Windows C++ compiler has not been tested yet... please try WSL first.
+
+
 And that's it! You can skip to `Quick Start <./quickstart.html>`_ now.
 
 

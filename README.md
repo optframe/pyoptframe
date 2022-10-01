@@ -11,9 +11,9 @@ Documentation and Tutorials: see [PyOptFrame Quickstart](https://pyoptframe.read
 Variable Neighborhood Search, Iterated Local Search, Tabu Search, Particle Swarm Optimization, NSGA-II, and other single and multi-objective methods.
 This is a 10-year project with several practical applications in industry and academia, so feel free to use it.
 
-## How to test
+## How to test locally (devs only)
 
-### With Package Manager
+### With Local Package Manager
 
 `make install` or `pip install .`
 
