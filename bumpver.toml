@@ -8,12 +8,10 @@ push = false
 
 [bumpver.file_patterns]
 "setup.py" = [
-    "{version}",
-    "{pep440_version}",
+    'version="{version}"',
 ]
 "README.md" = [
     "{version}",
-    "{pep440_version}",
 ]
 "bumpver.toml" = [
     'current_version = "{version}"',
