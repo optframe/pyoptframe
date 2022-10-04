@@ -605,7 +605,7 @@ optframe_api0d_engine_simulated_annealing_params(FakeEnginePtr _engine, double t
    sref<optframe::RandGen> rg = engine->loader.factory.getRandGen();
 
    //sref<optframe::GeneralEvaluator<FCoreLibESolution, optframe::Evaluation<double>>> evaluator{ gev };
-   sref<optframe::InitialSearch<FCoreLibESolution, optframe::Evaluation<double>>> constructive{ initSol };
+   sref<optframe::InitialSearch<FCoreLibESolution>> constructive{ initSol };
    vsref<optframe::NS<FCoreLibESolution, optframe::Evaluation<double>>> neighbors;
    neighbors.push_back(ns);
 
@@ -853,6 +853,11 @@ optframe_api0d_engine_test(FakeEnginePtr _engine)
    engine->loader.factory.assign(ev, 0, "OptFrame:GeneralEvaluator:Evaluator");
    assert(ev);
    sref<MyEval> ev2{ ev };
+
+   using MyIEval = optframe::IEvaluator<FCoreLibESolution>;
+
+   sref<MyIEval> iev2{ ev2 };
+
    //
    //
    using MyConstructive = optframe::Constructive<FCoreLibSolution>;
@@ -862,7 +867,7 @@ optframe_api0d_engine_test(FakeEnginePtr _engine)
    assert(initial);
    //
    sref<optframe::InitialSearch<FCoreLibESolution>> initSol{
-      new optframe::BasicInitialSearch<FCoreLibESolution>(initial, ev)
+      new optframe::BasicInitialSearch<FCoreLibESolution>(initial, iev2)
    };
    //
    std::cout << "### test will generate solution" << std::endl;
@@ -1000,6 +1005,11 @@ optframe_api1d_add_constructive(FakeEnginePtr _engine,
    std::shared_ptr<MyEval> ev;
    engine->loader.factory.assign(ev, 0, "OptFrame:GeneralEvaluator:Evaluator");
    assert(ev);
+
+   using MyIEval = optframe::IEvaluator<FCoreLibESolution>;
+
+   sref<MyEval> ref_ev{ ev };
+   sref<MyIEval> iev{ ref_ev };
    //
    if (!ev)
       std::cout
@@ -1012,7 +1022,7 @@ optframe_api1d_add_constructive(FakeEnginePtr _engine,
       //    std::static_pointer_cast<MyEval>(gev));
 
       sref<optframe::InitialSearch<FCoreLibESolution>> initSol{
-         new optframe::BasicInitialSearch<FCoreLibESolution>(fc2, ev)
+         new optframe::BasicInitialSearch<FCoreLibESolution>(fc2, iev)
       };
       engine->check.add(initSol);
    }
