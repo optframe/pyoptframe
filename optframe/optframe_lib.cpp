@@ -1,17 +1,21 @@
 #include "optframe_lib.h"
 //
 
+// C
 #include <assert.h>
+// C++
 #include <iostream>
-
+#include <utility>
+//
 #include <OptFCore/FCore.hpp>
 #include <OptFCore/FxCore.hpp>
-#include <OptFrame/HeuristicFactory.hpp>
+#include <OptFrame/BaseConcepts.hpp> // XESolution
 #include <OptFrame/Heuristics/EA/RK/BasicDecoderRandomKeys.hpp>
 #include <OptFrame/Heuristics/EA/RK/BasicInitialEPopulationRK.hpp>
-#include <OptFrame/Loader.hpp>
+#include <OptFrame/Hyper/HeuristicFactory.hpp>
+#include <OptFrame/Hyper/Loader.hpp>
+#include <OptFrame/Hyper/OptFrameList.hpp>
 #include <OptFrame/MyConcepts.hpp> // sref
-#include <OptFrame/OptFrameList.hpp>
 #include <OptFrame/Util/CheckCommand.hpp>
 
 class FCoreLibSolution
@@ -210,6 +214,8 @@ public:
 
 using FCoreLibESolution = std::pair<FCoreLibSolution, optframe::Evaluation<double>>;
 
+using FCoreLibEMSolution = std::pair<FCoreLibSolution, optframe::MultiEvaluation<double>>;
+
 // ============================ Engine: HeuristicFactory ===========================
 
 /*
@@ -286,13 +292,16 @@ public:
 // IMPORTANT: OptFrame FMove does not require Copy on M (aka, FakePythonObjPtr)... I HOPE!
 // Don't remember needing a clone() member on OptFrame Moves... but nice to clarify a NoCopy (NoNothing...) concept there.
 //using FMoveLib = optframe::FMove<FakePythonObjPtr, FCoreLibESolution>;
-
 // will not use FMove now, because of DecRef on destructor... a necessary personalization.
 
-class FMoveLib : public optframe::Move<FCoreLibESolution, typename FCoreLibESolution::second_type>
+using optframe::Move; // let's simplify things!!
+
+// class FMoveLib : public optframe::Move<FCoreLibESolution, typename FCoreLibESolution::second_type>
+template<typename XES = FCoreLibESolution, typename XEv = typename XES::second_type>
+class FMoveLib : public optframe::Move<XES, XEv>
 {
-   using XES = FCoreLibESolution;
-   using XEv = typename XES::second_type;
+   // using XES = FCoreLibESolution;
+   // using XEv = typename XES::second_type;
    using XSH = XES; // only single objective
    using M = FakePythonObjPtr;
 
@@ -301,7 +310,7 @@ public:
 
    typedef std::function<M(const M&, XES&)> FuncTypeMoveApply;
    typedef std::function<bool(const M&, const XES&)> FuncTypeMoveCBA;
-   typedef std::function<bool(const M&, const Move<XES>&)> FuncTypeMoveEq;
+   typedef std::function<bool(const M&, const optframe::Move<XES>&)> FuncTypeMoveEq;
    typedef std::function<bool(FakePythonObjPtr)> FuncTypeUtilsDecRef;
 
    //M (*fApply)(const M&, XES&);                    // fApply
@@ -365,11 +374,11 @@ public:
    static string idComponent()
    {
       std::stringstream ss;
-      ss << Component::idComponent() << ":FMoveLib";
+      ss << optframe::Component::idComponent() << ":FMoveLib";
       return ss.str();
    }
 
-   virtual string id() const override
+   virtual std::string id() const override
    {
       return idComponent();
    }
@@ -1030,6 +1039,63 @@ optframe_api1d_add_constructive(FakeEnginePtr _engine,
    return id;
 }
 
+extern "C" int // index of general crossover
+optframe_api0d_add_general_crossover(FakeEnginePtr _engine,
+                                     FakePythonObjPtr (*_fcross1)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                                     FakePythonObjPtr (*_fcross2)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                                     FakePythonObjPtr problem_view,
+                                     FakePythonObjPtr (*f_sol_deepcopy)(FakePythonObjPtr),
+                                     size_t (*f_sol_tostring)(FakePythonObjPtr, char*, size_t),
+                                     int (*f_utils_decref)(FakePythonObjPtr))
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+
+   auto fcross1 = [_fcross1,
+                   problem_view,
+                   f_sol_deepcopy,
+                   f_sol_tostring,
+                   f_utils_decref](const FCoreLibSolution& s1, const FCoreLibSolution& s2)
+     -> FCoreLibSolution {
+      FakePythonObjPtr vobj_owned = _fcross1(problem_view, s1.solution_ptr, s2.solution_ptr);
+      assert(vobj_owned);
+      FCoreLibSolution sol(vobj_owned, f_sol_deepcopy, f_sol_tostring, f_utils_decref);
+      return sol;
+   };
+
+   auto fcross2 = [_fcross2,
+                   problem_view,
+                   f_sol_deepcopy,
+                   f_sol_tostring,
+                   f_utils_decref](const FCoreLibSolution& s1, const FCoreLibSolution& s2)
+     -> FCoreLibSolution {
+      FakePythonObjPtr vobj_owned = _fcross2(problem_view, s1.solution_ptr, s2.solution_ptr);
+      assert(vobj_owned);
+      FCoreLibSolution sol(vobj_owned, f_sol_deepcopy, f_sol_tostring, f_utils_decref);
+      return sol;
+   };
+
+   // workaround to join both callbacks...
+   // for now, complicated to efficiently have multiple returns in
+   // python callbacks! It's fixable, but takes time...
+   auto fcross = [fcross1, fcross2](
+                   const FCoreLibSolution& s1,
+                   const FCoreLibSolution& s2)
+     -> std::pair<FCoreLibSolution, FCoreLibSolution> {
+      std::pair<FCoreLibSolution, FCoreLibSolution> p = {
+         fcross1(s1, s2),
+         fcross2(s1, s2)
+      };
+      return p;
+   };
+   auto* gc_ptr = new optframe::FGeneralCrossover<FCoreLibSolution>{ fcross };
+
+   sref<optframe::GeneralCrossover<FCoreLibSolution>> fgc2(gc_ptr);
+   sref<optframe::Component> fc(fgc2);
+
+   int id = engine->loader.factory.addComponent(fc, "OptFrame:GeneralCrossover");
+   return id;
+}
+
 extern "C" int // index of Constructive (for RK)
 optframe_api1d_add_rk_constructive(FakeEnginePtr _engine,
                                    int (*_fconstructive)(FakePythonObjPtr, LibArrayDouble*),
@@ -1167,7 +1233,7 @@ optframe_api1d_add_ns(FakeEnginePtr _engine,
    typedef std::function<bool(const FakePythonObjPtr&, const optframe::Move<FCoreLibESolution>&)> FuncTypeMoveEq;
    FuncTypeMoveEq func_fmove_eq = [_fmove_eq, problem_view](const FakePythonObjPtr& my_m_view, const optframe::Move<FCoreLibESolution>& _mOther) -> bool {
       // cast to to lib move type. (TODO: check type... how? use OptFrame Component id()? or must improve OptFrame in this regard... not worry now!)
-      auto& mOther = (FMoveLib&)_mOther;
+      auto& mOther = (FMoveLib<>&)_mOther;
       //
       FakePythonObjPtr mStructOtherView = mOther.m;
       // IMPORTANT: python will receive all as views..
@@ -1220,6 +1286,99 @@ optframe_api1d_add_ns(FakeEnginePtr _engine,
    return id;
 }
 
+extern "C" int // index of ns<XMES>
+optframe_api3d_add_ns_xmes(FakeEnginePtr _engine,
+                           FakePythonObjPtr (*_fns_rand)(FakePythonObjPtr, FakePythonObjPtr),
+                           FakePythonObjPtr (*_fmove_apply)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                           bool (*_fmove_eq)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                           bool (*_fmove_cba)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                           FakePythonObjPtr problem_view,
+                           int (*_f_utils_decref)(FakePythonObjPtr))
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+
+   //std::cout << "invoking 'optframe_api1d_add_constructive' with "
+   //          << "_hf=" << _hf << " _fconstructive and problem_view=" << problem_view << std::endl;
+
+   // ======== preparing move functions ========
+   typedef std::function<FakePythonObjPtr(const FakePythonObjPtr&, FCoreLibEMSolution&)> FuncTypeMoveApply;
+   FuncTypeMoveApply func_fmove_apply = [_fmove_apply, problem_view](const FakePythonObjPtr& m_view, FCoreLibEMSolution& se) -> FakePythonObjPtr {
+      // IMPORTANT: _fmove_apply must IncRef Move on python before returning! I think so...
+      // m_view seems to come from Python, to be used on Python... don't know if we need to IncRef or DecRef that...
+      // TODO: will pass ESolution as a Solution in API1... ignoring Evaluation/Re-evaluation!
+      //
+      // vobj_owned should come IncRef'ed before! I guess...
+      //
+      FakePythonObjPtr vobj_owned = _fmove_apply(problem_view, m_view, se.first.solution_ptr);
+      // TODO: don't know if IncRef or not solution_ptr... I THINK it's a "view" for python, so no IncRef here.
+      return vobj_owned;
+   };
+
+   typedef std::function<bool(const FakePythonObjPtr&, const FCoreLibEMSolution&)> FuncTypeMoveCBA;
+   FuncTypeMoveCBA func_fmove_cba = [_fmove_cba, problem_view](const FakePythonObjPtr& m_view, const FCoreLibEMSolution& se) -> bool {
+      // IMPORTANT: python will receive all as views..
+      // TODO: will pass ESolution as a Solution in API1... ignoring Evaluation/Re-evaluation!
+      bool r = _fmove_cba(problem_view, m_view, se.first.solution_ptr);
+      return r;
+   };
+
+   typedef std::function<bool(const FakePythonObjPtr&, const optframe::Move<FCoreLibEMSolution>&)> FuncTypeMoveEq;
+   FuncTypeMoveEq func_fmove_eq = [_fmove_eq, problem_view](const FakePythonObjPtr& my_m_view, const optframe::Move<FCoreLibEMSolution>& _mOther) -> bool {
+      // cast to to lib move type. (TODO: check type... how? use OptFrame Component id()? or must improve OptFrame in this regard... not worry now!)
+      auto& mOther = (FMoveLib<FCoreLibEMSolution>&)_mOther;
+      //
+      FakePythonObjPtr mStructOtherView = mOther.m;
+      // IMPORTANT: python will receive all as views..
+      bool r = _fmove_eq(problem_view, my_m_view, mStructOtherView);
+      return r;
+   };
+
+   typedef std::function<bool(FakePythonObjPtr)> FuncTypeUtilsDecRef;
+   FuncTypeUtilsDecRef func_utils_decref = _f_utils_decref;
+
+   //std::function<uptr<Move<XES>>(const XES&)>
+   auto func_fns = [_fns_rand,
+                    problem_view,
+                    func_fmove_apply,
+                    func_fmove_cba,
+                    func_fmove_eq,
+                    func_utils_decref](const FCoreLibEMSolution& se) -> optframe::uptr<optframe::Move<FCoreLibEMSolution>> {
+      // IMPORTANT: _fns_rand must IncRef Move on python before returning! I think so...
+      // TODO: will pass ESolution as a Solution in API1... ignoring Evaluation/Re-evaluation!
+      // TODO: don't know if IncRef or not solution_ptr... I THINK it's a "view" for python, so no IncRef here.
+      //
+      // vobj_owned should come IncRef'ed before! I guess...
+      FakePythonObjPtr vobj_owned = _fns_rand(problem_view, se.first.solution_ptr);
+      //std::cout << "'optframe_api1d_add_ns' -> _fns_rand generated pointer: " << vobj_owned << std::endl;
+      assert(vobj_owned); // check void* (TODO: allow non-existing move, return nullptr)
+
+      //
+      auto* m_ptr = new FMoveLib(vobj_owned,
+                                 func_fmove_apply,
+                                 func_fmove_cba,
+                                 func_fmove_eq,
+                                 func_utils_decref);
+
+      //std::cout << "'optframe_api1d_add_ns' -> move created!" << std::endl;
+      return optframe::uptr<optframe::Move<FCoreLibEMSolution>>(m_ptr);
+   };
+
+   sref<optframe::NS<FCoreLibEMSolution>> fns(
+     new optframe::FNS<FCoreLibEMSolution>{ func_fns });
+
+   sref<optframe::Component> fns_comp(fns);
+   //new optframe::FNS<FCoreLibESolution>{ func_fns });
+
+   //std::cout << "'optframe_api1d_add_ns' will add component on hf" << std::endl;
+
+   int id = engine->loader.factory.addComponent(fns_comp, "OptFrame:NS<XMESf64>");
+   //
+   // TODO: cannot add to check module here!
+   // engine->check.add(fns);
+   //fns->print();
+   return id;
+}
+
 // FOR NOW, WE IGNORE 'const XES' AND JUST USE 'const S'.... LET'S SEE!
 
 extern "C" int // index of ns
@@ -1262,7 +1421,7 @@ optframe_api1d_add_nsseq(FakeEnginePtr _engine,
    typedef std::function<bool(const FakePythonObjPtr&, const optframe::Move<FCoreLibESolution>&)> FuncTypeMoveEq;
    FuncTypeMoveEq func_fmove_eq = [_fmove_eq, problem_view](const FakePythonObjPtr& my_m_view, const optframe::Move<FCoreLibESolution>& _mOther) -> bool {
       // cast to to lib move type. (TODO: check type... how? use OptFrame Component id()? or must improve OptFrame in this regard... not worry now!)
-      auto& mOther = (FMoveLib&)_mOther;
+      auto& mOther = (FMoveLib<>&)_mOther;
       //
       FakePythonObjPtr mStructOtherView = mOther.m;
       // IMPORTANT: python will receive all as views..

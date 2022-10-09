@@ -1,8 +1,10 @@
 #ifndef OPTFRAME_PYTHON_LIB_H
 #define OPTFRAME_PYTHON_LIB_H
 
-#include <cstdint> // int32_t
+// C
 #include <stdio.h>
+// C++
+#include <cstdint> // int32_t
 
 typedef void* FakeFEvaluatorPtr;
 typedef void* FakeFConstructivePtr;
@@ -73,6 +75,15 @@ optframe_api1d_add_constructive(FakeEnginePtr _engine,
                                 size_t (*f_sol_tostring)(FakePythonObjPtr, char*, size_t),
                                 int (*f_utils_decref)(FakePythonObjPtr));
 
+extern "C" int // index of general crossover
+optframe_api0d_add_general_crossover(FakeEnginePtr _engine,
+                                     FakePythonObjPtr (*_fcross1)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                                     FakePythonObjPtr (*_fcross2)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                                     FakePythonObjPtr problem_view,
+                                     FakePythonObjPtr (*f_sol_deepcopy)(FakePythonObjPtr),
+                                     size_t (*f_sol_tostring)(FakePythonObjPtr, char*, size_t),
+                                     int (*f_utils_decref)(FakePythonObjPtr));
+
 extern "C" int // index of ns
 optframe_api1d_add_ns(FakeEnginePtr _engine,
                       FakePythonObjPtr (*_fns_rand)(FakePythonObjPtr, FakePythonObjPtr),
@@ -81,6 +92,15 @@ optframe_api1d_add_ns(FakeEnginePtr _engine,
                       bool (*_fmove_cba)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
                       FakePythonObjPtr problem_view,
                       int (*f_utils_decref)(FakePythonObjPtr));
+
+extern "C" int // index of ns<XMES>
+optframe_api3d_add_ns_xmes(FakeEnginePtr _engine,
+                           FakePythonObjPtr (*_fns_rand)(FakePythonObjPtr, FakePythonObjPtr),
+                           FakePythonObjPtr (*_fmove_apply)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                           bool (*_fmove_eq)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                           bool (*_fmove_cba)(FakePythonObjPtr, FakePythonObjPtr, FakePythonObjPtr),
+                           FakePythonObjPtr problem_view,
+                           int (*f_utils_decref)(FakePythonObjPtr));
 
 // ADD (specific)
 

@@ -66,6 +66,14 @@ optframe_lib.optframe_api1d_add_constructive.argtypes = [
     FUNC_SOL_DEEPCOPY, FUNC_SOL_TOSTRING, FUNC_UTILS_DECREF]
 optframe_lib.optframe_api1d_add_constructive.restype = ctypes.c_int32
 
+FUNC_FCROSS = CFUNCTYPE(
+    ctypes.py_object, ctypes.py_object, ctypes.py_object, ctypes.py_object)
+
+optframe_lib.optframe_api0d_add_general_crossover.argtypes = [
+    ctypes.c_void_p, FUNC_FCROSS, FUNC_FCROSS, ctypes.py_object,
+    FUNC_SOL_DEEPCOPY, FUNC_SOL_TOSTRING, FUNC_UTILS_DECREF]
+optframe_lib.optframe_api0d_add_general_crossover.restype = ctypes.c_int32
+
 
 class LibArrayDouble(ctypes.Structure):
     _fields_ = [("size", ctypes.c_int),  
@@ -145,6 +153,11 @@ FUNC_FNSSEQ_IT_CURRENT = CFUNCTYPE(
 optframe_lib.optframe_api1d_add_ns.argtypes = [
     ctypes.c_void_p, FUNC_FNS_RAND, FUNC_FMOVE_APPLY, FUNC_FMOVE_EQ, FUNC_FMOVE_CBA, ctypes.py_object, FUNC_UTILS_DECREF]
 optframe_lib.optframe_api1d_add_ns.restype = ctypes.c_int32
+
+# fns: hf*, func_ns, func_mv1, func_mv2, func_mv3, problem* -> int
+optframe_lib.optframe_api3d_add_ns_xmes.argtypes = [
+    ctypes.c_void_p, FUNC_FNS_RAND, FUNC_FMOVE_APPLY, FUNC_FMOVE_EQ, FUNC_FMOVE_CBA, ctypes.py_object, FUNC_UTILS_DECREF]
+optframe_lib.optframe_api3d_add_ns_xmes.restype = ctypes.c_int32
 
 # fns: hf*, func_ns, func_mv1, func_mv2, func_mv3, problem* -> int
 optframe_lib.optframe_api1d_add_nsseq.argtypes = [
@@ -450,6 +463,20 @@ class Engine(object):
             self.callback_utils_decref_ptr)
         return idx_c
 
+    def add_crossover(self, problemCtx, cross_callback0, cross_callback1):
+        cross_callback0_ptr = FUNC_FCROSS(cross_callback0)
+        cross_callback1_ptr = FUNC_FCROSS(cross_callback1)
+        self.register_callback(cross_callback0_ptr)
+        self.register_callback(cross_callback1_ptr)
+        #
+        idx_c = optframe_lib.optframe_api0d_add_general_crossover(
+            self.hf, cross_callback0_ptr, cross_callback0_ptr,
+            problemCtx,
+            self.callback_sol_deepcopy_ptr,
+            self.callback_sol_tostring_ptr,
+            self.callback_utils_decref_ptr)
+        return idx_c
+
     def add_constructive_rk(self, problemCtx, constructive_rk_callback):
         #print("will execute 'add_constructive_rk'")
         #
@@ -483,7 +510,7 @@ class Engine(object):
 
 
 
-    def add_ns(self, problemCtx, ns_rand_callback, move_apply_callback, move_eq_callback, move_cba_callback):
+    def add_ns(self, problemCtx, ns_rand_callback, move_apply_callback, move_eq_callback, move_cba_callback, isXMES=False):
         ns_rand_callback_ptr = FUNC_FNS_RAND(ns_rand_callback)
         self.register_callback(ns_rand_callback_ptr)
         #
@@ -494,10 +521,18 @@ class Engine(object):
         move_cba_callback_ptr = FUNC_FMOVE_CBA(move_cba_callback)
         self.register_callback(move_cba_callback_ptr)
         #
-        idx_ns = optframe_lib.optframe_api1d_add_ns(
-            self.hf, ns_rand_callback_ptr, move_apply_callback_ptr,
-            move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
-            self.callback_utils_decref_ptr)
+        idx_ns = -1
+        # if NOT Multi Objective
+        if not isXMES:
+            idx_ns = optframe_lib.optframe_api1d_add_ns(
+                self.hf, ns_rand_callback_ptr, move_apply_callback_ptr,
+                move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
+                self.callback_utils_decref_ptr)
+        else: # this is Multi Objective
+            idx_ns = optframe_lib.optframe_api3d_add_ns_xmes(
+                self.hf, ns_rand_callback_ptr, move_apply_callback_ptr,
+                move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
+                self.callback_utils_decref_ptr)
         return idx_ns
 
     def add_nsseq(self, problemCtx,

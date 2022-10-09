@@ -1,6 +1,6 @@
 CC=g++
 #CC=clang++
-CPPSTD=-std=c++20 -fconcepts-diagnostics-depth=2 # -Wfatal-errors
+CPPSTD=-std=c++20 -fconcepts-diagnostics-depth=2  # -Wfatal-errors
 #CPPSTD=--std=c++17 -fconcepts -Wfatal-errors
 
 all: optframe_lib demo_local
