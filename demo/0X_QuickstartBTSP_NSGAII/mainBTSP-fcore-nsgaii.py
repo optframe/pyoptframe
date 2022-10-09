@@ -300,9 +300,37 @@ ns_idx = pBTSP.engine.add_ns(pBTSP,
                            True) # This is XMES (Multi Objective)
 print("ns_idx=", ns_idx)
 
+# pack NS<XMESf64>'s into a NS<XMESf64> list
+list_ns_mev_idx = pBTSP.engine.create_component_list(
+    "[ OptFrame:NS<XMESf64> 0 ]", 
+    "OptFrame:NS<XMESf64>[]")
+print("list_ns_mev_idx=", list_ns_mev_idx)
+
+# pack OptFrame:GeneralCrossover
+list_cross_idx = pBTSP.engine.create_component_list(
+    "[ OptFrame:GeneralCrossover 0 ]", 
+    "OptFrame:GeneralCrossover[]")
+print("list_cross_idx=", list_cross_idx)
+
+
 ####
 pBTSP.engine.list_components("OptFrame:")
 ####
+
+mopop_manage_idx = pBTSP.engine.build_component(
+    "OptFrame:ComponentBuilder:BasicMOPopulationManagement",
+    "OptFrame:InitialMultiESolution:BasicInitialMultiESolution 0 "
+    "OptFrame:NS<XMESf64>[] 0  0.5  OptFrame:GeneralCrossover[] 0  0.1",
+    "OptFrame:MOPopulationManagement")
+print("mopop_manage_idx=", mopop_manage_idx)
+
+#builder: OptFrame:ComponentBuilder:BasicMOPopulationManagementBuilder |params|=5
+#	param 0 => OptFrame:InitialMultiESolution : initial epopulation
+#	param 1 => OptFrame:NS<XMESf64>[] : list of NS
+#	param 2 => OptFrame:double : mutation rate
+#	param 3 => OptFrame:GeneralCrossover[] : list of crossover
+#	param 4 => OptFrame:double : renew rate
+
 
 exit(1)
 
