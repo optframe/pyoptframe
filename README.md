@@ -3,7 +3,7 @@ Python bindings for OptFrame Functional Core
 
 Install: `python -m pip install optframe`
 
-Version: `pyoptframe v5.0.14rc0`
+Version: `pyoptframe v5.0.15rc0`
 
 Documentation and Tutorials: see [PyOptFrame Quickstart](https://pyoptframe.readthedocs.io/en/latest/quickstart.html)
 
@@ -118,7 +118,7 @@ Build:
 
 `twine upload -r testpypi dist/* --verbose`
 
-Error: Binary wheel 'optframe-5.0.14rc0-cp39-cp39-linux_x86_64.whl' has an unsupported platform tag 'linux_x86_64'. See [1](https://stackoverflow.com/questions/59451069/binary-wheel-cant-be-uploaded-on-pypi-using-twine) and [2](https://peps.python.org/pep-0513/#rationale).
+Error: Binary wheel 'optframe-5.0.15rc0-cp39-cp39-linux_x86_64.whl' has an unsupported platform tag 'linux_x86_64'. See [1](https://stackoverflow.com/questions/59451069/binary-wheel-cant-be-uploaded-on-pypi-using-twine) and [2](https://peps.python.org/pep-0513/#rationale).
 
 Solution: `rm -f dist/*.whl`
 
