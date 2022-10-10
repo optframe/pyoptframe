@@ -44,17 +44,17 @@ print("evaluation obj 0:", z0)
 z1 = pBTSP.engine.fevaluator_evaluate(fev1, False, solxx)
 print("evaluation obj 1:", z1)
 
+print("   = = = Will PACK both Evaluators in a MultiEvaluator")
 # pack Evaluator's into a Evaluator list
 list_ev_idx = pBTSP.engine.create_component_list(
-    "[ OptFrame:GeneralEvaluator:Evaluator 0 "
-    " OptFrame:GeneralEvaluator:Evaluator 1 ]", 
+    "[ OptFrame:GeneralEvaluator:Evaluator 0 , OptFrame:GeneralEvaluator:Evaluator 1 ]", 
     "OptFrame:GeneralEvaluator:Evaluator[]")
 print("list_ev_idx=", list_ev_idx)
 
 #####
 
 print("engine will list builders for :MultiEvaluator")
-print("count=", pBTSP.engine.list_builders(":MultiEvaluator"))
+#print("count=", pBTSP.engine.list_builders(":MultiEvaluator"))
 print()
 
 mev_idx = pBTSP.engine.build_component(
@@ -80,7 +80,7 @@ print("pop_init_idx=", pop_init_idx)
 
 # list the required parameters for OptFrame ComponentBuilder
 print("engine will list builders for OptFrame: ")
-print(pBTSP.engine.list_builders("OptFrame:"))
+# print(pBTSP.engine.list_builders("OptFrame:"))
 print()
 
 # get index of new NS
@@ -123,6 +123,8 @@ print("mopop_manage_idx=", mopop_manage_idx)
 #	param 3 => OptFrame:GeneralCrossover[] : list of crossover
 #	param 4 => OptFrame:double : renew rate
 
+st=pBTSP.engine.run_nsgaii_params(10.0, 0, 100000, 0, 0, 30, 100)
+print(st)
 
 exit(1)
 

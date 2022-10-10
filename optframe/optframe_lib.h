@@ -45,7 +45,9 @@ optframe_api0d_engine_simulated_annealing(FakeEnginePtr _engine);
 
 extern "C" LibSearchOutput
 optframe_api0d_engine_simulated_annealing_params(FakeEnginePtr _engine, double timelimit, int id_evaluator, int id_constructive, int id_ns, double alpha, int iter, double T);
-// double alpha, int iter, double temp
+
+extern "C" int // ONLY STATUS... CANNOT RETURN PARETO ELEMENTS NOW...
+optframe_api0d_engine_classic_nsgaii_params(FakeEnginePtr _engine, double timelimit, double min_limit, double max_limit, int id_mevaluator, int id_popman, int popSize, int maxIter);
 
 extern "C" int
 optframe_api1d_engine_list_builders(FakeEnginePtr _engine, char* prefix);

@@ -280,6 +280,12 @@ optframe_lib.optframe_api0d_engine_simulated_annealing_params.argtypes = [
     ctypes.c_void_p, ctypes.c_double, ctypes.c_int, ctypes.c_int, ctypes.c_int,
     ctypes.c_double, ctypes.c_int, ctypes.c_double]
 optframe_lib.optframe_api0d_engine_simulated_annealing_params.restype = SearchOutput
+#
+optframe_lib.optframe_api0d_engine_classic_nsgaii_params.argtypes = [
+    ctypes.c_void_p, ctypes.c_double, ctypes.c_double, ctypes.c_double,
+     ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int]
+optframe_lib.optframe_api0d_engine_classic_nsgaii_params.restype = SearchStatus
+
 
 # extern "C" LibSearchOutput
 # fcore_api1_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelimit);
@@ -424,6 +430,14 @@ class Engine(object):
         print("Finished SA Params")
         return r
 
+    def run_nsgaii_params(self, timelimit, min_limit, max_limit, id_mev, id_popman, popsize, maxiter):
+        print("Will Begin NSGA-II Params")
+        st = optframe_lib.optframe_api0d_engine_classic_nsgaii_params(self.hf,
+                                                                    timelimit, min_limit, max_limit,
+                                                                    id_mev, id_popman, popsize, maxiter)
+        print("Finished NSGA-II Params")
+        return st
+        
     def run_test(self):
         print("Will Begin Test")
         r = optframe_lib.optframe_api1d_engine_test(self.hf)

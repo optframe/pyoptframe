@@ -12,6 +12,7 @@
 #include <OptFrame/BaseConcepts.hpp> // XESolution
 #include <OptFrame/Heuristics/EA/RK/BasicDecoderRandomKeys.hpp>
 #include <OptFrame/Heuristics/EA/RK/BasicInitialEPopulationRK.hpp>
+#include <OptFrame/Heuristics/MultiObjective/ClassicNSGAII.hpp>
 #include <OptFrame/Hyper/HeuristicFactory.hpp>
 #include <OptFrame/Hyper/Loader.hpp>
 #include <OptFrame/Hyper/OptFrameList.hpp>
@@ -557,12 +558,13 @@ optframe_api1d_create_component_list(FakeEnginePtr _engine, char* clist, char* l
    auto* engine = (FCoreApi1Engine*)_engine;
    //
    std::string str_list{ clist };
+   // std::cout << "DEBUG: list: '" << str_list << "'" << std::endl;
    std::string str_type{ list_type };
    //
    std::map<std::string, std::vector<std::string>> ldictionary; // TODO: why??
    //
    std::vector<std::string>* vvlist = optframe::OptFrameList::readList(ldictionary, str_list);
-   //std::cout << "lsit size=" << vvlist->size() << std::endl;
+   // std::cout << "LIST size=" << vvlist->size() << std::endl;
    std::cout << vvlist->at(0) << std::endl;
    std::vector<sptr<optframe::Component>> vcomp;
    for (unsigned i = 0; i < vvlist->size(); i++) {
@@ -574,6 +576,7 @@ optframe_api1d_create_component_list(FakeEnginePtr _engine, char* clist, char* l
       vcomp.push_back(comp);
    }
    delete vvlist;
+   // std::cout << "DEBUG: Component List size=" << vcomp.size() << std::endl;
 
    int id = engine->loader.factory.addComponentList(vcomp, str_type);
    return id;
@@ -639,6 +642,57 @@ optframe_api0d_engine_simulated_annealing_params(FakeEnginePtr _engine, double t
       lout.best_e = out.best->second.evaluation(); // ("best_e", ctypes.c_double)]
    }
    return lout;
+}
+
+extern "C" int // ONLY STATUS... CANNOT RETURN PARETO ELEMENTS NOW...
+optframe_api0d_engine_classic_nsgaii_params(FakeEnginePtr _engine, double timelimit, double min_limit, double max_limit, int id_mevaluator, int id_popman, int popSize, int maxIter)
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+
+   //
+   using MyMEval = optframe::MultiEvaluator<FCoreLibEMSolution>;
+
+   // will try to get evaluator to build InitialSolution component...
+   std::shared_ptr<MyMEval> _mev;
+   engine->loader.factory.assign(_mev, id_mevaluator, "OptFrame:GeneralEvaluator:MultiEvaluator");
+   assert(_mev);
+   sref<MyMEval> multi_ev{ _mev };
+   std::cout << "NDIRECTIONS = " << multi_ev->vDir.size() << std::endl;
+   //
+   using MyMOPopManager = optframe::MOPopulationManagement<FCoreLibEMSolution>;
+   //
+   std::shared_ptr<MyMOPopManager> mopop;
+   engine->loader.factory.assign(mopop, id_popman, "OptFrame:MOPopulationManagement");
+   assert(mopop);
+   //
+
+   sref<optframe::RandGen> rg = engine->loader.factory.getRandGen();
+
+   // std::cout << "WARNING: hardcoding limits 0, 100000 for bi-objective nsga-ii" << std::endl;
+   // multi_ev->vDir[0]->setLimits(0, 100000);
+   // multi_ev->vDir[1]->setLimits(0, 100000);
+   for (unsigned i = 0; i < multi_ev->vDir.size(); i++)
+      multi_ev->vDir[i]->setLimits(min_limit, max_limit);
+
+   optframe::ClassicNSGAII<FCoreLibEMSolution> classic_nsgaii{
+      multi_ev,
+      mopop,
+      (unsigned)popSize,
+      maxIter
+   };
+
+   // sa.setVerbose();
+
+   auto sout = classic_nsgaii.search({ timelimit });
+   //
+   std::cout << "finished classic_nsgaii with: ";
+   std::cout << "status=" << sout.status << std::endl;
+   optframe::Pareto<FCoreLibEMSolution> best = *sout.best;
+   std::cout << "best pareto: ";
+   // best pareto front
+   best.print();
+   //
+   return 0;
 }
 
 extern "C" int // index of GlobalSearch

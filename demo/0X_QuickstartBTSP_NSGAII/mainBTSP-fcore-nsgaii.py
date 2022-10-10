@@ -173,10 +173,12 @@ def mycallback_ns_rand_swap(pBTSP: ProblemContextBTSP, sol: SolutionBTSP) -> Mov
 # Workaround: at this version, this is divided into two callbacks...
 
 from typing import Tuple
+from copy import deepcopy
 
 def btsp_point_crossover(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: SolutionBTSP ) -> Tuple[SolutionBTSP, SolutionBTSP]:
     assert(pBTSP.n == p1.n)
     assert(p1.n == p2.n)
+    
     # select cut point
     k = random.randint(0, pBTSP.n - 2) + 1
     #
@@ -184,11 +186,17 @@ def btsp_point_crossover(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: Soluti
     s2 = deepcopy(p2)
     #
     for i in range(k):
-      s1[i] = p1[i];
-      s2[i] = p2[i];
+      s1.cities[i] = p1.cities[i];
+      s2.cities[i] = p2.cities[i];
     for j in range(k, pBTSP.n):
-      s1[j] = p2[j];
-      s2[j] = p1[j];
+      s1.cities[j] = p2.cities[j];
+      s2.cities[j] = p1.cities[j];
+    #
+    # TODO: we need to fix this crossover, so that cities wont repeat!
+    # TODO: replace here by OX crossover?
+    #
+    print("WARNING: we need to fix this crossover, otherwise cities will repeat!")
+
     return s1, s2
 
 # NOTE: this is just a demo... it has a problem!
@@ -252,17 +260,17 @@ print("evaluation obj 0:", z0)
 z1 = pBTSP.engine.fevaluator_evaluate(fev1, False, solxx)
 print("evaluation obj 1:", z1)
 
+print("   = = = Will PACK both Evaluators in a MultiEvaluator")
 # pack Evaluator's into a Evaluator list
 list_ev_idx = pBTSP.engine.create_component_list(
-    "[ OptFrame:GeneralEvaluator:Evaluator 0 "
-    " OptFrame:GeneralEvaluator:Evaluator 1 ]", 
+    "[ OptFrame:GeneralEvaluator:Evaluator 0 , OptFrame:GeneralEvaluator:Evaluator 1 ]", 
     "OptFrame:GeneralEvaluator:Evaluator[]")
 print("list_ev_idx=", list_ev_idx)
 
 #####
 
 print("engine will list builders for :MultiEvaluator")
-print("count=", pBTSP.engine.list_builders(":MultiEvaluator"))
+#print("count=", pBTSP.engine.list_builders(":MultiEvaluator"))
 print()
 
 mev_idx = pBTSP.engine.build_component(
@@ -288,7 +296,7 @@ print("pop_init_idx=", pop_init_idx)
 
 # list the required parameters for OptFrame ComponentBuilder
 print("engine will list builders for OptFrame: ")
-print(pBTSP.engine.list_builders("OptFrame:"))
+# print(pBTSP.engine.list_builders("OptFrame:"))
 print()
 
 # get index of new NS
@@ -331,6 +339,8 @@ print("mopop_manage_idx=", mopop_manage_idx)
 #	param 3 => OptFrame:GeneralCrossover[] : list of crossover
 #	param 4 => OptFrame:double : renew rate
 
+st=pBTSP.engine.run_nsgaii_params(10.0, 0, 100000, 0, 0, 30, 100)
+print(st)
 
 exit(1)
 
