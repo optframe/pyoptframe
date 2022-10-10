@@ -3,9 +3,9 @@
 import os
 
 # DO NOT REORDER 'import sys ...'
-import sys
-sys.path.insert(0, os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '../..')))
+#import sys
+#sys.path.insert(0, os.path.abspath(
+#    os.path.join(os.path.dirname(__file__), '../..')))
 
 # THIS PACKAGE IS LOCAL (../optframe), NOT FROM PACKAGE MANAGER...
 # GOOD FOR LOCAL TESTING!

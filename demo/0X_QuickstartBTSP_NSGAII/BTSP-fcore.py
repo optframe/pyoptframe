@@ -3,9 +3,9 @@
 import os
 
 # DO NOT REORDER 'import sys ...'
-import sys
-sys.path.insert(0, os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '../..')))
+#import sys
+#sys.path.insert(0, os.path.abspath(
+#    os.path.join(os.path.dirname(__file__), '../..')))
 
 # THIS PACKAGE IS LOCAL (../optframe), NOT FROM PACKAGE MANAGER...
 # GOOD FOR LOCAL TESTING!
@@ -195,7 +195,7 @@ def btsp_point_crossover(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: Soluti
     # TODO: we need to fix this crossover, so that cities wont repeat!
     # TODO: replace here by OX crossover?
     #
-    print("WARNING: we need to fix this crossover, otherwise cities will repeat!")
+    print("WARNING: we need to fix this crossover, otherwise cities may repeat!")
 
     return s1, s2
 
