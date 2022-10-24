@@ -1,11 +1,14 @@
-# pyoptframe
-Python bindings for OptFrame Functional Core
+# pyoptframe-dev
+
+Development repo for draft versions of Python bindings for OptFrame Functional Core.
+
+Beware that, after officially launched, this project will be migrated into [Official Optframe C++](https://github.com/optframe/optframe) repo (and same strategy applies to other future external language bindings).
 
 Install: `python -m pip install optframe`
 
 Version: `pyoptframe v5.0.16rc0`
 
-Documentation and Tutorials: see [PyOptFrame Quickstart](https://pyoptframe.readthedocs.io/en/latest/quickstart.html)
+Documentation and Tutorials: see [Draft PyOptFrame Quickstart](https://pyoptframe.readthedocs.io/en/latest/quickstart.html)
 
 [OptFrame](https://github.com/optframe/optframe) is a C++ framework for optimization problems, including techniques such as classic metaheuristics Simulated Annealing, Genetic Algorithm, 
 Variable Neighborhood Search, Iterated Local Search, Tabu Search, Particle Swarm Optimization, NSGA-II, and other single and multi-objective methods.

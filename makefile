@@ -21,6 +21,14 @@ optframe_lib:
 	#
 	#readelf -s build/optframe_lib.so | grep fcore
 
+publish_test:
+	rm -f dist/*
+	python -m build
+	rm -f dist/*.whl
+	twine check dist/*
+	twine upload -r testpypi dist/* --verbose
+	
+
 
 demo_local: optframe/optframe_lib.so
 	# valgrind --leak-check=full python3 demo/demo_kp.py 

@@ -9,8 +9,9 @@ OptFrame Python Documentation
 Welcome to OptFrame Python (or PyOptFrame) Documentation, please select the desired content section.
 
 .. hint::
-    This is OptFrame Python project, so for OptFrame C++ please 
-    see `OptFrame on GitHub <https://github.com/optframe/optframe>`_
+    This is OptFrame Python project, and will be soon migrated into official OptFrame C++.
+    Please see `OptFrame on GitHub <https://github.com/optframe/optframe>`_
+
 
 .. toctree::
    :maxdepth: 2
