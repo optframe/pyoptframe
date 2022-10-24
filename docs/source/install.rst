@@ -33,7 +33,7 @@ To clone OptFrame repository from GitHub and make symbolic link:
 
 .. code-block:: shell
 
-   git clone https://github.com/optframe/pyoptframe.git
+   git clone https://github.com/optframe/pyoptframe-dev.git
    git clone https://github.com/optframe/optframe.git
    ln -s  $(pwd)/optframe/include  pyoptframe/src/optframe-src
 

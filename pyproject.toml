@@ -27,4 +27,4 @@ requires-python = ">=3.9"
 dev = ["black", "bumpver", "isort", "pip-tools", "pytest"]
 
 [project.urls]
-Homepage = "https://github.com/optframe/pyoptframe"
+Homepage = "https://github.com/optframe/pyoptframe-dev"
