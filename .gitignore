@@ -11,3 +11,5 @@ requirements.txt
 optframe-git
 dist/
 app_*
+bazel-*
+optframe-local
