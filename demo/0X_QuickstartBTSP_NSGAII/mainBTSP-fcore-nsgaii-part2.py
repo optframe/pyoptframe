@@ -20,6 +20,9 @@ print("evaluator id:", ev0_idx)
 ev1_idx = pBTSP.engine.minimize(pBTSP, mycallback_fevaluate1)
 print("evaluator id:", ev1_idx)
 
+ev2_idx = pBTSP.engine.minimize(pBTSP, mycallback_fevaluate2)
+print("evaluator id:", ev2_idx)
+
 c_idx = pBTSP.engine.add_constructive(pBTSP, mycallback_constructive)
 print("c_idx=", c_idx)
 
@@ -31,6 +34,9 @@ pBTSP.engine.print_component(fev0)
 
 fev1 = pBTSP.engine.get_evaluator(ev1_idx)
 pBTSP.engine.print_component(fev1)
+
+fev2 = pBTSP.engine.get_evaluator(ev2_idx)
+pBTSP.engine.print_component(fev2)
 
 fc = pBTSP.engine.get_constructive(c_idx)
 pBTSP.engine.print_component(fc)
@@ -44,10 +50,13 @@ print("evaluation obj 0:", z0)
 z1 = pBTSP.engine.fevaluator_evaluate(fev1, False, solxx)
 print("evaluation obj 1:", z1)
 
+z2 = pBTSP.engine.fevaluator_evaluate(fev2, False, solxx)
+print("evaluation obj 2:", z2)
+
 print("   = = = Will PACK both Evaluators in a MultiEvaluator")
 # pack Evaluator's into a Evaluator list
 list_ev_idx = pBTSP.engine.create_component_list(
-    "[ OptFrame:GeneralEvaluator:Evaluator 0 , OptFrame:GeneralEvaluator:Evaluator 1 ]", 
+    "[ OptFrame:GeneralEvaluator:Evaluator 0 , OptFrame:GeneralEvaluator:Evaluator 1 , OptFrame:GeneralEvaluator:Evaluator 2 ]", 
     "OptFrame:GeneralEvaluator:Evaluator[]")
 print("list_ev_idx=", list_ev_idx)
 

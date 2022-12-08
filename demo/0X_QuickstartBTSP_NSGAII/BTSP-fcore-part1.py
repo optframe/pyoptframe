@@ -3,15 +3,16 @@
 import os
 
 # DO NOT REORDER 'import sys ...'
-#import sys
-#sys.path.insert(0, os.path.abspath(
-#    os.path.join(os.path.dirname(__file__), '../..')))
+import sys
+str_path=os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '../../'))
+sys.path.insert(0, str_path)
 
 # THIS PACKAGE IS LOCAL (../optframe), NOT FROM PACKAGE MANAGER...
 # GOOD FOR LOCAL TESTING!
 
 # DO NOT REORDER 'from optframe.engine ...'
-#from optframe.engine import OptFrameEngine
+from optframe.engine import Engine
 
 import optframe
 

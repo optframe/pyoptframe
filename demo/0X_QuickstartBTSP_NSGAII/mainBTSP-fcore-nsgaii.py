@@ -3,15 +3,16 @@
 import os
 
 # DO NOT REORDER 'import sys ...'
-#import sys
-#sys.path.insert(0, os.path.abspath(
-#    os.path.join(os.path.dirname(__file__), '../..')))
+import sys
+str_path=os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '../../'))
+sys.path.insert(0, str_path)
 
 # THIS PACKAGE IS LOCAL (../optframe), NOT FROM PACKAGE MANAGER...
 # GOOD FOR LOCAL TESTING!
 
 # DO NOT REORDER 'from optframe.engine ...'
-#from optframe.engine import OptFrameEngine
+from optframe.engine import Engine
 
 import optframe
 
@@ -113,6 +114,17 @@ def mycallback_fevaluate1(pBTSP: ProblemContextBTSP, s: SolutionBTSP):
     f += pBTSP.dist1[s.cities[int(pBTSP.n) - 1]][s.cities[0]];
     return f
 
+# THIRD OBJECTIVE
+def mycallback_fevaluate2(pBTSP: ProblemContextBTSP, s: SolutionBTSP):
+    assert (s.n == pBTSP.n)
+    assert (len(s.cities) == s.n)
+    # remember this is an API1d method
+    f = 0.0
+    for i in range(pBTSP.n-1):
+      f += pBTSP.dist1[s.cities[i]][s.cities[i + 1]];
+    f += pBTSP.dist1[s.cities[int(pBTSP.n) - 1]][s.cities[0]];
+    return f
+
 import random
 
 def mycallback_constructive(problemCtx: ProblemContextBTSP) -> SolutionBTSP:
@@ -175,28 +187,35 @@ def mycallback_ns_rand_swap(pBTSP: ProblemContextBTSP, sol: SolutionBTSP) -> Mov
 from typing import Tuple
 from copy import deepcopy
 
-def btsp_point_crossover(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: SolutionBTSP ) -> Tuple[SolutionBTSP, SolutionBTSP]:
+def ox_cross_parts(p1, p2, k1, k2):
+    # initialize offspring 's'
+    s = deepcopy(p1)
+    middle_p1 = p1.cities[k1:k2]
+    n = len(p1.cities)
+    # create offspring s with the three parts
+    s.cities = [-1]*len(p1.cities[:k1]) + middle_p1 + [-1]*len(p1.cities[k2:])
+    # list rest of pending elements
+    rest = [x for x in p2.cities if x not in middle_p1]
+    k=0
+    for i in range(0, n):
+      if s.cities[i] == -1:
+        s.cities[i] = rest[k]
+        k = k + 1
+    return s
+
+def btsp_ox_crossover(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: SolutionBTSP ) -> Tuple[SolutionBTSP, SolutionBTSP]:
     assert(pBTSP.n == p1.n)
     assert(p1.n == p2.n)
+    assert(pBTSP.n >= 3)
     
     # select cut point
-    k = random.randint(0, pBTSP.n - 2) + 1
+    # NOTE: randint (both sides included)
+    k1 = random.randint(1, pBTSP.n - 2)
+    k2 = random.randint(k1+1, pBTSP.n - 1)
     #
-    s1 = deepcopy(p1)
-    s2 = deepcopy(p2)
+    s1 = ox_cross_parts(p1, p2, k1, k2)
+    s2 = ox_cross_parts(p2, p1, k1, k2)
     #
-    for i in range(k):
-      s1.cities[i] = p1.cities[i];
-      s2.cities[i] = p2.cities[i];
-    for j in range(k, pBTSP.n):
-      s1.cities[j] = p2.cities[j];
-      s2.cities[j] = p1.cities[j];
-    #
-    # TODO: we need to fix this crossover, so that cities wont repeat!
-    # TODO: replace here by OX crossover?
-    #
-    print("WARNING: we need to fix this crossover, otherwise cities may repeat!")
-
     return s1, s2
 
 # NOTE: this is just a demo... it has a problem!
@@ -204,11 +223,11 @@ def btsp_point_crossover(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: Soluti
 # This is a simple workaround for this first version
 
 def mycallback_cross1(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: SolutionBTSP) -> SolutionBTSP:
-    s1, s2 = btsp_point_crossover(pBTSP, p1, p2)
+    s1, s2 = btsp_ox_crossover(pBTSP, p1, p2)
     return s1
 
 def mycallback_cross2(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: SolutionBTSP) -> SolutionBTSP:
-    s1, s2 = btsp_point_crossover(pBTSP, p1, p2)
+    s1, s2 = btsp_ox_crossover(pBTSP, p1, p2)
     return s2
     
 # ============================================
@@ -236,6 +255,9 @@ print("evaluator id:", ev0_idx)
 ev1_idx = pBTSP.engine.minimize(pBTSP, mycallback_fevaluate1)
 print("evaluator id:", ev1_idx)
 
+ev2_idx = pBTSP.engine.minimize(pBTSP, mycallback_fevaluate2)
+print("evaluator id:", ev2_idx)
+
 c_idx = pBTSP.engine.add_constructive(pBTSP, mycallback_constructive)
 print("c_idx=", c_idx)
 
@@ -247,6 +269,9 @@ pBTSP.engine.print_component(fev0)
 
 fev1 = pBTSP.engine.get_evaluator(ev1_idx)
 pBTSP.engine.print_component(fev1)
+
+fev2 = pBTSP.engine.get_evaluator(ev2_idx)
+pBTSP.engine.print_component(fev2)
 
 fc = pBTSP.engine.get_constructive(c_idx)
 pBTSP.engine.print_component(fc)
@@ -260,10 +285,13 @@ print("evaluation obj 0:", z0)
 z1 = pBTSP.engine.fevaluator_evaluate(fev1, False, solxx)
 print("evaluation obj 1:", z1)
 
+z2 = pBTSP.engine.fevaluator_evaluate(fev2, False, solxx)
+print("evaluation obj 2:", z2)
+
 print("   = = = Will PACK both Evaluators in a MultiEvaluator")
 # pack Evaluator's into a Evaluator list
 list_ev_idx = pBTSP.engine.create_component_list(
-    "[ OptFrame:GeneralEvaluator:Evaluator 0 , OptFrame:GeneralEvaluator:Evaluator 1 ]", 
+    "[ OptFrame:GeneralEvaluator:Evaluator 0 , OptFrame:GeneralEvaluator:Evaluator 1 , OptFrame:GeneralEvaluator:Evaluator 2 ]", 
     "OptFrame:GeneralEvaluator:Evaluator[]")
 print("list_ev_idx=", list_ev_idx)
 

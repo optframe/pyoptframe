@@ -4,8 +4,8 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
     name = "OptFrame",
-    strip_prefix = "optframe-7101496ad4118c575ae5752f69decebdba5cc618",
-    url = "https://github.com/optframe/optframe/archive/7101496ad4118c575ae5752f69decebdba5cc618.tar.gz",
+    strip_prefix = "optframe-8daf7b1e91df36df389a862d52f55d01de88b490",
+    url = "https://github.com/optframe/optframe/archive/8daf7b1e91df36df389a862d52f55d01de88b490.tar.gz",
 )
 
 # CLANG-TIDY-INTEGRATION (experimental) - https://github.com/erenon/bazel_clang_tidy
