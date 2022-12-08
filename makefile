@@ -60,7 +60,7 @@ test:   #install
 install:
 	#pip install  --global-option=build_ext --global-option="-I${OPTFRAME_SRC}/include" .
 	rm -rf ./optframe-git/
-	pip install .
+	python3 -m pip install -e .
 
 clean:
 	rm -f optframe/*.so

@@ -99,7 +99,7 @@ Edit `pyproject.toml`.
 
 For versioning:
 
-`python -m pip install bumpver`
+`python3 -m pip install bumpver`
 
 `bumpver init`
 
@@ -109,11 +109,11 @@ For versioning:
 
 Test locally:
 
-`python -m pip install -e .`
+`python3 -m pip install -e .`
 
 Build:
 
-`python -m pip install build twine`
+`python3 -m pip install build twine`
 
 `python -m build`
 
