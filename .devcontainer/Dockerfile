@@ -36,4 +36,8 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 RUN pip install cpplint 
 
 # bumpver
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+     && apt-get -y install --no-install-recommends virtualenv python3-venv
 RUN python3 -m pip install bumpver
+# build and twine
+RUN python3 -m pip install build twine
