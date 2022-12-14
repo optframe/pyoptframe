@@ -6,6 +6,7 @@
 // C++
 #include <iostream>
 #include <utility>
+#include <map>
 //
 #include <OptFCore/FCore.hpp>
 #include <OptFCore/FxCore.hpp>
@@ -71,7 +72,7 @@ public:
          // must decref solution_ptr and discard it
          int x = f_utils_decref(solution_ptr);
          if (x > 1) {
-            std::cout << "operator=(FCoreLibSolution) ptr_count = " << x << std::endl;
+            // std::cout << "operator=(FCoreLibSolution) ptr_count = " << x << std::endl;
          }
       }
       solution_ptr = nullptr;
@@ -140,7 +141,7 @@ public:
          int x = f_utils_decref(solution_ptr);
          //std::cout << "~FCoreLibSolution ptr_count = " << x << std::endl;
          if (x > 1) {
-            std::cout << "~FCoreLibSolution ptr_count = " << x << std::endl;
+            // std::cout << "~FCoreLibSolution ptr_count = " << x << std::endl;
          }
       }
       solution_ptr = nullptr;
@@ -446,7 +447,7 @@ public:
          int x = f_utils_decref(this->ims_ptr);
          //std::cout << "~FCoreLibSolution ptr_count = " << x << std::endl;
          if (x > 1) {
-            std::cout << "~IMSObjLib ptr_count = " << x << std::endl;
+            // std::cout << "~IMSObjLib ptr_count = " << x << std::endl;
          }
 
          ims_ptr = 0;
@@ -533,10 +534,13 @@ optframe_api1d_engine_list_builders(FakeEnginePtr _engine, char* prefix)
    auto* engine = (FCoreApi1Engine*)_engine;
    std::vector<std::pair<std::string, std::vector<std::pair<std::string, std::string>>>>
      vlist = engine->loader.factory.listBuilders(sprefix);
-   for (auto& p : vlist) {
-      std::cout << "builder: " << p.first << " |params|=" << p.second.size() << std::endl;
-      for (unsigned i = 0; i < p.second.size(); i++)
-         std::cout << "\tparam " << i << " => " << p.second[i].first << " : " << p.second[i].second << std::endl;
+   
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug) {
+      for (auto& p : vlist) {
+         std::cout << "builder: " << p.first << " |params|=" << p.second.size() << std::endl;
+         for (unsigned i = 0; i < p.second.size(); i++)
+            std::cout << "\tparam " << i << " => " << p.second[i].first << " : " << p.second[i].second << std::endl;
+      }
    }
    return vlist.size();
 }
@@ -547,8 +551,10 @@ optframe_api1d_engine_list_components(FakeEnginePtr _engine, char* prefix)
    std::string sprefix{ prefix };
    auto* engine = (FCoreApi1Engine*)_engine;
    std::vector<std::string> vlist = engine->loader.factory.listComponents(sprefix);
-   for (unsigned i = 0; i < vlist.size(); i++)
-      std::cout << "component " << i << " => " << vlist[i] << std::endl;
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug) {
+      for (unsigned i = 0; i < vlist.size(); i++)
+         std::cout << "component " << i << " => " << vlist[i] << std::endl;
+   }
    return vlist.size();
 }
 
@@ -556,16 +562,21 @@ extern "C" int // index of ComponentList
 optframe_api1d_create_component_list(FakeEnginePtr _engine, char* clist, char* list_type)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug)
+      std::cout << "DEBUG: create_component_list" << std::endl;
    //
    std::string str_list{ clist };
-   // std::cout << "DEBUG: list: '" << str_list << "'" << std::endl;
+   
    std::string str_type{ list_type };
    //
-   std::map<std::string, std::vector<std::string>> ldictionary; // TODO: why??
+   std::map<std::string, std::vector<std::string>> ldictionary; // TODO(igormcoelho): why??
    //
    std::vector<std::string>* vvlist = optframe::OptFrameList::readList(ldictionary, str_list);
-   // std::cout << "LIST size=" << vvlist->size() << std::endl;
-   std::cout << vvlist->at(0) << std::endl;
+   //
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug) {
+      std::cout << "create_component_list readList:: size=" << vvlist->size() << std::endl;
+      std::cout << vvlist->at(0) << std::endl;
+   }
    std::vector<sptr<optframe::Component>> vcomp;
    for (unsigned i = 0; i < vvlist->size(); i++) {
       sptr<optframe::Component> comp;
@@ -579,6 +590,9 @@ optframe_api1d_create_component_list(FakeEnginePtr _engine, char* clist, char* l
    // std::cout << "DEBUG: Component List size=" << vcomp.size() << std::endl;
 
    int id = engine->loader.factory.addComponentList(vcomp, str_type);
+
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug)
+      std::cout << "DEBUG: end create_component_list id=" << id << std::endl;
    return id;
 }
 
@@ -657,7 +671,8 @@ optframe_api0d_engine_classic_nsgaii_params(FakeEnginePtr _engine, double timeli
    engine->loader.factory.assign(_mev, id_mevaluator, "OptFrame:GeneralEvaluator:MultiEvaluator");
    assert(_mev);
    sref<MyMEval> multi_ev{ _mev };
-   std::cout << "NDIRECTIONS = " << multi_ev->vDir.size() << std::endl;
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Info)
+      std::cout << "NDIRECTIONS = " << multi_ev->vDir.size() << std::endl;
    //
    using MyMOPopManager = optframe::MOPopulationManagement<FCoreLibEMSolution>;
    //
@@ -685,12 +700,17 @@ optframe_api0d_engine_classic_nsgaii_params(FakeEnginePtr _engine, double timeli
 
    auto sout = classic_nsgaii.search({ timelimit });
    //
-   std::cout << "finished classic_nsgaii with: ";
-   std::cout << "status=" << sout.status << std::endl;
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Info) {
+      std::cout << "finished classic_nsgaii with: ";
+      std::cout << "status=" << sout.status << std::endl;
+   }
    optframe::Pareto<FCoreLibEMSolution> best = *sout.best;
-   std::cout << "best pareto: ";
-   // best pareto front
-   best.print();
+
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Info) {
+      std::cout << "best pareto: ";
+      // best pareto front
+      best.print();
+   }
    //
    return 0;
 }
@@ -709,10 +729,12 @@ optframe_api1d_build_global(FakeEnginePtr _engine, char* builder, char* build_st
    // Example: "OptFrame:ComponentBuilder:GlobalSearch:SA:BasicSA"
    //
    std::string sbuilder = strBuilder;
-   std::cout << "OptFrame Engine GET BUILDER: " << sbuilder << std::endl;
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug)
+      std::cout << "OptFrame Engine GET BUILDER: " << sbuilder << std::endl;
    CB* cb = engine->loader.factory.getBuilder(sbuilder);
    if (!cb) {
-      std::cout << "WARNING! OptFrame builder for GlobalSearch not found!" << std::endl;
+      if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Warning)
+         std::cout << "WARNING! OptFrame builder for GlobalSearch not found!" << std::endl;
       return -1;
    }
    //cb->buildComponent
@@ -722,11 +744,14 @@ optframe_api1d_build_global(FakeEnginePtr _engine, char* builder, char* build_st
    // Example: "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999";
    //
    std::string scan_params = strBuildString;
-   std::cout << "OptFrame Engine BUILD: " << scan_params << std::endl;
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug)
+      std::cout << "OptFrame Engine BUILD: " << scan_params << std::endl;
    scannerpp::Scanner scanner{ scan_params };
    optframe::GlobalSearch<FCoreLibESolution>* global = cbglobal->build(scanner, engine->loader.factory);
-   std::cout << "global_search =" << global << std::endl;
-   global->print();
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug) {
+      std::cout << "global_search =" << global << std::endl;
+      global->print();
+   }
    //
 
    optframe::Component* cglobal = (optframe::Component*)global; // why??
@@ -750,10 +775,12 @@ optframe_api1d_build_single(FakeEnginePtr _engine, char* builder, char* build_st
    // Example: "OptFrame:ComponentBuilder:SingleObjSearch:SA:BasicSA"
    //
    std::string sbuilder = strBuilder;
-   std::cout << "OptFrame Engine GET BUILDER: " << sbuilder << std::endl;
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug)
+      std::cout << "OptFrame Engine GET BUILDER: " << sbuilder << std::endl;
    CB* cb = engine->loader.factory.getBuilder(sbuilder);
    if (!cb) {
-      std::cout << "WARNING! OptFrame builder for SingleObjSearch not found!" << std::endl;
+      if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Warning)
+         std::cout << "WARNING! OptFrame builder for SingleObjSearch not found!" << std::endl;
       return -1;
    }
    //cb->buildComponent
@@ -763,11 +790,14 @@ optframe_api1d_build_single(FakeEnginePtr _engine, char* builder, char* build_st
    // Example: "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999";
    //
    std::string scan_params = strBuildString;
-   std::cout << "OptFrame Engine BUILD: " << scan_params << std::endl;
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug)
+      std::cout << "OptFrame Engine BUILD: " << scan_params << std::endl;
    scannerpp::Scanner scanner{ scan_params };
    optframe::SingleObjSearch<FCoreLibESolution>* single = cbsingle->build(scanner, engine->loader.factory);
-   std::cout << "single =" << single << std::endl;
-   single->print();
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug) {
+      std::cout << "single =" << single << std::endl;
+      single->print();
+   }
    //
 
    optframe::Component* csingle = (optframe::Component*)single; // why??
@@ -793,7 +823,8 @@ optframe_api1d_build_local_search(FakeEnginePtr _engine, char* builder, char* bu
    std::string sbuilder = strBuilder;
    CB* cb = engine->loader.factory.getBuilder(sbuilder);
    if (!cb) {
-      std::cout << "WARNING! OptFrame builder for LocalSearch not found!" << std::endl;
+      if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Warning)
+         std::cout << "WARNING! OptFrame builder for LocalSearch not found!" << std::endl;
       return -1;
    }
    //cb->buildComponent
@@ -805,8 +836,10 @@ optframe_api1d_build_local_search(FakeEnginePtr _engine, char* builder, char* bu
    std::string scan_params = strBuildString;
    scannerpp::Scanner scanner{ scan_params };
    optframe::LocalSearch<FCoreLibESolution>* local = cblocal->build(scanner, engine->loader.factory);
-   std::cout << "local_search =" << local << std::endl;
-   local->print();
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug) {
+      std::cout << "local_search =" << local << std::endl;
+      local->print();
+   }
    //
 
    optframe::Component* clocal = (optframe::Component*)local; // why??
@@ -833,7 +866,8 @@ optframe_api1d_build_component(FakeEnginePtr _engine, char* builder, char* build
    std::string sbuilder = strBuilder;
    CB* cb = engine->loader.factory.getBuilder(sbuilder);
    if (!cb) {
-      std::cout << "WARNING! OptFrame builder '" << strBuilder << "' for Component not found!" << std::endl;
+      if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Warning)
+         std::cout << "WARNING! OptFrame builder '" << strBuilder << "' for Component not found!" << std::endl;
       return -1;
    }
 
@@ -843,8 +877,10 @@ optframe_api1d_build_component(FakeEnginePtr _engine, char* builder, char* build
    std::string scan_params = strBuildString;
    scannerpp::Scanner scanner{ scan_params };
    optframe::Component* c = cb->buildComponent(scanner, engine->loader.factory);
-   std::cout << "component =" << c << std::endl;
-   c->print();
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug) {
+      std::cout << "component =" << c << std::endl;
+      c->print();
+   }
    //
    sptr<optframe::Component> sptrComp{ c };
 
@@ -855,17 +891,36 @@ optframe_api1d_build_component(FakeEnginePtr _engine, char* builder, char* build
 extern "C" LibSearchOutput // SearchOutput for XSH "best-type"
 optframe_api1d_run_global_search(FakeEnginePtr _engine, int g_idx, double timelimit)
 {
-   std::cout << "begin C++ optframe_api1d_run_global_search: g_idx=" << g_idx << " timelimit=" << timelimit << std::endl;
    auto* engine = (FCoreApi1Engine*)_engine;
+   //
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug)
+      std::cout << "begin C++ optframe_api1d_run_global_search: g_idx=" << g_idx << " timelimit=" << timelimit << std::endl;
    //
    sptr<optframe::GlobalSearch<FCoreLibESolution, FCoreLibESolution>> gs;
    engine->loader.factory.assign(gs, g_idx, "OptFrame:GlobalSearch");
    assert(gs);
-   gs->print();
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug) {
+      gs->print();
+   }
    //sos->setVerbose();
    //
+   // ===============================
+   // use same log level from engine
+   // ===============================
+   //
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug)
+      gs->setVerboseR();
+   else if (engine->loader.factory.getLogLevel() == optframe::LogLevel::Silent)
+      gs->setSilentR();
+   else {
+      // no recursive here? TODO: fix with setMessageLevelR...
+      gs->setMessageLevel(engine->loader.factory.getLogLevel());
+   }
+   // ===============================
+   //
    optframe::SearchOutput<FCoreLibESolution> out = gs->search({ timelimit });
-   std::cout << "out=" << out.status << std::endl;
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Info)
+      std::cout << "run_global_search -> out=" << out.status << std::endl;
 
    LibSearchOutput lout;
    lout.status = (int)out.status;  // ("status", c_int),
@@ -881,17 +936,37 @@ optframe_api1d_run_global_search(FakeEnginePtr _engine, int g_idx, double timeli
 extern "C" LibSearchOutput // SearchOutput for XSH "best-type"
 optframe_api1d_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelimit)
 {
-   std::cout << "begin C++ optframe_api1d_run_sos_search: sos_idx=" << sos_idx << " timelimit=" << timelimit << std::endl;
    auto* engine = (FCoreApi1Engine*)_engine;
+   //
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug)
+      std::cout << "begin C++ optframe_api1d_run_sos_search: sos_idx=" << sos_idx << " timelimit=" << timelimit << std::endl;
    //
    sptr<optframe::SingleObjSearch<FCoreLibESolution>> sos;
    engine->loader.factory.assign(sos, sos_idx, "OptFrame:GlobalSearch:SingleObjSearch");
    assert(sos);
-   sos->print();
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug)
+      sos->print();
    //sos->setVerbose();
    //
+   // ===============================
+   // use same log level from engine
+   // ===============================
+   //
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug)
+      sos->setVerboseR();
+   else if (engine->loader.factory.getLogLevel() == optframe::LogLevel::Silent)
+      sos->setSilentR();
+   else {
+      // no recursive here? TODO: fix with setMessageLevelR...
+      sos->setMessageLevel(engine->loader.factory.getLogLevel());
+   }
+   // ===============================
+
+      
    optframe::SearchOutput<FCoreLibESolution> out = sos->search({ timelimit });
-   std::cout << "out=" << out.status << std::endl;
+
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Info)
+      std::cout << "run_sos_search -> out=" << out.status << std::endl;
 
    LibSearchOutput lout;
    lout.status = (int)out.status;  // ("status", c_int),
@@ -932,6 +1007,8 @@ optframe_api0d_engine_test(FakeEnginePtr _engine)
    sref<optframe::InitialSearch<FCoreLibESolution>> initSol{
       new optframe::BasicInitialSearch<FCoreLibESolution>(initial, iev2)
    };
+   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug)
+      std::cout << "### THIS IS DEBUG LEVEL!" << std::endl;
    //
    std::cout << "### test will generate solution" << std::endl;
    auto ose_status = initSol->initialSearch({ 10.0 });

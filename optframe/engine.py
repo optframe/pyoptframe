@@ -686,7 +686,7 @@ class Engine(object):
 
     def fevaluator_evaluate(self, fevaluator_ptr: ctypes.py_object, min_or_max: bool, py_sol):
         # print("invoking 'optframe_lib.optframe_api1d_float64_fevaluator_evaluate' with fevaluator_ptr=", fevaluator_ptr)
-        self.print_component(fevaluator_ptr)
+        # self.print_component(fevaluator_ptr)
         pyo_view = ctypes.py_object(py_sol)
         # print("begin fevaluator_evaluate with pyo_view=", pyo_view)
         z = optframe_lib.optframe_api0d_fevaluator_evaluate(
@@ -698,7 +698,7 @@ class Engine(object):
         # print("XXXXX BEGIN 'fconstructive_gensolution'")
         # print("invoking 'optframe_lib.optframe_api1d_fconstructive_gensolution' with fconstructive_ptr=", fconstructive_ptr)
         # print("printing component... => ")
-        self.print_component(fconstructive_ptr)
+        #self.print_component(fconstructive_ptr)
 
         # print("begin fconstructive_gensolution")
         pyo_sol = optframe_lib.optframe_api0_fconstructive_gensolution(

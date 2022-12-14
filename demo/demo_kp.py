@@ -18,6 +18,7 @@ import optframe
 # DO NOT REORDER 'from optframe.engine ...'
 import random  # TODO: get from hf engine ?
 
+KP_EXAMPLE_SILENT=True
 
 # ==========================================
 # THIS IS AN EXAMPLE OF THE KNAPSACK PROBLEM
@@ -83,7 +84,8 @@ class ExampleSol(object):
 
 class ExampleKP(object):
     def __init__(self):
-        print('Init KP')
+        if not KP_EXAMPLE_SILENT:
+            print('Init KP')
         # may store current optframe engine for local usage
         self.engine = None
         # number of items
@@ -286,9 +288,10 @@ def mycallback_decoder_rk(problemCtx: ExampleKP, array_double : optframe.engine.
 # =============================
 #       BEGIN SCRIPT
 # =============================
-print("=========================")
-print("BEGIN with OptFrameEngine")
-print("=========================")
+if not KP_EXAMPLE_SILENT:
+    print("=========================")
+    print("BEGIN with OptFrameEngine")
+    print("=========================")
 
 #
 pKP = ExampleKP()
@@ -297,17 +300,25 @@ pKP.w = [1, 2, 3, 4, 5]
 pKP.p = [5, 4, 3, 2, 1]
 pKP.Q = 6.0
 #
-pKP.engine = optframe.Engine(optframe.APILevel.API1d, optframe.LogLevel.Debug)
-print(pKP)
+if not KP_EXAMPLE_SILENT:
+    pKP.engine = optframe.Engine(optframe.APILevel.API1d, optframe.LogLevel.Debug)
+else:
+    pKP.engine = optframe.Engine(optframe.APILevel.API1d, optframe.LogLevel.Silent)
+
+if not KP_EXAMPLE_SILENT:
+    print(pKP)
 
 ev_idx = pKP.engine.maximize(pKP, mycallback_fevaluate)
-print("evaluator id:", ev_idx)
-
-print("Listing components:")
-pKP.engine.list_components("OptFrame:")
+#
+if not KP_EXAMPLE_SILENT:
+    print("evaluator id:", ev_idx)
+    print("Listing components:")
+    pKP.engine.list_components("OptFrame:")
 
 fev = pKP.engine.get_evaluator()
-pKP.engine.print_component(fev)
+
+if not KP_EXAMPLE_SILENT:
+    pKP.engine.print_component(fev)
 #
 # print("")
 # print("=====================")
@@ -321,71 +332,95 @@ pKP.engine.print_component(fev)
 # print("====================")
 #z = pKP.engine.fevaluator_evaluate(fev, True, sol)
 #
-print("")
-print("==========================")
-print("manually generate solution")
-print("==========================")
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("==========================")
+    print("manually generate solution")
+    print("==========================")
 
 s = mycallback_constructive(pKP)
-print("")
-print("count=", sys.getrefcount(s))
-print(s)
 
-print("")
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("count=", sys.getrefcount(s))
+    print(s)
+
+    print("")
 
 c_idx = pKP.engine.add_constructive(pKP, mycallback_constructive)
-print("c_idx=", c_idx)
+
+
+if not KP_EXAMPLE_SILENT:
+    print("c_idx=", c_idx)
 
 is_idx = pKP.engine.create_initial_search(ev_idx, c_idx)
-print("is_idx=", is_idx)
+
+if not KP_EXAMPLE_SILENT:
+    print("is_idx=", is_idx)
 
 fc = pKP.engine.get_constructive(c_idx)
-pKP.engine.print_component(fc)
-print("")
-print("========================")
-print("engine generate solution")
-print("========================")
+
+if not KP_EXAMPLE_SILENT:
+    pKP.engine.print_component(fc)
+    print("")
+    print("========================")
+    print("engine generate solution")
+    print("========================")
 #
+
 solxx = pKP.engine.fconstructive_gensolution(fc)
-print("")
-print("count=", sys.getrefcount(solxx))
-print("solxx:", solxx)
 
-print("")
-print("")
-print("")
-print("")
-print("")
-print("")
-print(fc)
-#
-print("")
-print("============================")
-print("engine test evaluate (again)")
-print("============================")
+
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("count=", sys.getrefcount(solxx))
+    print("solxx:", solxx)
+
+    print("")
+    print("")
+    print("")
+    print("")
+    print("")
+    print("")
+    print(fc)
+    #
+    print("")
+    print("============================")
+    print("engine test evaluate (again)")
+    print("============================")
+
 z1 = pKP.engine.fevaluator_evaluate(fev, False, solxx)
-print("evaluation:", z1)
 
+if not KP_EXAMPLE_SILENT:
+    print("evaluation:", z1)
 
-print("")
-print("=====================")
-print("engine add ns bitflip")
-print("=====================")
+    print("")
+    print("=====================")
+    print("engine add ns bitflip")
+    print("=====================")
 
 # get index of new NS
 ns_idx = pKP.engine.add_ns(pKP, mycallback_ns_rand_bitflip,
                            mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
-print("ns_idx=", ns_idx)
+if not KP_EXAMPLE_SILENT:
+    print("ns_idx=", ns_idx)
+
 
 list_idx = pKP.engine.create_component_list(
     "[ OptFrame:NS 0 ]", "OptFrame:NS[]")
-print("list_idx=", list_idx)
 
 
-print("")
-print("========================")
-print("engine add nsseq bitflip")
-print("========================")
+
+if not KP_EXAMPLE_SILENT:
+    print("list_idx=", list_idx)
+
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("========================")
+    print("engine add nsseq bitflip")
+    print("========================")
+
+
 
 # get index of new NSSeq
 nsseq_idx = pKP.engine.add_nsseq(pKP,
@@ -396,103 +431,130 @@ nsseq_idx = pKP.engine.add_nsseq(pKP,
                                  mycallback_nsseq_it_isdone_bitflip,
                                  mycallback_nsseq_it_current_bitflip,
                                  mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
-print("nsseq_idx=", nsseq_idx)
+
+if not KP_EXAMPLE_SILENT:
+    print("nsseq_idx=", nsseq_idx)
 
 
-print("")
-print("============================")
-print("    stress test generate    ")
-print("============================")
-will_stress = False
-if will_stress:
-    while True:
-        sol_inf = pKP.engine.fconstructive_gensolution(fc)
-        print("sol_inf:", sol_inf)
-        z1 = pKP.engine.fevaluator_evaluate(fev, False, sol_inf)
-        print("evaluation:", z1)
-else:
-    print("OK. no stress...")
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("============================")
+    print("    stress test generate    ")
+    print("============================")
+    will_stress = False
+    if will_stress:
+        while True:
+            sol_inf = pKP.engine.fconstructive_gensolution(fc)
+            print("sol_inf:", sol_inf)
+            z1 = pKP.engine.fevaluator_evaluate(fev, False, sol_inf)
+            print("evaluation:", z1)
+    else:
+        print("OK. no stress...")
 
 # ============= CHECK =============
-print("")
-print("Engine: will check")
-print("")
-if False:
-    pKP.engine.check(100, 10, False)
-print("pass...")
 
-print()
-print("engine will list builders ")
-print("count=", pKP.engine.list_builders("OptFrame:"))
-print()
-print("engine will list builders for :BasicSA ")
-print("count=", pKP.engine.list_builders(":BasicSA"))
-print()
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("Engine: will check")
+    print("")
+    if False:
+        pKP.engine.check(100, 10, False)
+    print("pass...")
 
-print("")
-print("testing handmade SA (run_sa_params) on C++...")
-print("")
-# DISABLED
-if False:
-    pKP.engine.run_sa_params(5.0, ev_idx, c_idx, ns_idx, 0.98, 200, 9999999)
-#
+if not KP_EXAMPLE_SILENT:
+    print()
+    print("engine will list builders ")
+    print("count=", pKP.engine.list_builders("OptFrame:"))
+    print()
+    print("engine will list builders for :BasicSA ")
+    print("count=", pKP.engine.list_builders(":BasicSA"))
+    print()
 
-print("")
-print("testing builder (build_global_search) for SA...")
-print("")
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("testing handmade SA (run_sa_params) on C++...")
+    print("")
+    # DISABLED
+    if False:
+        pKP.engine.run_sa_params(5.0, ev_idx, c_idx, ns_idx, 0.98, 200, 9999999)
+    #
+
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("testing builder (build_global_search) for SA...")
+    print("")
+
 
 g_idx = pKP.engine.build_global_search(
     "OptFrame:ComponentBuilder:GlobalSearch:SA:BasicSA",
     "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999")
-print("g_idx=", g_idx)
 
-pKP.engine.list_components("OptFrame:")
+if not KP_EXAMPLE_SILENT:
+    print("g_idx=", g_idx)
 
-print("")
-print("testing execution of GlobalSearch (run_global_search) for SA...")
-print("")
+if not KP_EXAMPLE_SILENT:
+    pKP.engine.list_components("OptFrame:")
+
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("testing execution of GlobalSearch (run_global_search) for SA...")
+    print("")
 
 lout = pKP.engine.run_global_search(g_idx, 4.0)
-print('lout=', lout)
 
-print("")
-print("testing builder (build_local_search) for BI...")
-print("")
+if not KP_EXAMPLE_SILENT:
+    print('lout=', lout)
+
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("testing builder (build_local_search) for BI...")
+    print("")
 
 ls_idx = pKP.engine.build_local_search(
     "OptFrame:ComponentBuilder:LocalSearch:FI",
     "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:NS:NSFind:NSSeq 0")
-print("ls_idx=", ls_idx)
 
-pKP.engine.list_components("OptFrame:")
+if not KP_EXAMPLE_SILENT:
+    print("ls_idx=", ls_idx)
 
-print("")
-print("testing builder (build_component) for ILSLevels...")
-print("")
+if not KP_EXAMPLE_SILENT:
+    pKP.engine.list_components("OptFrame:")
+
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("testing builder (build_component) for ILSLevels...")
+    print("")
 
 pert_idx = pKP.engine.build_component(
     "OptFrame:ComponentBuilder:ILS:LevelPert:LPlus2",
     "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:NS 0",
     "OptFrame:ILS:LevelPert")
-print("pert_idx=", pert_idx)
 
-pKP.engine.list_components("OptFrame:")
+if not KP_EXAMPLE_SILENT:
+    print("pert_idx=", pert_idx)
+
+if not KP_EXAMPLE_SILENT:
+    pKP.engine.list_components("OptFrame:")
 
 
 ###########
 
-print("")
-print("testing builder (build_single_obj_search) for ILS...")
-print("")
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("testing builder (build_single_obj_search) for ILS...")
+    print("")
 
 sos_idx = pKP.engine.build_single_obj_search(
     "OptFrame:ComponentBuilder:SingleObjSearch:ILS:ILSLevels",
     "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:LocalSearch 0 OptFrame:ILS:LevelPert 0  50  3")
-print("sos_idx=", sos_idx)
 
-print("")
-print("testing execution of SingleObjSearch (run_sos_search) for ILS...")
-print("")
+if not KP_EXAMPLE_SILENT:
+    print("sos_idx=", sos_idx)
+
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("testing execution of SingleObjSearch (run_sos_search) for ILS...")
+    print("")
 
 # r = pKP.engine.component_set_loglevel(
 #    "OptFrame:GlobalSearch:SingleObjSearch "+str(sos_idx), 4, False)
@@ -502,70 +564,90 @@ print("")
 #print("r=", r)
 
 lout = pKP.engine.run_sos_search(sos_idx, 4.5)
-print('lout=', lout)
+
+print('SA output =', lout)
 ss = optframe.SearchStatus(lout.status)
-print(ss)
+print('SA status =', ss)
 
 ###########
 
 c_rk_idx = pKP.engine.add_constructive_rk(pKP, mycallback_constructive_rk)
-print("c_rk_idx=", c_rk_idx)
 
-pKP.engine.list_components("OptFrame:")
+if not KP_EXAMPLE_SILENT:
+    print("c_rk_idx=", c_rk_idx)
+
+if not KP_EXAMPLE_SILENT:
+    pKP.engine.list_components("OptFrame:")
 
 initepop_rk_id = pKP.engine.build_component(
     "OptFrame:ComponentBuilder:EA:RK:BasicInitialEPopulationRKBuilder", 
     "OptFrame:Constructive:EA:RK:ConstructiveRK 0",
     "OptFrame:InitialEPopulation:EA:RK:InitialEPopulationRK")
-print("initepop_rk_id=", initepop_rk_id)
 
-print("")
-print("WILL CREATE DECODER!!")
+if not KP_EXAMPLE_SILENT:
+    print("initepop_rk_id=", initepop_rk_id)
+
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("WILL CREATE DECODER!!")
+
 dec_rk_idx = pKP.engine.add_decoder_rk(pKP, mycallback_decoder_rk)
-print("dec_rk_idx=", dec_rk_idx)
 
-pKP.engine.list_components("OptFrame:")
+if not KP_EXAMPLE_SILENT:
+    print("dec_rk_idx=", dec_rk_idx)
 
-print("")
-print("WILL BUILD COMPLETE DECODER WITH EVALUATOR!!")
+if not KP_EXAMPLE_SILENT:
+    pKP.engine.list_components("OptFrame:")
+
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("WILL BUILD COMPLETE DECODER WITH EVALUATOR!!")
+
 drk_rk_id = pKP.engine.build_component(
     "OptFrame:ComponentBuilder:EA:RK:BasicDecoderRandomKeysBuilder", 
     "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:EA:RK:DecoderRandomKeysNoEvaluation 0",
     "OptFrame:EA:RK:DecoderRandomKeys")
-print("drk_rk_id=", drk_rk_id)
 
-print("")
-print("testing builder (build_global_search) for BRKGA...")
-print("")
+if not KP_EXAMPLE_SILENT:
+    print("drk_rk_id=", drk_rk_id)
+
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("testing builder (build_global_search) for BRKGA...")
+    print("")
 
 g_idx = pKP.engine.build_global_search(
     "OptFrame:ComponentBuilder:GlobalSearch:EA:RK:BRKGA",
     "OptFrame:EA:RK:DecoderRandomKeys 0  OptFrame:InitialEPopulation:EA:RK:InitialEPopulationRK 0 "
     "30 100 0.2 0.4 0.6")
-print("g_idx=", g_idx)
 
-pKP.engine.list_components("OptFrame:")
+if not KP_EXAMPLE_SILENT:
+    print("g_idx=", g_idx)
 
-print("")
-print("testing execution of GlobalSearch (run_global_search) for BRKGA...")
-print("")
+if not KP_EXAMPLE_SILENT:
+    pKP.engine.list_components("OptFrame:")
+
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("testing execution of GlobalSearch (run_global_search) for BRKGA...")
+    print("")
 
 lout = pKP.engine.run_global_search(g_idx, 4.9)
-print('lout=', lout)
+
+print('BRKGA output =', lout)
 #
 
-
-print("")
-print("count_solkp=", count_solkp)
-print("count_plus_solkp=", count_plus_solkp)
-print("count_minus_solkp=", count_minus_solkp)
-print("count_solkp_new_copy=", count_solkp_new_copy)
-print("count_solkp_new_deepcopy=", count_solkp_new_deepcopy)
-print("")
-print("count_move_bitflip=", count_move_bitflip)
-print("count_plus_move_bitflip=", count_plus_move_bitflip)
-print("count_minus_move_bitflip=", count_minus_move_bitflip)
-print("")
-print("count_it_bitflip=", count_it_bitflip)
-print("")
-exit(0)
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("count_solkp=", count_solkp)
+    print("count_plus_solkp=", count_plus_solkp)
+    print("count_minus_solkp=", count_minus_solkp)
+    print("count_solkp_new_copy=", count_solkp_new_copy)
+    print("count_solkp_new_deepcopy=", count_solkp_new_deepcopy)
+    print("")
+    print("count_move_bitflip=", count_move_bitflip)
+    print("count_plus_move_bitflip=", count_plus_move_bitflip)
+    print("count_minus_move_bitflip=", count_minus_move_bitflip)
+    print("")
+    print("count_it_bitflip=", count_it_bitflip)
+    print("")
