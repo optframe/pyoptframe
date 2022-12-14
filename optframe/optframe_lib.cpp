@@ -535,13 +535,13 @@ optframe_api1d_engine_list_builders(FakeEnginePtr _engine, char* prefix)
    std::vector<std::pair<std::string, std::vector<std::pair<std::string, std::string>>>>
      vlist = engine->loader.factory.listBuilders(sprefix);
    
-   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug) {
-      for (auto& p : vlist) {
-         std::cout << "builder: " << p.first << " |params|=" << p.second.size() << std::endl;
-         for (unsigned i = 0; i < p.second.size(); i++)
-            std::cout << "\tparam " << i << " => " << p.second[i].first << " : " << p.second[i].second << std::endl;
-      }
+   // This will be printed, regardless of message level
+   for (auto& p : vlist) {
+      std::cout << "builder: " << p.first << " |params|=" << p.second.size() << std::endl;
+      for (unsigned i = 0; i < p.second.size(); i++)
+         std::cout << "\tparam " << i << " => " << p.second[i].first << " : " << p.second[i].second << std::endl;
    }
+   
    return vlist.size();
 }
 
@@ -551,10 +551,11 @@ optframe_api1d_engine_list_components(FakeEnginePtr _engine, char* prefix)
    std::string sprefix{ prefix };
    auto* engine = (FCoreApi1Engine*)_engine;
    std::vector<std::string> vlist = engine->loader.factory.listComponents(sprefix);
-   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug) {
-      for (unsigned i = 0; i < vlist.size(); i++)
-         std::cout << "component " << i << " => " << vlist[i] << std::endl;
-   }
+
+   // This will be printed, regardless of message level
+   for (unsigned i = 0; i < vlist.size(); i++)
+      std::cout << "component " << i << " => " << vlist[i] << std::endl;
+
    return vlist.size();
 }
 

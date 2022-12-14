@@ -461,13 +461,16 @@ if not KP_EXAMPLE_SILENT:
         pKP.engine.check(100, 10, False)
     print("pass...")
 
-if not KP_EXAMPLE_SILENT:
+if True:
     print()
     print("engine will list builders ")
     print("count=", pKP.engine.list_builders("OptFrame:"))
     print()
     print("engine will list builders for :BasicSA ")
     print("count=", pKP.engine.list_builders(":BasicSA"))
+    print()
+    print("engine will list builders for :BasicTabuSearch ")
+    print("count=", pKP.engine.list_builders(":BasicTabuSearch"))
     print()
 
 if not KP_EXAMPLE_SILENT:
@@ -636,6 +639,31 @@ lout = pKP.engine.run_global_search(g_idx, 4.9)
 
 print('BRKGA output =', lout)
 #
+
+
+###########################
+#       Tabu Search
+###########################
+
+if not KP_EXAMPLE_SILENT:
+    print("")
+    print("testing builder (build_global_search) for BRKGA...")
+    print("")
+
+g_idx = pKP.engine.build_global_search(
+    "OptFrame:ComponentBuilder:SingleObjSearch:TS:BasicTabuSearch",
+    "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0 "
+    "OptFrame:NS:NSFind:NSSeq 0 "
+    "1 10")
+
+if not KP_EXAMPLE_SILENT:
+    print("g_idx=", g_idx)
+
+lout = pKP.engine.run_global_search(g_idx, 4.7)
+
+print('BasicTabuSearch output =', lout)
+
+##################
 
 if not KP_EXAMPLE_SILENT:
     print("")
