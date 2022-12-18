@@ -7,7 +7,6 @@ optframe_lib.so
 __pycache__
 *.pyc
 *.egg-info
-requirements.txt
 optframe-git
 dist/
 app_*
