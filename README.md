@@ -29,6 +29,22 @@ make optframe_lib
 make demo_local
 ```
 
+### Advice for online environments
+
+Before installing, check C++ compiler (typically GCC) version:
+
+`x86_64-linux-gnu-gcc -v`
+
+At least gcc-10 is required for C++20... if not enough, try to install g++-10 and make it default.
+*Considering Jupyter notebook syntax*:
+```
+!apt install -y g++-10
+!g++-10 --version
+!update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 10
+!update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 10
+!update-alternatives --install /usr/bin/x86_64-linux-gnu-gcc gcc /usr/bin/gcc-10 10
+```
+
 
 ## Tutorials
 
