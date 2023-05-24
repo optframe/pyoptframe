@@ -181,5 +181,14 @@ extern "C" bool
 optframe_api1d_engine_component_set_loglevel(FakeEnginePtr _engine, char* _scomponent, int loglevel, bool recursive);
 
 // ============================
+// EXPERIMENTAL
+
+extern "C" bool
+optframe_api1d_engine_experimental_set_parameter(FakeEnginePtr _engine, char* parameter, char* svalue);
+
+extern "C" char*
+optframe_api1d_engine_experimental_get_parameter(FakeEnginePtr _engine, char* parameter);
+
+// ============================
 
 #endif // OPTFRAME_PYTHON_LIB_H

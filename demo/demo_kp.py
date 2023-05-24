@@ -308,6 +308,18 @@ else:
 if not KP_EXAMPLE_SILENT:
     print(pKP)
 
+##################
+
+print("==-Experimental-==")
+json_out = pKP.engine.experimental_get_parameter("")
+print("json_out=",json_out)
+bout = pKP.engine.experimental_set_parameter("NS_VALID_RANDOM_MOVE_MAX_TRIES", "2")
+print("bout=",bout)
+json_out = pKP.engine.experimental_get_parameter("")
+print("json_out=",json_out)
+
+##################
+
 ev_idx = pKP.engine.maximize(pKP, mycallback_fevaluate)
 #
 if not KP_EXAMPLE_SILENT:
@@ -457,8 +469,14 @@ if not KP_EXAMPLE_SILENT:
     print("")
     print("Engine: will check")
     print("")
-    if False:
-        pKP.engine.check(100, 10, False)
+
+# LogLevel::Info(3) for check module
+bout = pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "3")
+print("bout=",bout)
+
+pKP.engine.check(100, 10, False)
+
+if not KP_EXAMPLE_SILENT:
     print("pass...")
 
 if True:
@@ -647,8 +665,12 @@ print('BRKGA output =', lout)
 
 if not KP_EXAMPLE_SILENT:
     print("")
-    print("testing builder (build_global_search) for BRKGA...")
+    print("testing builder (build_global_search) for Tabu Search...")
     print("")
+
+# make it silent
+bout = pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
+print("bout=",bout)
 
 g_idx = pKP.engine.build_global_search(
     "OptFrame:ComponentBuilder:SingleObjSearch:TS:BasicTabuSearch",

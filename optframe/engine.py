@@ -247,6 +247,14 @@ optframe_lib.optframe_api1d_engine_component_set_loglevel.argtypes = [
     ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int, ctypes.c_bool]
 optframe_lib.optframe_api1d_engine_component_set_loglevel.restype = ctypes.c_bool
 
+optframe_lib.optframe_api1d_engine_experimental_set_parameter.argtypes = [
+    ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p]
+optframe_lib.optframe_api1d_engine_experimental_set_parameter.restype = ctypes.c_bool
+
+optframe_lib.optframe_api1d_engine_experimental_get_parameter.argtypes = [
+    ctypes.c_void_p, ctypes.c_char_p]
+optframe_lib.optframe_api1d_engine_experimental_get_parameter.restype = ctypes.c_char_p
+
 
 class SearchStatus(Enum):
     NO_REPORT = 0x00
@@ -398,6 +406,31 @@ class Engine(object):
             assert (False)
         b_comp = scomponent.encode('ascii')
         return optframe_lib.optframe_api1d_engine_component_set_loglevel(self.hf, b_comp, loglevel, recursive)
+
+    def experimental_set_parameter(self, sparameter: str, svalue: str):
+        if (not isinstance(sparameter, str)):
+            assert (False)
+        if (not isinstance(svalue, str)):
+            assert (False)
+        b_param = sparameter.encode('ascii')
+        b_value = svalue.encode('ascii')
+        return optframe_lib.optframe_api1d_engine_experimental_set_parameter(self.hf, b_param, b_value)
+
+    def experimental_get_parameter(self, sparameter: str):
+        if (not isinstance(sparameter, str)):
+            assert (False)
+        b_param = sparameter.encode('ascii')
+        b_out = optframe_lib.optframe_api1d_engine_experimental_get_parameter(self.hf, b_param)
+        str_out=b_out.decode('ascii')
+        if len(str_out) == 0:
+            return None
+        # print("str_out=",str_out, len(str_out))
+        # output is JSON
+        import json        
+        json_data = json.loads(str_out)
+        #print(json_data)
+        return json_data
+
 
     def list_builders(self, pattern: str):
         if (not isinstance(pattern, str)):

@@ -7,6 +7,8 @@
 #include <iostream>
 #include <utility>
 #include <map>
+#include <string>
+#include <iomanip> // std::setprecision
 //
 #include <OptFCore/FCore.hpp>
 #include <OptFCore/FxCore.hpp>
@@ -272,15 +274,48 @@ using CB = optframe::ComponentBuilder<
 class FCoreApi1Engine
 {
 public:
-   /*
-   optframe::HeuristicFactory<
-     FCoreLibSolution,             //XSolution S,
-     optframe::Evaluation<double>, // XEvaluation XEv = Evaluation<>,
-     FCoreLibESolution             //  XESolution XES = pair<S, XEv>,
-     //X2ESolution<XES> X2ES = MultiESolution<XES>>
-     >
-     hf;
-     */
+   FCoreApi1Engine()
+   {
+      // ======================
+      // setup basic parameters
+      // ======================
+      // parameter: NS_VALID_RANDOM_MOVE_MAX_TRIES
+      this->experimentalParams["NS_VALID_RANDOM_MOVE_MAX_TRIES"]="1";
+      // parameter: EVTYPE_NUM_ZERO_PRECISION
+      std::stringstream ss_zero;
+      ss_zero << std::fixed << std::setprecision( 8 ) << optframe::num_zero_precision<double>();
+      this->experimentalParams["EVTYPE_NUM_ZERO_PRECISION"]=ss_zero.str();
+      // parameter: ENGINE_LOG_LEVEL
+      // from Component.hpp
+      // |      1      |      2      |      3      |      4      |
+      // |    error    |   warning   | information | debug/verb. | => this direction = more verbose...
+      // 0 is silent
+      this->experimentalParams["ENGINE_LOG_LEVEL"]="2";
+      // parameter: COMPONENT_LOG_LEVEL
+      this->experimentalParams["COMPONENT_LOG_LEVEL"]="3";
+      // refresh engine parameters
+      updateParameters();
+   }
+
+   void updateParameters() {
+      int engine_ll = std::stoi(this->experimentalParams["ENGINE_LOG_LEVEL"]);
+      int comp_ll   = std::stoi(this->experimentalParams["COMPONENT_LOG_LEVEL"]);
+      this->engineLogLevel    = (optframe::LogLevel)engine_ll;
+      this->componentLogLevel = (optframe::LogLevel)comp_ll;
+      check.setLogLevel(engineLogLevel);
+      loader.factory.setLogLevel(engineLogLevel);
+   }
+
+   std::map<std::string, std::string> experimentalParams;
+
+   // =========================================================================
+   // LOG SYSTEM: use 'engineLogLevel' for system logs, but 'componentLogLevel'
+   // for specific components.
+   //
+   // engineLogLevel: 0-silent 1-error 2-warning 3-info 4-debug
+   optframe::LogLevel engineLogLevel;
+   // componentLogLevel: 0-silent 1-error 2-warning 3-info 4-debug
+   optframe::LogLevel componentLogLevel;
 
    optframe::Loader<
      FCoreLibESolution //  XESolution XES = pair<S, XEv>,
@@ -495,17 +530,24 @@ public:
 extern "C" void
 optframe_api0d_engine_welcome(FakeEnginePtr _engine)
 {
+   // IGNORING LOG LEVEL FOR WELCOME! ASSUMING AS DEBUG FUNCTION!
+   //if(_engine->engineLogLevel >= optframe::LogLevel::Error)
    std::cout << optframe::FCore::welcome() << std::endl;
 }
 
 extern "C" FakeEnginePtr
 optframe_api1d_create_engine(int ll)
 {
+   // safety checks on log level
+   if(ll <= 0) ll = 0;
+   if(ll >= 4) ll = 4;
    auto l = (optframe::LogLevel)ll;
    auto* _eng = new FCoreApi1Engine;
    if (l == optframe::LogLevel::Debug)
       std::cout << "Debug: will set OptFrame Engine loglevel to Debug" << std::endl;
-   _eng->loader.factory.setLogLevel(l);
+   //
+   _eng->experimentalParams["ENGINE_LOG_LEVEL"] = std::to_string(ll);
+   _eng->updateParameters();
    //
    FakeEnginePtr engine_ptr = _eng;
    return engine_ptr;
@@ -515,7 +557,8 @@ extern "C" bool
 optframe_api1d_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
-   engine->check.setParameters(verbose);
+   if(verbose)
+      engine->check.setParameters(verbose);
    // bool run(int iterMax, int nSolNSSeq)
    auto data = engine->check.run(p1, p2);
    return true;
@@ -756,6 +799,7 @@ optframe_api1d_build_global(FakeEnginePtr _engine, char* builder, char* build_st
    //
 
    optframe::Component* cglobal = (optframe::Component*)global; // why??
+   cglobal->setMessageLevel(engine->componentLogLevel);
    sptr<optframe::Component> sptrGlobal{ cglobal };
 
    int id = engine->loader.factory.addComponent(sptrGlobal, "OptFrame:GlobalSearch");
@@ -802,6 +846,7 @@ optframe_api1d_build_single(FakeEnginePtr _engine, char* builder, char* build_st
    //
 
    optframe::Component* csingle = (optframe::Component*)single; // why??
+   csingle->setMessageLevel(engine->componentLogLevel);
    sptr<optframe::Component> sptrSingle{ csingle };
 
    int id = engine->loader.factory.addComponent(sptrSingle, "OptFrame:GlobalSearch:SingleObjSearch");
@@ -844,6 +889,7 @@ optframe_api1d_build_local_search(FakeEnginePtr _engine, char* builder, char* bu
    //
 
    optframe::Component* clocal = (optframe::Component*)local; // why??
+   clocal->setMessageLevel(engine->componentLogLevel);
    sptr<optframe::Component> sptrLocal{ clocal };
 
    int id = engine->loader.factory.addComponent(sptrLocal, "OptFrame:LocalSearch");
@@ -878,7 +924,10 @@ optframe_api1d_build_component(FakeEnginePtr _engine, char* builder, char* build
    std::string scan_params = strBuildString;
    scannerpp::Scanner scanner{ scan_params };
    optframe::Component* c = cb->buildComponent(scanner, engine->loader.factory);
-   if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug) {
+   // use componentLogLevel
+   c->setMessageLevel(engine->componentLogLevel);
+   // use engineLogLevel (this is correct!)
+   if (engine->engineLogLevel >= optframe::LogLevel::Debug) {
       std::cout << "component =" << c << std::endl;
       c->print();
    }
@@ -907,8 +956,10 @@ optframe_api1d_run_global_search(FakeEnginePtr _engine, int g_idx, double timeli
    //
    // ===============================
    // use same log level from engine
+   // NOPE! now it's fine-grained to each component... respect that!
    // ===============================
    //
+   /*
    if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug)
       gs->setVerboseR();
    else if (engine->loader.factory.getLogLevel() == optframe::LogLevel::Silent)
@@ -917,6 +968,7 @@ optframe_api1d_run_global_search(FakeEnginePtr _engine, int g_idx, double timeli
       // no recursive here? TODO: fix with setMessageLevelR...
       gs->setMessageLevel(engine->loader.factory.getLogLevel());
    }
+   */
    // ===============================
    //
    optframe::SearchOutput<FCoreLibESolution> out = gs->search({ timelimit });
@@ -951,8 +1003,10 @@ optframe_api1d_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelim
    //
    // ===============================
    // use same log level from engine
+   // NOPE! now it's fine-grained to each component... respect that!
    // ===============================
    //
+   /*
    if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Debug)
       sos->setVerboseR();
    else if (engine->loader.factory.getLogLevel() == optframe::LogLevel::Silent)
@@ -961,6 +1015,7 @@ optframe_api1d_run_sos_search(FakeEnginePtr _engine, int sos_idx, double timelim
       // no recursive here? TODO: fix with setMessageLevelR...
       sos->setMessageLevel(engine->loader.factory.getLogLevel());
    }
+   */
    // ===============================
 
       
@@ -1403,8 +1458,27 @@ optframe_api1d_add_ns(FakeEnginePtr _engine,
       return optframe::uptr<optframe::Move<FCoreLibESolution>>(m_ptr);
    };
 
-   sref<optframe::NS<FCoreLibESolution>> fns(
-     new optframe::FNS<FCoreLibESolution>{ func_fns });
+   auto* p_fns = new optframe::FNS<FCoreLibESolution>{ func_fns };
+   // adjust NS_VALID_RANDOM_MOVE_MAX_TRIES for NS
+   int max_tries = std::stoi(engine->experimentalParams["NS_VALID_RANDOM_MOVE_MAX_TRIES"]);
+   if(max_tries > 1) {
+      if(engine->engineLogLevel >= optframe::LogLevel::Warning)
+         std::cout << "WARNING: using NS_VALID_RANDOM_MOVE_MAX_TRIES=" << max_tries << std::endl;
+      p_fns->fValidRandom =
+         [p_fns, max_tries](const FCoreLibESolution& se) -> optframe::uptr<Move<FCoreLibESolution>> {
+            int t = 0;
+            while(t < max_tries) {
+               optframe::uptr<Move<FCoreLibESolution>> moveValid = p_fns->fRandom(se);
+               if (moveValid && moveValid->canBeApplied(se))
+                  return moveValid;
+               else 
+                  t++;
+            }
+            // no way!
+            return nullptr;
+         };
+   }
+   sref<optframe::NS<FCoreLibESolution>> fns{p_fns};
 
    sref<optframe::Component> fns_comp(fns);
    //new optframe::FNS<FCoreLibESolution>{ func_fns });
@@ -1662,15 +1736,35 @@ optframe_api1d_add_nsseq(FakeEnginePtr _engine,
      uptr<Move<XES>> (*_fCurrent)(IMS&)       // iterator.current()
      )
    */
-
-   sref<optframe::NSSeq<FCoreLibESolution>>
-     fnsseq(new optframe::FNSSeq<IMSObjLib, FCoreLibESolution>{ func_fnsrand,
+   auto* p_fnsseq = new optframe::FNSSeq<IMSObjLib, FCoreLibESolution>{ func_fnsrand,
                                                                 func_fnsseq_it_init,
                                                                 func_fnsseq_it_first,
                                                                 func_fnsseq_it_next,
                                                                 func_fnsseq_it_isdone,
-                                                                func_fnsseq_it_current });
+                                                                func_fnsseq_it_current };
+   
+   // adjust NS_VALID_RANDOM_MOVE_MAX_TRIES for NSSeq
+   int max_tries = std::stoi(engine->experimentalParams["NS_VALID_RANDOM_MOVE_MAX_TRIES"]);
+   if(max_tries > 1) {
+      if(engine->engineLogLevel >= optframe::LogLevel::Warning)
+         std::cout << "WARNING: using NS_VALID_RANDOM_MOVE_MAX_TRIES=" << max_tries << std::endl;
+      p_fnsseq->fValidRandom =
+         [p_fnsseq, max_tries](const FCoreLibESolution& se) -> optframe::uptr<Move<FCoreLibESolution>> {
+            int t = 0;
+            while(t < max_tries) {
+               optframe::uptr<Move<FCoreLibESolution>> moveValid = p_fnsseq->fRandom(se);
+               if (moveValid && moveValid->canBeApplied(se))
+                  return moveValid;
+               else 
+                  t++;
+            }
+            // no way!
+            return nullptr;
+         };
+   }
 
+   sref<optframe::NSSeq<FCoreLibESolution>> fnsseq{p_fnsseq};
+   
    sref<optframe::Component> fnsseq_comp(fnsseq);
 
    //std::cout << "'optframe_api1d_add_nsseq' will add component on hf" << std::endl;
@@ -1832,5 +1926,140 @@ optframe_api1d_engine_component_set_loglevel(FakeEnginePtr _engine, char* _scomp
 
    return true;
 }
+
+
+extern "C" bool
+optframe_api1d_engine_experimental_set_parameter(FakeEnginePtr _engine, char* _parameter, char* _svalue)
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+
+   std::string parameter{ _parameter };
+   std::string svalue{ _svalue };
+
+   auto cleanParam = scannerpp::Scanner::trim(parameter);
+   auto cleanValue = scannerpp::Scanner::trim(svalue);
+
+   if((cleanParam.length() < 3  ) || 
+      (cleanParam.length() > 100) || 
+      (cleanValue.length() < 0  ) || 
+      (cleanValue.length() > 100)) {
+      std::cout << "WARNING: invalid call optframe_api1d_engine_experimental_set_parameter(...):" << std::endl;
+      std::cout << "parameter: '" << parameter << "'" << std::endl;
+      std::cout << "value: '" << svalue << "'" << std::endl;
+      return false;
+   }
+
+   if((cleanParam != "NS_VALID_RANDOM_MOVE_MAX_TRIES") && 
+      (cleanParam != "ENGINE_LOG_LEVEL") && 
+      (cleanParam != "COMPONENT_LOG_LEVEL"))
+   {
+      std::cout << "WARNING: non-existing parameter optframe_api1d_engine_experimental_set_parameter(...):" << std::endl;
+      std::cout << "parameter: '" << parameter << "'" << std::endl;
+      return false;
+   }
+
+   if(cleanParam == "NS_VALID_RANDOM_MOVE_MAX_TRIES") {
+      scannerpp::Scanner scan{cleanValue};
+      // just to be extra safe...
+      if(!scan.hasNextInt())
+         return false;
+      auto op_x = scan.nextInt();
+      if(!op_x || *op_x <= 0 || *op_x >= 2'000'000) {
+         std::cout << "WARNING: optframe_api1d_engine_experimental_set_parameter:";
+         std::cout << "bad value '" << cleanValue << "' for param '" << cleanParam << "'" << std::endl;
+         return false;
+      }
+   }
+
+   if(cleanParam == "ENGINE_LOG_LEVEL") {
+      scannerpp::Scanner scan{cleanValue};
+      // just to be extra safe...
+      if(!scan.hasNextInt())
+         return false;
+      auto op_x = scan.nextInt();
+      if(!op_x || *op_x < 0 || *op_x > 4) {
+         std::cout << "WARNING: optframe_api1d_engine_experimental_set_parameter:";
+         std::cout << "bad value '" << cleanValue << "' for param '" << cleanParam << "'" << std::endl;
+         return false;
+      }
+   }
+
+   if(cleanParam == "COMPONENT_LOG_LEVEL") {
+      scannerpp::Scanner scan{cleanValue};
+      // just to be extra safe...
+      if(!scan.hasNextInt())
+         return false;
+      auto op_x = scan.nextInt();
+      if(!op_x || *op_x < 0 || *op_x > 4) {
+         std::cout << "WARNING: optframe_api1d_engine_experimental_set_parameter:";
+         std::cout << "bad value '" << cleanValue << "' for param '" << cleanParam << "'" << std::endl;
+         return false;
+      }
+   }
+
+   engine->experimentalParams[cleanParam] = cleanValue;
+   engine->updateParameters();
+
+   return true;
+}
+
+
+extern "C" char*
+optframe_api1d_engine_experimental_get_parameter(FakeEnginePtr _engine, char* _parameter)
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+
+   std::string parameter{ _parameter };
+   auto cleanParam = scannerpp::Scanner::trim(parameter);
+
+   auto& m  = engine->experimentalParams;
+
+   // empty param means HELP
+   if(cleanParam.length() == 0 ) {
+      std::stringstream ss;
+      ss << "[";
+      bool first = true;
+      for (auto it = m.begin(); it != m.end(); it++)
+      {
+         std::string sparam = it->first;
+         std::string svalue = it->second;
+         if(first) first = false;
+         else      ss << ",";
+         ss << "{\"parameter\": \"" << sparam << "\",";
+         ss << "\"value\": \"" << svalue << "\"}";
+      }
+      ss << "]";
+      std::string sout = ss.str();
+      char* c_sout = new char[sout.length()];
+      ::strcpy(c_sout, sout.c_str());
+      return c_sout;
+   }
+
+   if((cleanParam.length() < 3  ) || 
+      (cleanParam.length() > 100) ) {
+      std::cout << "WARNING: invalid call optframe_api1d_engine_experimental_get_parameter(...):" << std::endl;
+      std::cout << "parameter: '" << parameter << "'" << std::endl;
+      char* c_sout = new char[1];
+      c_sout[0] = '\0';
+      return c_sout;
+   }
+
+   if (m.find(cleanParam) == m.end()) {
+      std::cout << "WARNING: non-existing parameter optframe_api1d_engine_experimental_get_parameter(...):" << std::endl;
+      std::cout << "parameter: '" << parameter << "'" << std::endl;
+      char* c_sout = new char[1];
+      c_sout[0] = '\0';
+      return c_sout;
+   } else {
+      std::string svalue = m.at(cleanParam);
+      std::stringstream ss;
+      ss << "\"" << svalue << "\"";
+      std::string sout = ss.str();
+      char* c_sout = new char[sout.length()];
+      ::strcpy(c_sout, sout.c_str());
+      return c_sout;
+   }
+}
+
 
 // ==============================================

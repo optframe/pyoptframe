@@ -13,3 +13,7 @@ pKP.load('knapsack-example.txt')
 # initializes optframe engine
 pKP.engine = optframe.Engine(optframe.APILevel.API1d)
 print(pKP)
+
+# make engine silent (loglevel 0)
+bout = pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "0")
+print("bout=",bout)
