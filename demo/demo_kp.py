@@ -24,6 +24,8 @@ KP_EXAMPLE_SILENT=True
 # THIS IS AN EXAMPLE OF THE KNAPSACK PROBLEM
 # ==========================================
 
+from typing import List, TypeVar, Dict, Any, Protocol, runtime_checkable, Callable
+
 
 # =========================
 #       Solution KP
@@ -44,12 +46,12 @@ count_minus_move_bitflip = 0
 count_it_bitflip = 0
 
 
-class ExampleSol(object):
+class ExampleSol(optframe.XSolution):
 
     def __init__(self):
         #print('__init__ ExampleSol')
         self.n = 0
-        self.bag = []
+        self.bag : List[int] = []
         global count_solkp
         global count_plus_solkp
         count_solkp = count_solkp + 1
@@ -82,7 +84,7 @@ class ExampleSol(object):
 # =========================
 
 
-class ExampleKP(object):
+class ExampleKP(optframe.XProblem):
     def __init__(self):
         if not KP_EXAMPLE_SILENT:
             print('Init KP')
@@ -133,6 +135,20 @@ def mycallback_constructive(problemCtx: ExampleKP) -> ExampleSol:
     #print("\tfinished mycallback_constructive with sol: ", sol)
     return sol
 
+# do not put optframe.XConstructive here!
+class KPRandom(object):
+    @staticmethod
+    def generateSolution(problem: ExampleKP) -> ExampleSol:
+        print("\tinvoking mycallback_constructive for problem: ", problem, flush=True)
+        sol = ExampleSol()
+        # print("count=", sys.getrefcount(sol)) # count=2
+        for _ in range(0, problem.n):
+            sol.bag.append(random.choice([0, 1]))
+        sol.n = problem.n
+        #print("\tfinished mycallback_constructive with sol: ", sol, flush=True)
+        return sol
+    
+assert isinstance(KPRandom, optframe.XConstructive) # composition tests
 
 # ========================================================
 # IMPORTANT: MoveBitFlip represents a move here,
@@ -156,27 +172,24 @@ class MoveBitFlip(object):
         count_minus_move_bitflip = count_minus_move_bitflip - 1
         pass
 
+    @staticmethod
+    def apply(problemCtx: ExampleKP, m: 'MoveBitFlip', sol: ExampleSol) -> 'MoveBitFlip':
+        k = m.k
+        sol.bag[k] = 1 - sol.bag[k]
+        # must create reverse move
+        mv = MoveBitFlip()
+        mv.k = k
+        return mv
+    @staticmethod
+    def canBeApplied(problemCtx: ExampleKP, m: 'MoveBitFlip', sol: ExampleSol) -> bool:
+        return True
 
-# C++: uptr<Move<XES>> (*fRandom)(const XES&);
+    @staticmethod
+    def eq(problemCtx: ExampleKP, m1: 'MoveBitFlip', m2: 'MoveBitFlip') -> bool:
+        return m1.k == m2.k
 
+assert isinstance(MoveBitFlip, optframe.XMove) # composition tests
 
-# TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
-def mycallback_ns_rand_bitflip(pKP: ExampleKP, sol: ExampleSol) -> MoveBitFlip:
-    k = random.randint(0, pKP.n - 1)
-    mv = MoveBitFlip()
-    mv.k = k
-    # TODO: should we IncRef this? probably...
-    return mv
-
-
-# ===============================
-
-#    FMove(
-#     const M& _m,
-#     M (*_fApply)(const M&, XES&),                                                // fApply
-#     bool (*_fCanBeApplied)(const M&, const XES&) = fDefaultCanBeApplied<M, XES>, // fCanBeApplied
-#     bool (*_fCompareEq)(const M&, const Move<XES>&) = fDefaultCompareEq<M, XES>  // fCompareEq
-#     )
 
 # TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
 def mycallback_move_apply_bitflip(problemCtx: ExampleKP, m: MoveBitFlip, sol: ExampleSol) -> MoveBitFlip:
@@ -192,13 +205,33 @@ def mycallback_move_apply_bitflip(problemCtx: ExampleKP, m: MoveBitFlip, sol: Ex
 
 # TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
 
-
 def mycallback_move_cba_bitflip(problemCtx: ExampleKP, m: MoveBitFlip, sol: ExampleSol) -> bool:
     return True
 
 
 def mycallback_move_eq_bitflip(problemCtx: ExampleKP, m1: MoveBitFlip, m2: MoveBitFlip) -> bool:
     return m1.k == m2.k
+
+
+class NSBitFlip(object):
+    @staticmethod
+    def randomMove(pKP: ExampleKP, sol: ExampleSol) -> MoveBitFlip:
+        k = random.randint(0, pKP.n - 1)
+        mv = MoveBitFlip()
+        mv.k = k
+        return mv
+    
+assert isinstance(NSBitFlip, optframe.XNS) # composition tests
+
+
+# TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
+def mycallback_ns_rand_bitflip(pKP: ExampleKP, sol: ExampleSol) -> MoveBitFlip:
+    k = random.randint(0, pKP.n - 1)
+    mv = MoveBitFlip()
+    mv.k = k
+    # TODO: should we IncRef this? probably...
+    return mv
+
 
 
 class IteratorBitFlip(object):
@@ -213,12 +246,22 @@ class IteratorBitFlip(object):
         global count_it_bitflip
         count_it_bitflip = count_it_bitflip - 1
         pass
+    @staticmethod
+    def first(pKP: ExampleKP, it: 'IteratorBitFlip'):
+        it.k = 0
+    @staticmethod
+    def next(pKP: ExampleKP, it: 'IteratorBitFlip'):
+        it.k = it.k + 1
+    @staticmethod
+    def isDone(pKP: ExampleKP, it: 'IteratorBitFlip') -> bool:
+        return it.k >= pKP.n
+    @staticmethod
+    def current(pKP: ExampleKP, it: 'IteratorBitFlip'):
+        mv = MoveBitFlip()
+        mv.k = it.k
+        return mv
 
-
-def mycallback_nsseq_it_init_bitflip(pKP: ExampleKP, sol: ExampleSol) -> IteratorBitFlip:
-    it = IteratorBitFlip()
-    it.k = 0
-    return it
+assert isinstance(IteratorBitFlip, optframe.XNSIterator) # composition tests
 
 
 def mycallback_nsseq_it_first_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
@@ -237,6 +280,25 @@ def mycallback_nsseq_it_current_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
     mv = MoveBitFlip()
     mv.k = it.k
     return mv
+
+class NSSeqBitFlip(object):
+    @staticmethod
+    def randomMove(pKP: ExampleKP, sol: ExampleSol) -> MoveBitFlip:
+        return NSBitFlip.randomMove(pKP, sol)
+    @staticmethod
+    def getIterator(pKP: ExampleKP, sol: ExampleSol) -> IteratorBitFlip:
+        it = IteratorBitFlip()
+        it.k = 0
+        return it
+    
+assert isinstance(NSSeqBitFlip, optframe.XNSSeq) # composition tests
+
+def mycallback_nsseq_it_init_bitflip(pKP: ExampleKP, sol: ExampleSol) -> IteratorBitFlip:
+    it = IteratorBitFlip()
+    it.k = 0
+    return it
+
+
 
 
 # ----------------------
@@ -359,7 +421,8 @@ if not KP_EXAMPLE_SILENT:
 
     print("")
 
-c_idx = pKP.engine.add_constructive(pKP, mycallback_constructive)
+#c_idx = pKP.engine.add_constructive(pKP, mycallback_constructive)
+c_idx = pKP.engine.add_constructive_class(pKP, KPRandom)
 
 
 if not KP_EXAMPLE_SILENT:
@@ -412,8 +475,9 @@ if not KP_EXAMPLE_SILENT:
     print("=====================")
 
 # get index of new NS
-ns_idx = pKP.engine.add_ns(pKP, mycallback_ns_rand_bitflip,
-                           mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
+#ns_idx = pKP.engine.add_ns(pKP, mycallback_ns_rand_bitflip,
+#                           mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
+ns_idx = pKP.engine.add_ns_class(pKP, NSBitFlip, MoveBitFlip)
 if not KP_EXAMPLE_SILENT:
     print("ns_idx=", ns_idx)
 
@@ -435,14 +499,15 @@ if not KP_EXAMPLE_SILENT:
 
 
 # get index of new NSSeq
-nsseq_idx = pKP.engine.add_nsseq(pKP,
-                                 mycallback_ns_rand_bitflip,
-                                 mycallback_nsseq_it_init_bitflip,
-                                 mycallback_nsseq_it_first_bitflip,
-                                 mycallback_nsseq_it_next_bitflip,
-                                 mycallback_nsseq_it_isdone_bitflip,
-                                 mycallback_nsseq_it_current_bitflip,
-                                 mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
+#nsseq_idx = pKP.engine.add_nsseq(pKP,
+#                                 mycallback_ns_rand_bitflip,
+#                                 mycallback_nsseq_it_init_bitflip,
+#                                 mycallback_nsseq_it_first_bitflip,
+#                                 mycallback_nsseq_it_next_bitflip,
+#                                 mycallback_nsseq_it_isdone_bitflip,
+#                                 mycallback_nsseq_it_current_bitflip,
+#                                 mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
+nsseq_idx = pKP.engine.add_nsseq_class(pKP, NSSeqBitFlip, IteratorBitFlip, MoveBitFlip)
 
 if not KP_EXAMPLE_SILENT:
     print("nsseq_idx=", nsseq_idx)

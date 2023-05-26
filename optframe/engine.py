@@ -361,6 +361,70 @@ class LogLevel(IntEnum):
 # example:
 # if (loglevel >= LogLevel::Warning) { ... }
 
+from typing import List, TypeVar, Dict, Any, Protocol, runtime_checkable, Callable, Type
+import inspect   # check: isclass
+
+@runtime_checkable
+class XSolution(Protocol):
+    # this is default, regardless of user implementing it or not...
+    def __str__(self) -> str:
+        ...
+
+@runtime_checkable
+class XProblem(Protocol):
+    # this is default, regardless of user implementing it or not...
+    def __str__(self) -> str:
+        ...
+
+@runtime_checkable
+class XConstructive(Protocol):
+    @staticmethod
+    def generateSolution(problem: XProblem) -> XSolution:
+        ...
+
+@runtime_checkable
+class XMove(Protocol):
+    @staticmethod
+    def apply(problemCtx: XProblem, m: 'XMove', sol: XSolution) -> 'XMove':
+        ...
+    @staticmethod
+    def canBeApplied(problemCtx: XProblem, m: 'XMove', sol: XSolution) -> bool:
+        ...
+    @staticmethod
+    def eq(problemCtx: XProblem, m1: 'XMove', m2: 'XMove') -> bool:
+        ...
+
+@runtime_checkable
+class XNS(Protocol):
+    @staticmethod
+    def randomMove(problem: XProblem, sol: XSolution) -> XMove:
+        ...
+
+@runtime_checkable
+class XNSIterator(Protocol):
+    @staticmethod
+    def first(problemCtx: XProblem, it: 'XNSIterator'):
+        ...
+    @staticmethod
+    def next(problemCtx: XProblem, it: 'XNSIterator'):
+        ...
+    @staticmethod
+    def isDone(problemCtx: XProblem, it: 'XNSIterator') -> bool:
+        ...
+    @staticmethod
+    def current(problemCtx: XProblem, it: 'XNSIterator') -> XMove:
+        ...
+
+@runtime_checkable
+class XNSSeq(Protocol):
+    @staticmethod
+    def randomMove(problem: XProblem, sol: XSolution) -> XMove:
+        ...
+    @staticmethod
+    def getIterator(problem: XProblem, sol: XSolution) -> XNSIterator:
+        ...
+
+
 
 # optframe.Engine
 class Engine(object):
@@ -398,10 +462,10 @@ class Engine(object):
     def welcome(self):
         optframe_lib.optframe_api0d_engine_welcome(self.hf)
 
-    def print_component(self, component):
-        optframe_lib.optframe_api0_component_print(component)
+    def print_component(self, component_ptr):
+        optframe_lib.optframe_api0_component_print(component_ptr)
 
-    def component_set_loglevel(self, scomponent, loglevel, recursive):
+    def component_set_loglevel(self, scomponent : str, loglevel : int, recursive : bool):
         if (not isinstance(scomponent, str)):
             assert (False)
         b_comp = scomponent.encode('ascii')
@@ -455,7 +519,7 @@ class Engine(object):
         print("Finished SA")
         return r
 
-    def run_sa_params(self, timelimit, id_ev, id_c, id_ns, alpha, iter, T):
+    def run_sa_params(self, timelimit : float, id_ev: int, id_c : int, id_ns : int, alpha : float, iter : int, T : float):
         print("Will Begin SA Params")
         r = optframe_lib.optframe_api1d_engine_simulated_annealing_params(self.hf,
                                                                           timelimit, id_ev, id_c, id_ns,
@@ -463,7 +527,7 @@ class Engine(object):
         print("Finished SA Params")
         return r
 
-    def run_nsgaii_params(self, timelimit, min_limit, max_limit, id_mev, id_popman, popsize, maxiter):
+    def run_nsgaii_params(self, timelimit : float, min_limit : float, max_limit : float, id_mev : int, id_popman : int, popsize : int, maxiter : int):
         print("Will Begin NSGA-II Params")
         st = optframe_lib.optframe_api0d_engine_classic_nsgaii_params(self.hf,
                                                                     timelimit, min_limit, max_limit,
@@ -477,7 +541,7 @@ class Engine(object):
         print("Finished Test")
         return r
 
-    def check(self, p1: int, p2: int, verbose=False) -> bool:
+    def check(self, p1: int, p2: int, verbose : bool = False) -> bool:
         return optframe_lib.optframe_api1d_engine_check(self.hf, p1, p2, verbose)
 
     # =================== ADD =========================
@@ -501,6 +565,30 @@ class Engine(object):
 
     def add_constructive(self, problemCtx, constructive_callback):
         constructive_callback_ptr = FUNC_FCONSTRUCTIVE(constructive_callback)
+        self.register_callback(constructive_callback_ptr)
+        #
+        idx_c = optframe_lib.optframe_api1d_add_constructive(
+            self.hf, constructive_callback_ptr, problemCtx,
+            self.callback_sol_deepcopy_ptr,
+            self.callback_sol_tostring_ptr,
+            self.callback_utils_decref_ptr)
+        return idx_c
+    
+    def add_constructive_class(self, problemCtx: XProblem, c: Type[XConstructive]):
+        """
+        Add a XConstructive class to the engine.
+
+        Parameters:
+        - problemCtx: XProblem object representing the problem context.
+        - c: Class object representing the XConstructive class.
+
+        Note: 'c' should be a class, not an object instance.
+        """
+        assert isinstance(problemCtx, XProblem)
+        assert isinstance(c, XConstructive)
+        assert inspect.isclass(c)
+        #
+        constructive_callback_ptr = FUNC_FCONSTRUCTIVE(c.generateSolution)
         self.register_callback(constructive_callback_ptr)
         #
         idx_c = optframe_lib.optframe_api1d_add_constructive(
@@ -581,6 +669,48 @@ class Engine(object):
                 move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
                 self.callback_utils_decref_ptr)
         return idx_ns
+    
+    def add_ns_class(self, problemCtx: XProblem, ns: Type[XNS], m: Type[XMove], isXMES: bool =False):
+        """
+        Add a XNS class to the engine.
+
+        Parameters:
+        - problemCtx: XProblem object representing the problem context.
+        - ns: Class object representing the XNS class.
+        - m: Class object representing the XMove class.
+        - isXMES: boolean for multi-objective cases.
+
+        Note: 'ns' and 'm' should be classes, not object instances.
+        """
+        assert isinstance(problemCtx, XProblem)
+        assert isinstance(ns, XNS)
+        assert isinstance(m, XMove)
+        assert inspect.isclass(ns)
+        assert inspect.isclass(m)
+        #
+        ns_rand_callback_ptr = FUNC_FNS_RAND(ns.randomMove)
+        self.register_callback(ns_rand_callback_ptr)
+        #
+        move_apply_callback_ptr = FUNC_FMOVE_APPLY(m.apply)
+        self.register_callback(move_apply_callback_ptr)
+        move_eq_callback_ptr = FUNC_FMOVE_EQ(m.eq)
+        self.register_callback(move_eq_callback_ptr)
+        move_cba_callback_ptr = FUNC_FMOVE_CBA(m.canBeApplied)
+        self.register_callback(move_cba_callback_ptr)
+        #
+        idx_ns = -1
+        # if NOT Multi Objective
+        if not isXMES:
+            idx_ns = optframe_lib.optframe_api1d_add_ns(
+                self.hf, ns_rand_callback_ptr, move_apply_callback_ptr,
+                move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
+                self.callback_utils_decref_ptr)
+        else: # this is Multi Objective
+            idx_ns = optframe_lib.optframe_api3d_add_ns_xmes(
+                self.hf, ns_rand_callback_ptr, move_apply_callback_ptr,
+                move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
+                self.callback_utils_decref_ptr)
+        return idx_ns
 
     def add_nsseq(self, problemCtx,
                   ns_rand_callback,
@@ -624,17 +754,70 @@ class Engine(object):
             self.callback_utils_decref_ptr)
 
         return idx_nsseq
+    
+    def add_nsseq_class(self, problemCtx: XProblem, nsseq: Type[XNSSeq], nsiterator: Type[XNSIterator], m: Type[XMove]):
+        """
+        Add a XNSSeq class to the engine.
+
+        Parameters:
+        - problemCtx: XProblem object representing the problem context.
+        - nsseq: Class object representing the XNSSeq class.
+        - nsiterator: Class object representing the XNSIterator class.
+        - m: Class object representing the XMove class.
+
+        Note: 'nsseq', 'nsiterator' and 'm' should be classes, not object instances.
+        """
+        assert isinstance(problemCtx, XProblem)
+        assert isinstance(nsseq, XNSSeq)
+        assert isinstance(nsiterator, XNSIterator)
+        assert isinstance(m, XMove)
+        assert inspect.isclass(nsseq)
+        assert inspect.isclass(nsiterator)
+        assert inspect.isclass(m)
+        ns_rand_callback_ptr = FUNC_FNS_RAND(nsseq.randomMove)
+        self.register_callback(ns_rand_callback_ptr)
+        #
+        nsseq_it_init_callback_ptr = FUNC_FNSSEQ_IT_INIT(nsseq.getIterator)
+        self.register_callback(nsseq_it_init_callback_ptr)
+        nsseq_it_first_callback_ptr = FUNC_FNSSEQ_IT_FIRST(nsiterator.first)
+        self.register_callback(nsseq_it_first_callback_ptr)
+        nsseq_it_next_callback_ptr = FUNC_FNSSEQ_IT_NEXT(nsiterator.next)
+        self.register_callback(nsseq_it_next_callback_ptr)
+        nsseq_it_isdone_callback_ptr = FUNC_FNSSEQ_IT_ISDONE(nsiterator.isDone)
+        self.register_callback(nsseq_it_isdone_callback_ptr)
+        nsseq_it_current_callback_ptr = FUNC_FNSSEQ_IT_CURRENT(nsiterator.current)
+        self.register_callback(nsseq_it_current_callback_ptr)
+        #
+        move_apply_callback_ptr = FUNC_FMOVE_APPLY(m.apply)
+        self.register_callback(move_apply_callback_ptr)
+        move_eq_callback_ptr = FUNC_FMOVE_EQ(m.eq)
+        self.register_callback(move_eq_callback_ptr)
+        move_cba_callback_ptr = FUNC_FMOVE_CBA(m.canBeApplied)
+        self.register_callback(move_cba_callback_ptr)
+        #
+        idx_nsseq = optframe_lib.optframe_api1d_add_nsseq(
+            self.hf, ns_rand_callback_ptr,
+            nsseq_it_init_callback_ptr,
+            nsseq_it_first_callback_ptr,
+            nsseq_it_next_callback_ptr,
+            nsseq_it_isdone_callback_ptr,
+            nsseq_it_current_callback_ptr,
+            move_apply_callback_ptr,
+            move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
+            self.callback_utils_decref_ptr)
+
+        return idx_nsseq
 
     # =============================
     #            CREATE
     # =============================
 
-    def create_initial_search(self, ev_idx, c_idx):
+    def create_initial_search(self, ev_idx : int, c_idx : int):
         idx_is = optframe_lib.optframe_api1d_create_initial_search(
             self.hf, ev_idx, c_idx)
         return idx_is
 
-    def create_component_list(self, str_list, str_type):
+    def create_component_list(self, str_list : str, str_type : str):
         if (not isinstance(str_list, str)):
             assert (False)
         b_list = str_list.encode('ascii')
@@ -650,7 +833,7 @@ class Engine(object):
     #         BUILD
     # =========================
 
-    def build_global_search(self, str_builder, str_params):
+    def build_global_search(self, str_builder : str, str_params : str):
         if (not isinstance(str_builder, str)):
             assert (False)
         b_builder = str_builder.encode('ascii')
@@ -662,7 +845,7 @@ class Engine(object):
             self.hf, b_builder, b_params)
         return idx_list
 
-    def build_single_obj_search(self, str_builder, str_params):
+    def build_single_obj_search(self, str_builder : str, str_params : str):
         if (not isinstance(str_builder, str)):
             assert (False)
         b_builder = str_builder.encode('ascii')
@@ -674,7 +857,7 @@ class Engine(object):
             self.hf, b_builder, b_params)
         return idx_list
 
-    def build_local_search(self, str_builder, str_params):
+    def build_local_search(self, str_builder : str, str_params : str):
         if (not isinstance(str_builder, str)):
             assert (False)
         b_builder = str_builder.encode('ascii')
@@ -686,7 +869,7 @@ class Engine(object):
             self.hf, b_builder, b_params)
         return idx_list
 
-    def build_component(self, str_builder, str_params, str_component_type):
+    def build_component(self, str_builder : str, str_params : str, str_component_type : str):
         if (not isinstance(str_builder, str)):
             assert (False)
         b_builder = str_builder.encode('ascii')
@@ -703,12 +886,12 @@ class Engine(object):
 
     # ===================== GET =======================
 
-    def get_evaluator(self, idx_ev=0):
+    def get_evaluator(self, idx_ev : int = 0):
         fevaluator = optframe_lib.optframe_api0d_get_evaluator(
             self.hf, idx_ev)
         return fevaluator
 
-    def get_constructive(self, idx_c=0):
+    def get_constructive(self, idx_c : int = 0):
         fconstructive = optframe_lib.optframe_api0d_get_constructive(
             self.hf, idx_c)
         return fconstructive
@@ -752,13 +935,13 @@ class Engine(object):
         # print("XXXXX FINISHED 'fconstructive_gensolution'!")
         return cast_pyo.value
 
-    def run_global_search(self, g_idx, timelimit) -> SearchOutput:
+    def run_global_search(self, g_idx: int, timelimit: float) -> SearchOutput:
         lout = optframe_lib.optframe_api1d_run_global_search(
             self.hf, g_idx, timelimit)
         # l2out = SearchOutput(lout)
         return lout
 
-    def run_sos_search(self, sos_idx, timelimit) -> SearchOutput:
+    def run_sos_search(self, sos_idx: int, timelimit: float) -> SearchOutput:
         lout = optframe_lib.optframe_api1d_run_sos_search(
             self.hf, sos_idx, timelimit)
         # l2out = SearchOutput(lout)
