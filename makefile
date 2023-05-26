@@ -43,8 +43,10 @@ publish_test:
 
 
 demo_local: optframe/optframe_lib.so
-	# valgrind --leak-check=full python3 demo/demo_kp.py 
 	python3 demo/demo_kp.py 
+
+demo_local_tiny: optframe/optframe_lib.so
+	python3 demo/demo_kp_tiny.py 
 
 .PHONY: docs
 

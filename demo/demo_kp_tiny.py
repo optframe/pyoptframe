@@ -1,277 +1,80 @@
 #!/usr/bin/python3
 
 import os
+import random
+import numpy as np
+from typing import List
 
 # DO NOT REORDER 'import sys ...'
 import sys
 sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')))
-
-# THIS PACKAGE IS LOCAL (../optframe), NOT FROM PACKAGE MANAGER...
-# GOOD FOR LOCAL TESTING!
-
-# DO NOT REORDER 'from optframe.engine ...'
-#from optframe.engine import OptFrameEngine
-
-import optframe
-
-# DO NOT REORDER 'from optframe.engine ...'
-import random  # TODO: get from hf engine ?
-
-KP_EXAMPLE_SILENT=True
-
-# ==========================================
-# THIS IS AN EXAMPLE OF THE KNAPSACK PROBLEM
-# ==========================================
-
-from typing import List, TypeVar, Dict, Any, Protocol, runtime_checkable, Callable
-
-
-# =========================
-#       Solution KP
-# =========================
-
-
-count_solkp = 0
-count_plus_solkp = 0
-count_minus_solkp = 0
 #
-count_solkp_new_copy = 0
-count_solkp_new_deepcopy = 0
-#
-count_move_bitflip = 0
-count_plus_move_bitflip = 0
-count_minus_move_bitflip = 0
-#
-count_it_bitflip = 0
+#import optframe
+from optframe import Engine, XProblem, XSolution, XMaximize, XConstructive, XMove, XNS, XNSIterator, XNSSeq
+from optframe.engine import LibArrayDouble, callback_adapter_list_to_vecdouble
+from optframe import APILevel, LogLevel, SearchStatus
 
-
-class ExampleSol(optframe.XSolution):
-
+class ExampleSol(object):
     def __init__(self):
-        #print('__init__ ExampleSol')
-        self.n = 0
+        self.n : int = 0
         self.bag : List[int] = []
-        global count_solkp
-        global count_plus_solkp
-        count_solkp = count_solkp + 1
-        count_plus_solkp = count_plus_solkp + 1
-
-    # MUST provide some printing mechanism
     def __str__(self):
         return f"ExampleSol(n={self.n};bag={self.bag})"
 
-    # MUST provide some deepcopy mechanism
-    def __deepcopy__(self, memo):
-        sol2 = ExampleSol()
-        sol2.n = self.n
-        sol2.bag = [i for i in self.bag]
-        global count_solkp_new_deepcopy
-        count_solkp_new_deepcopy = count_solkp_new_deepcopy + 1
-        return sol2
-
-    def __del__(self):
-        # print("~ExampleSol")
-        global count_solkp
-        global count_minus_solkp
-        count_solkp = count_solkp - 1
-        count_minus_solkp = count_minus_solkp - 1
-        pass
-
-
-# =========================
-#       Problem KP
-# =========================
-
-
-class ExampleKP(optframe.XProblem):
+class ExampleKP(object):
     def __init__(self):
-        if not KP_EXAMPLE_SILENT:
-            print('Init KP')
-        # may store current optframe engine for local usage
         self.engine = None
-        # number of items
-        self.n : int = 0
-        # item weights
-        self.w : List[float] = []
-        # item profits
-        self.p : List[float] = []
-        # knapsack capacity
-        self.Q : float = 0.0
-
+        self.n : int = 0          # number of items
+        self.w : List[float] = [] # item weights
+        self.p : List[float] = [] # item profits
+        self.Q : float = 0.0      # knapsack capacity
     def __str__(self):
         return f"ExampleKP(n={self.n};Q={self.Q};w={self.w};p={self.p})"
-
-
-def mycallback_fevaluate(pKP: ExampleKP, sol: ExampleSol):
-    #print("python: invoking 'mycallback_fevaluate' with problem and solution sol=", sol)
-
-    assert (sol.n == pKP.n)
-    assert (len(sol.bag) == sol.n)
-    #
-    sum_w = 0.0
-    sum_p = 0.0
-    for i in range(0, sol.n):
-        if sol.bag[i] == 1:
-            sum_w += pKP.w[i]
-            sum_p += pKP.p[i]
-    # weight for infeasibility
-    W_INF = -1000.0
-    if sum_w > pKP.Q:
-        # excess is penalized
-        #print("will penalize: Q=", pKP.Q, "sum_w=", sum_w)
-        sum_p += W_INF * (sum_w - pKP.Q)
-    #print("result is: ", sum_p)
-    return sum_p
-
-
-# do not put optframe.XConstructive here!
-class KPMaximize(object):
+    # random constructive
     @staticmethod
-    def maximize(pKP: ExampleKP, sol: ExampleSol) -> float:
-        #print("python: invoking 'mycallback_fevaluate' with problem and solution sol=", sol)
-        assert (sol.n == pKP.n)
-        assert (len(sol.bag) == sol.n)
-        #
-        sum_w = 0.0
-        sum_p = 0.0
-        for i in range(0, sol.n):
-            if sol.bag[i] == 1:
-                sum_w += pKP.w[i]
-                sum_p += pKP.p[i]
-        # weight for infeasibility
-        W_INF = -1000.0
-        if sum_w > pKP.Q:
-            # excess is penalized
-            #print("will penalize: Q=", pKP.Q, "sum_w=", sum_w)
-            sum_p += W_INF * (sum_w - pKP.Q)
-        #print("result is: ", sum_p)
-        return sum_p
-    
-assert isinstance(KPMaximize, optframe.XMaximize) # composition tests
-
-
-def mycallback_constructive(problemCtx: ExampleKP) -> ExampleSol:
-    #print("\tinvoking mycallback_constructive for problem: ", problemCtx)
-    sol = ExampleSol()
-    # print("count=", sys.getrefcount(sol)) # count=2
-    for i in range(0, problemCtx.n):
-        sol.bag.append(random.choice([0, 1]))
-    sol.n = problemCtx.n
-    #print("\tfinished mycallback_constructive with sol: ", sol)
-    return sol
-
-# do not put optframe.XConstructive here!
-class KPRandom(object):
-    @staticmethod
-    def generateSolution(problem: ExampleKP) -> ExampleSol:
-        print("\tinvoking mycallback_constructive for problem: ", problem, flush=True)
+    def generateSolution(problem: 'ExampleKP') -> ExampleSol:
         sol = ExampleSol()
-        # print("count=", sys.getrefcount(sol)) # count=2
-        for _ in range(0, problem.n):
-            sol.bag.append(random.choice([0, 1]))
         sol.n = problem.n
-        #print("\tfinished mycallback_constructive with sol: ", sol, flush=True)
+        sol.bag = [random.randint(0, 1) for _ in range(sol.n)]
         return sol
-    
-assert isinstance(KPRandom, optframe.XConstructive) # composition tests
+    @staticmethod
+    def maximize(pKP: 'ExampleKP', sol: ExampleSol) -> float:
+        wsum = np.dot(sol.bag, pKP.w)
+        if wsum > pKP.Q:
+            return -1000.0*(wsum - pKP.Q)
+        return np.dot(sol.bag, pKP.p)
 
-# ========================================================
-# IMPORTANT: MoveBitFlip represents a move here,
-# while on C++ it only represents a Move Structure...
-# It will work fine, anyway. What pleases the user most ;)
-# ========================================================
+assert isinstance(ExampleSol, XSolution)    # composition tests 
+assert isinstance(ExampleKP, XProblem)      # composition tests 
+assert isinstance(ExampleKP, XConstructive) # composition tests    
+assert isinstance(ExampleKP, XMaximize)     # composition tests
+
 class MoveBitFlip(object):
-    def __init__(self):
-        #print('__init__ MoveBitFlip')
-        self.k = 0
-        global count_move_bitflip
-        global count_plus_move_bitflip
-        count_move_bitflip = count_move_bitflip + 1
-        count_plus_move_bitflip = count_plus_move_bitflip + 1
-
-    def __del__(self):
-        # print("~MoveBitFlip")
-        global count_move_bitflip
-        global count_minus_move_bitflip
-        count_move_bitflip = count_move_bitflip - 1
-        count_minus_move_bitflip = count_minus_move_bitflip - 1
-        pass
-
+    def __init__(self, _k :int):
+        self.k = _k
     @staticmethod
     def apply(problemCtx: ExampleKP, m: 'MoveBitFlip', sol: ExampleSol) -> 'MoveBitFlip':
-        k = m.k
-        sol.bag[k] = 1 - sol.bag[k]
-        # must create reverse move
-        mv = MoveBitFlip()
-        mv.k = k
-        return mv
+        sol.bag[m.k] = 1 - sol.bag[m.k]
+        return MoveBitFlip(m.k)
     @staticmethod
     def canBeApplied(problemCtx: ExampleKP, m: 'MoveBitFlip', sol: ExampleSol) -> bool:
         return True
-
     @staticmethod
     def eq(problemCtx: ExampleKP, m1: 'MoveBitFlip', m2: 'MoveBitFlip') -> bool:
         return m1.k == m2.k
 
-assert isinstance(MoveBitFlip, optframe.XMove) # composition tests
-
-
-# TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
-def mycallback_move_apply_bitflip(problemCtx: ExampleKP, m: MoveBitFlip, sol: ExampleSol) -> MoveBitFlip:
-
-    k = m.k
-    #esol.first.bag[k] = 1 - esol.first.bag[k]
-    sol.bag[k] = 1 - sol.bag[k]
-    # must create reverse move
-    mv = MoveBitFlip()
-    mv.k = k
-    # TODO: should we IncRef this? probably...
-    return mv
-
-# TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
-
-def mycallback_move_cba_bitflip(problemCtx: ExampleKP, m: MoveBitFlip, sol: ExampleSol) -> bool:
-    return True
-
-
-def mycallback_move_eq_bitflip(problemCtx: ExampleKP, m1: MoveBitFlip, m2: MoveBitFlip) -> bool:
-    return m1.k == m2.k
-
-
 class NSBitFlip(object):
     @staticmethod
     def randomMove(pKP: ExampleKP, sol: ExampleSol) -> MoveBitFlip:
-        k = random.randint(0, pKP.n - 1)
-        mv = MoveBitFlip()
-        mv.k = k
-        return mv
-    
-assert isinstance(NSBitFlip, optframe.XNS) # composition tests
+        return MoveBitFlip(random.randint(0, pKP.n - 1))
 
-
-# TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
-def mycallback_ns_rand_bitflip(pKP: ExampleKP, sol: ExampleSol) -> MoveBitFlip:
-    k = random.randint(0, pKP.n - 1)
-    mv = MoveBitFlip()
-    mv.k = k
-    # TODO: should we IncRef this? probably...
-    return mv
-
-
+assert isinstance(MoveBitFlip, XMove) # composition tests
+assert isinstance(NSBitFlip, XNS)     # composition tests
 
 class IteratorBitFlip(object):
-    def __init__(self):
-        # print('__init__ IteratorBitFlip')
-        self.k = 0
-        global count_it_bitflip
-        count_it_bitflip = count_it_bitflip + 1
-
-    def __del__(self):
-        # print("__del__ IteratorBitFlip")
-        global count_it_bitflip
-        count_it_bitflip = count_it_bitflip - 1
-        pass
+    def __init__(self, _k:int):
+        self.k = _k
     @staticmethod
     def first(pKP: ExampleKP, it: 'IteratorBitFlip'):
         it.k = 0
@@ -283,29 +86,7 @@ class IteratorBitFlip(object):
         return it.k >= pKP.n
     @staticmethod
     def current(pKP: ExampleKP, it: 'IteratorBitFlip'):
-        mv = MoveBitFlip()
-        mv.k = it.k
-        return mv
-
-assert isinstance(IteratorBitFlip, optframe.XNSIterator) # composition tests
-
-
-def mycallback_nsseq_it_first_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
-    it.k = 0
-
-
-def mycallback_nsseq_it_next_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
-    it.k = it.k + 1
-
-
-def mycallback_nsseq_it_isdone_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
-    return it.k >= pKP.n
-
-
-def mycallback_nsseq_it_current_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
-    mv = MoveBitFlip()
-    mv.k = it.k
-    return mv
+        return MoveBitFlip(it.k)
 
 class NSSeqBitFlip(object):
     @staticmethod
@@ -313,18 +94,10 @@ class NSSeqBitFlip(object):
         return NSBitFlip.randomMove(pKP, sol)
     @staticmethod
     def getIterator(pKP: ExampleKP, sol: ExampleSol) -> IteratorBitFlip:
-        it = IteratorBitFlip()
-        it.k = 0
-        return it
-    
-assert isinstance(NSSeqBitFlip, optframe.XNSSeq) # composition tests
+        return IteratorBitFlip(0)
 
-def mycallback_nsseq_it_init_bitflip(pKP: ExampleKP, sol: ExampleSol) -> IteratorBitFlip:
-    it = IteratorBitFlip()
-    it.k = 0
-    return it
-
-
+assert isinstance(IteratorBitFlip, XNSIterator) # composition tests
+assert isinstance(NSSeqBitFlip, XNSSeq) # composition tests
 
 
 # ----------------------
@@ -340,7 +113,7 @@ def mycallback_constructive_rk(problemCtx: ExampleKP, ptr_array_double) -> int:
     #print(" python 'mycallback_constructive_rk': generated keys (in python): ", rkeys)
     # set output array
     ptr_array_double.contents.size = len(rkeys)
-    ptr_array_double.contents.v = optframe.engine.callback_adapter_list_to_vecdouble(rkeys)
+    ptr_array_double.contents.v = callback_adapter_list_to_vecdouble(rkeys)
 
     # ======= PRINT CONTENTS OF ARRAY v =======
     #for i in range(ptr_array_double.contents.size):
@@ -349,7 +122,7 @@ def mycallback_constructive_rk(problemCtx: ExampleKP, ptr_array_double) -> int:
 
     return len(rkeys)
 
-def mycallback_decoder_rk(problemCtx: ExampleKP, array_double : optframe.engine.LibArrayDouble) -> ExampleSol:
+def mycallback_decoder_rk(problemCtx: ExampleKP, array_double : LibArrayDouble) -> ExampleSol:
     #
     #print("begin decoder with array=",array_double)
     #print("begin decoder with array=",array_double.size)
@@ -372,7 +145,7 @@ def mycallback_decoder_rk(problemCtx: ExampleKP, array_double : optframe.engine.
     sol.n = problemCtx.n
     return sol
 
-
+KP_EXAMPLE_SILENT = True
 # =============================
 #       BEGIN SCRIPT
 # =============================
@@ -389,9 +162,9 @@ pKP.p = [5, 4, 3, 2, 1]
 pKP.Q = 6.0
 #
 if not KP_EXAMPLE_SILENT:
-    pKP.engine = optframe.Engine(optframe.APILevel.API1d, optframe.LogLevel.Debug)
+    pKP.engine = Engine(APILevel.API1d, LogLevel.Debug)
 else:
-    pKP.engine = optframe.Engine(optframe.APILevel.API1d, optframe.LogLevel.Silent)
+    pKP.engine = Engine(APILevel.API1d, LogLevel.Silent)
 
 if not KP_EXAMPLE_SILENT:
     print(pKP)
@@ -409,7 +182,7 @@ print("json_out=",json_out)
 ##################
 
 #ev_idx = pKP.engine.maximize(pKP, mycallback_fevaluate)
-ev_idx = pKP.engine.add_maximize_class(pKP, KPMaximize)
+ev_idx = pKP.engine.add_maximize_class(pKP, ExampleKP)
 #
 if not KP_EXAMPLE_SILENT:
     print("evaluator id:", ev_idx)
@@ -439,7 +212,7 @@ if not KP_EXAMPLE_SILENT:
     print("manually generate solution")
     print("==========================")
 
-s = mycallback_constructive(pKP)
+s = ExampleKP.generateSolution(pKP)
 
 if not KP_EXAMPLE_SILENT:
     print("")
@@ -449,7 +222,7 @@ if not KP_EXAMPLE_SILENT:
     print("")
 
 #c_idx = pKP.engine.add_constructive(pKP, mycallback_constructive)
-c_idx = pKP.engine.add_constructive_class(pKP, KPRandom)
+c_idx = pKP.engine.add_constructive_class(pKP, ExampleKP)
 
 
 if not KP_EXAMPLE_SILENT:
@@ -679,7 +452,7 @@ if not KP_EXAMPLE_SILENT:
 lout = pKP.engine.run_sos_search(sos_idx, 4.5)
 
 print('SA output =', lout)
-ss = optframe.SearchStatus(lout.status)
+ss = SearchStatus(lout.status)
 print('SA status =', ss)
 
 ###########

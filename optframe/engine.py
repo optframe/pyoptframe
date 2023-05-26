@@ -383,6 +383,18 @@ class XConstructive(Protocol):
         ...
 
 @runtime_checkable
+class XMaximize(Protocol):
+    @staticmethod
+    def maximize(problem: XProblem, sol: XSolution) -> float:
+        ...
+
+@runtime_checkable
+class XMinimize(Protocol):
+    @staticmethod
+    def minimize(problem: XProblem, sol: XSolution) -> float:
+        ...
+
+@runtime_checkable
 class XMove(Protocol):
     @staticmethod
     def apply(problemCtx: XProblem, m: 'XMove', sol: XSolution) -> 'XMove':
@@ -557,6 +569,47 @@ class Engine(object):
 
     def maximize(self, problemCtx, max_callback):
         max_callback_ptr = FUNC_FEVALUATE(max_callback)
+        self.register_callback(max_callback_ptr)
+        #
+        idx_ev = optframe_lib.optframe_api1d_add_evaluator(
+            self.hf, max_callback_ptr, False, problemCtx)
+        return idx_ev
+    
+    def add_minimize_class(self, problemCtx: XProblem, f: Type[XMinimize]):
+        """
+        Add a XMinimize class to the engine.
+
+        Parameters:
+        - problemCtx: XProblem object representing the problem context.
+        - f: Class object representing the XMinimize class.
+
+        Note: 'f' should be a class, not an object instance.
+        """
+        assert isinstance(problemCtx, XProblem)
+        assert isinstance(f, XMinimize)
+        assert inspect.isclass(f)
+        #
+        min_callback_ptr = FUNC_FEVALUATE(f.minimize)
+        self.register_callback(min_callback_ptr)
+        #
+        idx_ev = optframe_lib.optframe_api1d_add_evaluator(
+            self.hf, min_callback_ptr, True, problemCtx)
+        return idx_ev
+
+    def add_maximize_class(self, problemCtx: XProblem, f: Type[XMaximize]):
+        """
+        Add a XMaximize class to the engine.
+
+        Parameters:
+        - problemCtx: XProblem object representing the problem context.
+        - f: Class object representing the XMaximize class.
+
+        Note: 'f' should be a class, not an object instance.
+        """
+        assert isinstance(problemCtx, XProblem)
+        assert isinstance(f, XMaximize)
+        assert inspect.isclass(f)
+        max_callback_ptr = FUNC_FEVALUATE(f.maximize)
         self.register_callback(max_callback_ptr)
         #
         idx_ev = optframe_lib.optframe_api1d_add_evaluator(

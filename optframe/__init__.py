@@ -7,6 +7,8 @@ from optframe.engine import LogLevel
 from optframe.engine import XConstructive
 from optframe.engine import XSolution
 from optframe.engine import XProblem
+from optframe.engine import XMinimize
+from optframe.engine import XMaximize
 from optframe.engine import XMove
 from optframe.engine import XNS
 from optframe.engine import XNSSeq
