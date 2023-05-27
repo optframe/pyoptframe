@@ -504,7 +504,7 @@ if not KP_EXAMPLE_SILENT:
 # get index of new NS
 #ns_idx = pKP.engine.add_ns(pKP, mycallback_ns_rand_bitflip,
 #                           mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
-ns_idx = pKP.engine.add_ns_class(pKP, NSBitFlip, MoveBitFlip)
+ns_idx = pKP.engine.add_ns_class(pKP, NSBitFlip)
 if not KP_EXAMPLE_SILENT:
     print("ns_idx=", ns_idx)
 
@@ -534,7 +534,7 @@ if not KP_EXAMPLE_SILENT:
 #                                 mycallback_nsseq_it_isdone_bitflip,
 #                                 mycallback_nsseq_it_current_bitflip,
 #                                 mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
-nsseq_idx = pKP.engine.add_nsseq_class(pKP, NSSeqBitFlip, IteratorBitFlip, MoveBitFlip)
+nsseq_idx = pKP.engine.add_nsseq_class(pKP, NSSeqBitFlip)
 
 if not KP_EXAMPLE_SILENT:
     print("nsseq_idx=", nsseq_idx)

@@ -24,7 +24,7 @@ class ExampleSol(object):
 
 class ExampleKP(object):
     def __init__(self):
-        self.engine = None
+        self.engine = Engine()
         self.n : int = 0          # number of items
         self.w : List[float] = [] # item weights
         self.p : List[float] = [] # item profits
@@ -103,10 +103,10 @@ assert isinstance(NSSeqBitFlip, XNSSeq) # composition tests
 # ----------------------
 
 # LibArrayDouble
-def mycallback_constructive_rk(problemCtx: ExampleKP, ptr_array_double) -> int:
+def mycallback_constructive_rk(problemCtx: ExampleKP, ptr_array_double: LibArrayDouble) -> int:
     #
-    rkeys = []
-    for i in range(problemCtx.n):
+    rkeys : List[float] = []
+    for _ in range(problemCtx.n):
         key = random.random() # [0,1] uniform
         rkeys.append(key)
     
@@ -230,8 +230,8 @@ if not KP_EXAMPLE_SILENT:
 
 is_idx = pKP.engine.create_initial_search(ev_idx, c_idx)
 
-if not KP_EXAMPLE_SILENT:
-    print("is_idx=", is_idx)
+#if not KP_EXAMPLE_SILENT:
+print("is_idx=", is_idx)
 
 fc = pKP.engine.get_constructive(c_idx)
 
@@ -277,7 +277,7 @@ if not KP_EXAMPLE_SILENT:
 # get index of new NS
 #ns_idx = pKP.engine.add_ns(pKP, mycallback_ns_rand_bitflip,
 #                           mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
-ns_idx = pKP.engine.add_ns_class(pKP, NSBitFlip, MoveBitFlip)
+ns_idx = pKP.engine.add_ns_class(pKP, NSBitFlip)
 if not KP_EXAMPLE_SILENT:
     print("ns_idx=", ns_idx)
 
@@ -307,7 +307,7 @@ if not KP_EXAMPLE_SILENT:
 #                                 mycallback_nsseq_it_isdone_bitflip,
 #                                 mycallback_nsseq_it_current_bitflip,
 #                                 mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
-nsseq_idx = pKP.engine.add_nsseq_class(pKP, NSSeqBitFlip, IteratorBitFlip, MoveBitFlip)
+nsseq_idx = pKP.engine.add_nsseq_class(pKP, NSSeqBitFlip)
 
 if not KP_EXAMPLE_SILENT:
     print("nsseq_idx=", nsseq_idx)

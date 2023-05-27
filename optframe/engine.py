@@ -555,6 +555,28 @@ class Engine(object):
 
     def check(self, p1: int, p2: int, verbose : bool = False) -> bool:
         return optframe_lib.optframe_api1d_engine_check(self.hf, p1, p2, verbose)
+ 
+    # ============ SETUP AUTOMATIC TYPES ============
+    def setup(self, p: XProblem, t = None):
+        if (t is None):
+            t = type(p)
+        ev_out = -1
+        c_out  = -1
+        if isinstance(p, XMinimize):
+            ev_out = self.add_minimize_class(p, t)
+            assert ev_out >= 0
+        elif isinstance(p, XMaximize):
+            ev_out = self.add_maximize_class(p, t)
+            assert ev_out >= 0
+        if isinstance(p, XConstructive):
+            c_out = self.add_constructive_class(p, t)
+            assert c_out >= 0
+        is_out = -1
+        if (ev_out >= 0) and (c_out >= 0):
+            is_out = self.create_initial_search(ev_out, c_out)
+            assert is_out >= 0
+        return [ev_out, c_out, is_out]
+
 
     # =================== ADD =========================
 
@@ -588,6 +610,7 @@ class Engine(object):
         assert isinstance(problemCtx, XProblem)
         assert isinstance(f, XMinimize)
         assert inspect.isclass(f)
+        assert not inspect.isclass(problemCtx)
         #
         min_callback_ptr = FUNC_FEVALUATE(f.minimize)
         self.register_callback(min_callback_ptr)
@@ -609,6 +632,7 @@ class Engine(object):
         assert isinstance(problemCtx, XProblem)
         assert isinstance(f, XMaximize)
         assert inspect.isclass(f)
+        assert not inspect.isclass(problemCtx)
         max_callback_ptr = FUNC_FEVALUATE(f.maximize)
         self.register_callback(max_callback_ptr)
         #
@@ -640,6 +664,7 @@ class Engine(object):
         assert isinstance(problemCtx, XProblem)
         assert isinstance(c, XConstructive)
         assert inspect.isclass(c)
+        assert not inspect.isclass(problemCtx)
         #
         constructive_callback_ptr = FUNC_FCONSTRUCTIVE(c.generateSolution)
         self.register_callback(constructive_callback_ptr)
@@ -723,22 +748,25 @@ class Engine(object):
                 self.callback_utils_decref_ptr)
         return idx_ns
     
-    def add_ns_class(self, problemCtx: XProblem, ns: Type[XNS], m: Type[XMove], isXMES: bool =False):
+    #def add_ns_class(self, problemCtx: XProblem, ns: Type[XNS], m: Type[XMove], isXMES: bool =False):
+    def add_ns_class(self, problemCtx: XProblem, ns: Type[XNS], isXMES: bool =False):
         """
         Add a XNS class to the engine.
 
         Parameters:
         - problemCtx: XProblem object representing the problem context.
         - ns: Class object representing the XNS class.
-        - m: Class object representing the XMove class.
         - isXMES: boolean for multi-objective cases.
 
-        Note: 'ns' and 'm' should be classes, not object instances.
+        Note: 'ns' should be class, not object instances.
         """
         assert isinstance(problemCtx, XProblem)
         assert isinstance(ns, XNS)
-        assert isinstance(m, XMove)
         assert inspect.isclass(ns)
+        assert not inspect.isclass(problemCtx)
+        #
+        m = inspect.signature(ns.randomMove).return_annotation
+        assert isinstance(m, XMove)
         assert inspect.isclass(m)
         #
         ns_rand_callback_ptr = FUNC_FNS_RAND(ns.randomMove)
@@ -808,25 +836,30 @@ class Engine(object):
 
         return idx_nsseq
     
-    def add_nsseq_class(self, problemCtx: XProblem, nsseq: Type[XNSSeq], nsiterator: Type[XNSIterator], m: Type[XMove]):
+    #def add_nsseq_class(self, problemCtx: XProblem, nsseq: Type[XNSSeq], nsiterator: Type[XNSIterator], m: Type[XMove]):
+    def add_nsseq_class(self, problemCtx: XProblem, nsseq: Type[XNSSeq]):
         """
         Add a XNSSeq class to the engine.
 
         Parameters:
         - problemCtx: XProblem object representing the problem context.
         - nsseq: Class object representing the XNSSeq class.
-        - nsiterator: Class object representing the XNSIterator class.
-        - m: Class object representing the XMove class.
 
-        Note: 'nsseq', 'nsiterator' and 'm' should be classes, not object instances.
+        Note: 'nsseq' should be class, not object instances.
         """
         assert isinstance(problemCtx, XProblem)
         assert isinstance(nsseq, XNSSeq)
-        assert isinstance(nsiterator, XNSIterator)
-        assert isinstance(m, XMove)
         assert inspect.isclass(nsseq)
-        assert inspect.isclass(nsiterator)
+        assert not inspect.isclass(problemCtx)
+        #
+        m = inspect.signature(nsseq.randomMove).return_annotation
+        assert isinstance(m, XMove)
         assert inspect.isclass(m)
+        #
+        nsiterator = inspect.signature(nsseq.getIterator).return_annotation
+        assert isinstance(nsiterator, XNSIterator)
+        assert inspect.isclass(nsiterator)
+        #
         ns_rand_callback_ptr = FUNC_FNS_RAND(nsseq.randomMove)
         self.register_callback(ns_rand_callback_ptr)
         #

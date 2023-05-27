@@ -46,6 +46,9 @@ demo_local: optframe/optframe_lib.so
 	python3 demo/demo_kp.py 
 
 demo_local_tiny: optframe/optframe_lib.so
+	echo "Demo KP Tiny SA"
+	python3 demo/demo_kp_tiny_sa.py 
+	echo "Demo KP Tiny"
 	python3 demo/demo_kp_tiny.py 
 
 .PHONY: docs
