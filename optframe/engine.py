@@ -437,6 +437,45 @@ class XNSSeq(Protocol):
         ...
 
 
+@runtime_checkable
+class XSingleObjSearch(Protocol):
+    @staticmethod
+    def search(problem: XProblem, sol: XSolution) -> XMove:
+        ... 
+
+@runtime_checkable
+class XGlobalSearch(Protocol):
+    @staticmethod
+    def search(problem: XProblem, sol: XSolution) -> XMove:
+        ... 
+
+@runtime_checkable
+class XEngine(Protocol):
+    @staticmethod
+    def build_global_search(code: str, args: str) -> int:
+        ... 
+    @staticmethod
+    def run_global_search(g_idx: int, timelimit: float) -> SearchOutput:
+        ... 
+
+class SingleObjSearch(object):
+    def __init__(self, _engine: XEngine):
+        self.engine = _engine
+    def search(self, timelimit: float) -> SearchOutput:
+        ...
+
+class BasicSimulatedAnnealing(SingleObjSearch):
+    def __init__(self, _engine: XEngine, _ev:int, _is:int, _lns:int, alpha:float, iter:int, T0:float):
+        assert isinstance(_engine, XEngine)
+        self.engine = _engine
+        str_code    = "OptFrame:ComponentBuilder:GlobalSearch:SA:BasicSA"
+        str_args    = "OptFrame:GeneralEvaluator:Evaluator "+str(_ev)+" OptFrame:InitialSearch "+str(_is)+" OptFrame:NS[] "+str(_lns)+" "+str(alpha)+" "+str(iter)+" "+str(T0)
+        self.g_idx  = self.engine.build_global_search(str_code, str_args)
+    def search(self, timelimit: float) -> SearchOutput:
+        lout : SearchOutput = self.engine.run_global_search(self.g_idx, timelimit)
+        return lout
+
+
 
 # optframe.Engine
 class Engine(object):

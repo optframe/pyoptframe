@@ -78,13 +78,8 @@ pKP.Q = 6.0
 
 v = pKP.engine.setup(pKP)
 print("v=",v)
-#ev_idx = pKP.engine.add_maximize_class(pKP, ExampleKP)
-#c_idx = pKP.engine.add_constructive_class(pKP, ExampleKP)
-#is_idx = pKP.engine.create_initial_search(0, 0)
-# get index of new NS
-#ns_idx = pKP.engine.add_ns(pKP, mycallback_ns_rand_bitflip,
-#                           mycallback_move_apply_bitflip, mycallback_move_eq_bitflip, mycallback_move_cba_bitflip)
-ns_idx = pKP.engine.add_ns_class(pKP, NSBitFlip) #, MoveBitFlip)
+
+pKP.engine.add_ns_class(pKP, NSBitFlip) 
 
 list_idx = pKP.engine.create_component_list(
     "[ OptFrame:NS 0 ]", "OptFrame:NS[]")
@@ -95,9 +90,5 @@ print("bout=",bout)
 
 pKP.engine.check(100, 10, False)
 
-g_idx = pKP.engine.build_global_search(
-    "OptFrame:ComponentBuilder:GlobalSearch:SA:BasicSA",
-    "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:NS[] 0 0.99 100 999")
-
-lout = pKP.engine.run_global_search(g_idx, 4.0)
-print('lout=', lout)
+sa = BasicSimulatedAnnealing(pKP.engine, 0, 0, list_idx, 0.99, 100, 999)
+lout = sa.search(4.0)
