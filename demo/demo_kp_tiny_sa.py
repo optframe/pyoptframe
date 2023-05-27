@@ -91,4 +91,6 @@ print("bout=",bout)
 pKP.engine.check(100, 10, False)
 
 sa = BasicSimulatedAnnealing(pKP.engine, 0, 0, list_idx, 0.99, 100, 999)
-lout = sa.search(4.0)
+sout = sa.search(4.0)
+print("Best solution: ",   sout.best_s)
+print("Best evaluation: ", sout.best_e)

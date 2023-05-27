@@ -651,12 +651,7 @@ class Engine(object):
         assert inspect.isclass(f)
         assert not inspect.isclass(problemCtx)
         #
-        min_callback_ptr = FUNC_FEVALUATE(f.minimize)
-        self.register_callback(min_callback_ptr)
-        #
-        idx_ev = optframe_lib.optframe_api1d_add_evaluator(
-            self.hf, min_callback_ptr, True, problemCtx)
-        return idx_ev
+        return self.minimize(problemCtx, f.minimize)
 
     def add_maximize_class(self, problemCtx: XProblem, f: Type[XMaximize]):
         """
@@ -672,12 +667,8 @@ class Engine(object):
         assert isinstance(f, XMaximize)
         assert inspect.isclass(f)
         assert not inspect.isclass(problemCtx)
-        max_callback_ptr = FUNC_FEVALUATE(f.maximize)
-        self.register_callback(max_callback_ptr)
         #
-        idx_ev = optframe_lib.optframe_api1d_add_evaluator(
-            self.hf, max_callback_ptr, False, problemCtx)
-        return idx_ev
+        return self.maximize(problemCtx, f.maximize)
 
     def add_constructive(self, problemCtx, constructive_callback):
         constructive_callback_ptr = FUNC_FCONSTRUCTIVE(constructive_callback)
@@ -705,16 +696,8 @@ class Engine(object):
         assert inspect.isclass(c)
         assert not inspect.isclass(problemCtx)
         #
-        constructive_callback_ptr = FUNC_FCONSTRUCTIVE(c.generateSolution)
-        self.register_callback(constructive_callback_ptr)
-        #
-        idx_c = optframe_lib.optframe_api1d_add_constructive(
-            self.hf, constructive_callback_ptr, problemCtx,
-            self.callback_sol_deepcopy_ptr,
-            self.callback_sol_tostring_ptr,
-            self.callback_utils_decref_ptr)
-        return idx_c
-
+        return self.add_constructive(problemCtx, c.generateSolution)
+    
     def add_crossover(self, problemCtx, cross_callback0, cross_callback1):
         cross_callback0_ptr = FUNC_FCROSS(cross_callback0)
         cross_callback1_ptr = FUNC_FCROSS(cross_callback1)
@@ -730,17 +713,6 @@ class Engine(object):
         return idx_c
 
     def add_constructive_rk(self, problemCtx, constructive_rk_callback):
-        #print("will execute 'add_constructive_rk'")
-        #
-        #print("will create lambda")
-        #     ctypes.py_object -> LibArrayDouble
-        #myfunction = lambda problem : callback_adapter_list_to_vecdouble(constructive_rk_callback(problem))
-        # TODO: create own mapping function here, from List to ctypes double pointer
-        #print("taking pointer from lambda")
-        #constructive_rk_callback_ptr = FUNC_FCONSTRUCTIVE_RK(myfunction)
-        #
-        #
-        #self.register_callback(constructive_rk_callback_ptr)
         constructive_rk_callback_ptr = FUNC_FCONSTRUCTIVE_RK(constructive_rk_callback)
         self.register_callback(constructive_rk_callback_ptr)
         #
@@ -808,29 +780,7 @@ class Engine(object):
         assert isinstance(m, XMove)
         assert inspect.isclass(m)
         #
-        ns_rand_callback_ptr = FUNC_FNS_RAND(ns.randomMove)
-        self.register_callback(ns_rand_callback_ptr)
-        #
-        move_apply_callback_ptr = FUNC_FMOVE_APPLY(m.apply)
-        self.register_callback(move_apply_callback_ptr)
-        move_eq_callback_ptr = FUNC_FMOVE_EQ(m.eq)
-        self.register_callback(move_eq_callback_ptr)
-        move_cba_callback_ptr = FUNC_FMOVE_CBA(m.canBeApplied)
-        self.register_callback(move_cba_callback_ptr)
-        #
-        idx_ns = -1
-        # if NOT Multi Objective
-        if not isXMES:
-            idx_ns = optframe_lib.optframe_api1d_add_ns(
-                self.hf, ns_rand_callback_ptr, move_apply_callback_ptr,
-                move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
-                self.callback_utils_decref_ptr)
-        else: # this is Multi Objective
-            idx_ns = optframe_lib.optframe_api3d_add_ns_xmes(
-                self.hf, ns_rand_callback_ptr, move_apply_callback_ptr,
-                move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
-                self.callback_utils_decref_ptr)
-        return idx_ns
+        return self.add_ns(problemCtx, ns.randomMove, m.apply, m.eq, m.canBeApplied, isXMES)
 
     def add_nsseq(self, problemCtx,
                   ns_rand_callback,
@@ -899,39 +849,9 @@ class Engine(object):
         assert isinstance(nsiterator, XNSIterator)
         assert inspect.isclass(nsiterator)
         #
-        ns_rand_callback_ptr = FUNC_FNS_RAND(nsseq.randomMove)
-        self.register_callback(ns_rand_callback_ptr)
-        #
-        nsseq_it_init_callback_ptr = FUNC_FNSSEQ_IT_INIT(nsseq.getIterator)
-        self.register_callback(nsseq_it_init_callback_ptr)
-        nsseq_it_first_callback_ptr = FUNC_FNSSEQ_IT_FIRST(nsiterator.first)
-        self.register_callback(nsseq_it_first_callback_ptr)
-        nsseq_it_next_callback_ptr = FUNC_FNSSEQ_IT_NEXT(nsiterator.next)
-        self.register_callback(nsseq_it_next_callback_ptr)
-        nsseq_it_isdone_callback_ptr = FUNC_FNSSEQ_IT_ISDONE(nsiterator.isDone)
-        self.register_callback(nsseq_it_isdone_callback_ptr)
-        nsseq_it_current_callback_ptr = FUNC_FNSSEQ_IT_CURRENT(nsiterator.current)
-        self.register_callback(nsseq_it_current_callback_ptr)
-        #
-        move_apply_callback_ptr = FUNC_FMOVE_APPLY(m.apply)
-        self.register_callback(move_apply_callback_ptr)
-        move_eq_callback_ptr = FUNC_FMOVE_EQ(m.eq)
-        self.register_callback(move_eq_callback_ptr)
-        move_cba_callback_ptr = FUNC_FMOVE_CBA(m.canBeApplied)
-        self.register_callback(move_cba_callback_ptr)
-        #
-        idx_nsseq = optframe_lib.optframe_api1d_add_nsseq(
-            self.hf, ns_rand_callback_ptr,
-            nsseq_it_init_callback_ptr,
-            nsseq_it_first_callback_ptr,
-            nsseq_it_next_callback_ptr,
-            nsseq_it_isdone_callback_ptr,
-            nsseq_it_current_callback_ptr,
-            move_apply_callback_ptr,
-            move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
-            self.callback_utils_decref_ptr)
-
-        return idx_nsseq
+        return self.add_nsseq(problemCtx, nsseq.randomMove,
+                  nsseq.getIterator, nsiterator.first, nsiterator.next, nsiterator.isDone, nsiterator.current,
+                  m.apply, m.eq, m.canBeApplied)
 
     # =============================
     #            CREATE
