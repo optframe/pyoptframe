@@ -174,8 +174,7 @@ if not KP_EXAMPLE_SILENT:
 print("==-Experimental-==")
 json_out = pKP.engine.experimental_get_parameter("")
 print("json_out=",json_out)
-bout = pKP.engine.experimental_set_parameter("NS_VALID_RANDOM_MOVE_MAX_TRIES", "2")
-print("bout=",bout)
+pKP.engine.experimental_set_parameter("NS_VALID_RANDOM_MOVE_MAX_TRIES", "2")
 json_out = pKP.engine.experimental_get_parameter("")
 print("json_out=",json_out)
 
@@ -336,8 +335,7 @@ if not KP_EXAMPLE_SILENT:
     print("")
 
 # LogLevel::Info(3) for check module
-bout = pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "3")
-print("bout=",bout)
+pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "3")
 
 pKP.engine.check(100, 10, False)
 
@@ -534,8 +532,7 @@ if not KP_EXAMPLE_SILENT:
     print("")
 
 # make it silent
-bout = pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
-print("bout=",bout)
+pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
 
 g_idx = pKP.engine.build_global_search(
     "OptFrame:ComponentBuilder:SingleObjSearch:TS:BasicTabuSearch",

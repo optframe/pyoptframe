@@ -23,7 +23,6 @@ Welcome to OptFrame Python (or PyOptFrame) Documentation, please select the desi
    quickstart_continued
    concepts
    fcore
-   debugging
    advanced
    advanced_checkmodule
    license

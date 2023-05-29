@@ -46,10 +46,13 @@ demo_local: optframe/optframe_lib.so
 	python3 demo/demo_kp.py 
 
 demo_local_tiny: optframe/optframe_lib.so
-	echo "Demo KP Tiny SA"
+	echo "TEST Demo KP Tiny SA"
 	python3 demo/demo_kp_tiny_sa.py 
-	echo "Demo KP Tiny"
+	echo "TEST Demo KP Tiny"
 	python3 demo/demo_kp_tiny.py 
+	# echo "DEMO 02: KP"
+	# (cd demo/02_QuickstartKP_SA/ && ./join.sh)
+	# python3 demo/02_QuickstartKP_SA/mainKP-fcore-ex.py
 
 .PHONY: docs
 

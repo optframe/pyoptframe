@@ -1,17 +1,14 @@
-# remember this is an API1d method
-def mycallback_fevaluate(pKP: ProblemContextKP, sol: SolutionKP):
-    assert (sol.n == pKP.n)
-    assert (len(sol.bag) == sol.n)
-    #
-    sum_w = 0.0
-    sum_p = 0.0
-    for i in range(0, sol.n):
-        if sol.bag[i] == 1:
-            sum_w += pKP.w[i]
-            sum_p += pKP.p[i]
-    # weight for infeasibility
-    W_INF = -1000000.0
-    if sum_w > pKP.Q:
-        # excess is penalized
-        sum_p += W_INF * (sum_w - pKP.Q)
-    return sum_p
+# continuation of ExampleKP class...
+    @staticmethod
+    def maximize(pKP: 'ExampleKP', sol: SolutionKP) -> float:
+        import numpy as np
+        wsum = np.dot(sol.bag, pKP.w)
+        if wsum > pKP.Q:
+            return -1000.0*(wsum - pKP.Q)
+        return np.dot(sol.bag, pKP.p)
+
+# optional tests...
+assert isinstance(SolutionKP, XSolution)     # composition tests 
+assert isinstance(ExampleKP,  XProblem)      # composition tests 
+assert isinstance(ExampleKP,  XConstructive) # composition tests    
+assert isinstance(ExampleKP,  XMaximize)     # composition tests

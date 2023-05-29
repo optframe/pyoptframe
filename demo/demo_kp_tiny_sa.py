@@ -85,8 +85,7 @@ list_idx = pKP.engine.create_component_list(
     "[ OptFrame:NS 0 ]", "OptFrame:NS[]")
 
 # LogLevel::Info(3) for check module
-bout = pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "0")
-print("bout=",bout)
+pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "0")
 
 pKP.engine.check(100, 10, False)
 

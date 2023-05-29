@@ -1,13 +1,12 @@
 
-# register model components (evaluation function, constructive, ...)
-pKP.engine.setup(pKP)
-ev_idx = 0
-c_idx = 0
-is_idx = 0
-# is_idx = pKP.engine.create_initial_search(ev_idx, c_idx)
+ev_idx = pKP.engine.maximize(pKP, mycallback_fevaluate)
+print("evaluator id:", ev_idx)
 
-# make engine silent (loglevel 0)
-pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "0")
+c_idx = pKP.engine.add_constructive(pKP, mycallback_constructive)
+print("c_idx=", c_idx)
+
+is_idx = pKP.engine.create_initial_search(ev_idx, c_idx)
+print("is_idx=", is_idx)
 
 # test each component
 

@@ -1,20 +1,14 @@
 
 
-class ProblemContextKP(object):
+class ExampleKP(object):
     def __init__(self):
-        print('Init KP')
-        # may store current optframe engine for local usage
-        self.engine = None
-        # number of items
-        self.n = 0
-        # item weights
-        self.w = []
-        # item profits
-        self.p = []
-        # knapsack capacity
-        self.Q = 0.0
+        self.engine = Engine()
+        self.n : int = 0          # number of items
+        self.w : List[float] = [] # item weights
+        self.p : List[float] = [] # item profits
+        self.Q : float = 0.0      # knapsack capacity
 
-    def load(self, filename):
+    def load(self, filename : str):
         with open(filename, 'r') as f:
             lines = f.readlines()
             self.n = int(lines[0])
@@ -25,5 +19,5 @@ class ProblemContextKP(object):
             self.w = [int(i) for i in w_lines] 
 
     def __str__(self):
-        return f"ProblemContextKP(n={self.n};Q={self.Q};w={self.w};p={self.p})"
+        return f"ExampleKP(n={self.n};Q={self.Q};w={self.w};p={self.p})"
 

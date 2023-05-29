@@ -1,9 +1,9 @@
-import random
-
-def mycallback_constructive(problemCtx: ProblemContextKP) -> SolutionKP:
-    sol = SolutionKP()
-    for i in range(0, problemCtx.n):
-        sol.bag.append(random.choice([0, 1]))
-    sol.n = problemCtx.n
-    return sol
+# continuation of ExampleKP class...
+    @staticmethod
+    def generateSolution(problem: 'ExampleKP') -> SolutionKP:
+        import random
+        sol = SolutionKP()
+        sol.n = problem.n
+        sol.bag = [random.randint(0, 1) for _ in range(sol.n)]
+        return sol
 
