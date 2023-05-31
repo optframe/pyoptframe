@@ -2,12 +2,6 @@
 
 import os
 from typing import List
-
-# DO NOT REORDER 'import sys ...'
-import sys
-sys.path.insert(0, os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '../..')))
-#
 from optframe import *
 
 class SolutionKP(object):

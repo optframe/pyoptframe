@@ -174,12 +174,12 @@ To discourage that, we introduce negative penalization whenever capacity is exce
     :linenos:
     :language: python
 
-We have defined :code:`mycallback_fevaluate` function, 
-and later we will define its optimization direction ( in this case, `maximization`).
+We have defined :code:`maximize` function, 
+and later we will define its optimization direction.
 
 
 .. hint::
-    User can also choose to :code:`MINIMIZE` if dealing with a minimization problem. For multi-objective
+    User can also choose to :code:`minimize` if dealing with a minimization problem. For multi-objective
     problems and Pareto optimization, user should visit `Multi-Objective <./advanced.html#multi-objective>`_ section.
 
 
