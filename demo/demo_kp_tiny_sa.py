@@ -49,10 +49,17 @@ assert isinstance(ExampleKP, XMaximize)     # composition tests
 class MoveBitFlip(object):
     def __init__(self, _k :int):
         self.k = _k
+    def __str__(self):
+        return "MoveBitFlip("+str(self.k)+")"
     @staticmethod
-    def apply(problemCtx: ExampleKP, m: 'MoveBitFlip', sol: ExampleSol) -> 'MoveBitFlip':
+    def apply(pKP: ExampleKP, m: 'MoveBitFlip', sol: ExampleSol) -> 'MoveBitFlip':
+        if pKP.engine.component_loglevel == LogLevel.Debug:
+            print("DEBUG: apply move: ", m, flush=True)
         sol.bag[m.k] = 1 - sol.bag[m.k]
-        return MoveBitFlip(m.k)
+        rev = MoveBitFlip(m.k)
+        if pKP.engine.component_loglevel == LogLevel.Debug:
+            print("DEBUG: reverse move is: ", rev, flush=True)
+        return rev
     @staticmethod
     def canBeApplied(problemCtx: ExampleKP, m: 'MoveBitFlip', sol: ExampleSol) -> bool:
         return True
@@ -67,6 +74,11 @@ class NSBitFlip(object):
 
 assert isinstance(MoveBitFlip, XMove) # composition tests
 assert isinstance(NSBitFlip, XNS)     # composition tests
+
+def my_onfail(code: CheckCommandFailCode, engine : Engine) -> bool:
+    engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "4")
+    print("ON FAIL! code:", CheckCommandFailCode(code), "cll:", engine.component_loglevel, flush=True)
+    return False
 
 #
 pKP = ExampleKP()
@@ -86,8 +98,13 @@ list_idx = pKP.engine.create_component_list(
 
 # LogLevel::Info(3) for check module
 pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "0")
+#
+print("COMP=",pKP.engine.experimental_get_parameter("COMPONENT_LOG_LEVEL"))
 
-pKP.engine.check(100, 10, False)
+pKP.engine.check(100, 10, False, my_onfail)
+
+# reset component_log_level flag (my_onfail may change it!)
+pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
 
 sa = BasicSimulatedAnnealing(pKP.engine, 0, 0, list_idx, 0.99, 100, 999)
 sout = sa.search(4.0)

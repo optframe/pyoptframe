@@ -37,7 +37,7 @@ extern "C" FakeEnginePtr
 optframe_api1d_create_engine(int LogLevel);
 
 extern "C" bool
-optframe_api1d_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose);
+optframe_api1d_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose, bool (*_fOnFail)(int));
 
 extern "C" LibSearchOutput
 optframe_api0d_engine_simulated_annealing(FakeEnginePtr _engine);

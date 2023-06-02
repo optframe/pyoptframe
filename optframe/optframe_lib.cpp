@@ -554,11 +554,14 @@ optframe_api1d_create_engine(int ll)
 }
 
 extern "C" bool
-optframe_api1d_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose)
+optframe_api1d_engine_check(FakeEnginePtr _engine, int p1, int p2, bool verbose, bool (*_fOnFail)(int))
 {
    auto* engine = (FCoreApi1Engine*)_engine;
    if(verbose)
       engine->check.setParameters(verbose);
+   engine->check.onFail = [_fOnFail](int code)->bool {
+      return _fOnFail(code);
+   };
    // bool run(int iterMax, int nSolNSSeq)
    auto data = engine->check.run(p1, p2);
    return true;

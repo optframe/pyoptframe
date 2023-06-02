@@ -235,8 +235,12 @@ optframe_lib.optframe_api1d_engine_list_components.argtypes = [
     ctypes.c_void_p, ctypes.c_char_p]
 optframe_lib.optframe_api1d_engine_list_components.restype = ctypes.c_int
 #
+# bool -> int, engine* => # bool (*_fOnFail)(int, FakeEnginePtr)
+# FUNC_CHECK_ONFAIL = CFUNCTYPE(ctypes.c_bool, ctypes.c_int, ctypes.c_void_p)
+FUNC_CHECK_ONFAIL = CFUNCTYPE(ctypes.c_bool, ctypes.c_int)
+#
 optframe_lib.optframe_api1d_engine_check.argtypes = [
-    ctypes.c_void_p]
+    ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_bool, FUNC_CHECK_ONFAIL]
 optframe_lib.optframe_api1d_engine_check.restype = ctypes.c_bool
 ###
 
@@ -255,6 +259,8 @@ optframe_lib.optframe_api1d_engine_experimental_get_parameter.argtypes = [
     ctypes.c_void_p, ctypes.c_char_p]
 optframe_lib.optframe_api1d_engine_experimental_get_parameter.restype = ctypes.c_char_p
 
+
+########
 
 class SearchStatus(Enum):
     NO_REPORT = 0x00
@@ -360,6 +366,18 @@ class LogLevel(IntEnum):
     Debug = 4
 # example:
 # if (loglevel >= LogLevel::Warning) { ... }
+
+
+class CheckCommandFailCode(IntEnum):
+    CMERR_EV_BETTERTHAN = 2001
+    CMERR_EV_BETTEREQUALS = 2002
+    CMERR_MOVE_EQUALS = 3001
+    CMERR_MOVE_HASREVERSE = 3002
+    CMERR_MOVE_REVREV_VALUE = 3004
+    CMERR_MOVE_REVSIMPLE = 3005
+    CMERR_MOVE_REVFASTER = 3006
+    CMERR_MOVE_REALREVFASTER = 3008
+    CMERR_MOVE_COST = 3007
 
 from typing import List, TypeVar, Dict, Any, Protocol, runtime_checkable, Callable, Type
 import inspect   # check: isclass
@@ -496,6 +514,8 @@ class Engine(object):
         # keep callbacks in memory
         self.callback_list = []
         atexit.register(self.cleanup)
+        #
+        self.component_loglevel = LogLevel.Info
 
     def register_callback(self, func):
         # expects 'func' to be of ctypes.CFUNCTYPE
@@ -529,9 +549,19 @@ class Engine(object):
             assert (False)
         b_param = sparameter.encode('ascii')
         b_value = svalue.encode('ascii')
-        return optframe_lib.optframe_api1d_engine_experimental_set_parameter(self.hf, b_param, b_value)
+        outp = optframe_lib.optframe_api1d_engine_experimental_set_parameter(self.hf, b_param, b_value)
+        #
+        if sparameter == "ENGINE_LOG_LEVEL":
+            self.loglevel = LogLevel(int(self.experimental_get_parameter("ENGINE_LOG_LEVEL")))
+            if self.loglevel == LogLevel.Debug:
+                print("DEBUG: Engine loglevel set to Debug")
+        #
+        if sparameter == "COMPONENT_LOG_LEVEL":
+            self.component_loglevel = LogLevel(int(self.experimental_get_parameter("COMPONENT_LOG_LEVEL")))
+        #
+        return outp
 
-    def experimental_get_parameter(self, sparameter: str):
+    def experimental_get_parameter(self, sparameter: str) -> str:
         if (not isinstance(sparameter, str)):
             assert (False)
         b_param = sparameter.encode('ascii')
@@ -591,9 +621,19 @@ class Engine(object):
         r = optframe_lib.optframe_api1d_engine_test(self.hf)
         print("Finished Test")
         return r
+    
+    @staticmethod
+    def default_onfailcallback(code: int, engine: 'Engine') -> bool:
+        return False
 
-    def check(self, p1: int, p2: int, verbose : bool = False) -> bool:
-        return optframe_lib.optframe_api1d_engine_check(self.hf, p1, p2, verbose)
+    def check(self, p1: int, p2: int, verbose : bool = False, onfail_callback : Callable[[CheckCommandFailCode, 'Engine'], bool] = default_onfailcallback) -> bool:
+        
+        def my_onfail_callback(_code: int) -> bool:
+            return onfail_callback(CheckCommandFailCode(_code), self)
+    
+        onfail_callback_ptr = FUNC_CHECK_ONFAIL(my_onfail_callback)
+        self.register_callback(onfail_callback_ptr)
+        return optframe_lib.optframe_api1d_engine_check(self.hf, p1, p2, verbose, onfail_callback_ptr)
  
     # ============ SETUP AUTOMATIC TYPES ============
     def setup(self, p: XProblem, t = None):
