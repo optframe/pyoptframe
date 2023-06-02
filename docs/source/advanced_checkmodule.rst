@@ -53,6 +53,62 @@ Remember to always flush your debug messages on python, otherwise they may be lo
     # remember to flush python messages during debug
     print("this is a debug message for component: ", component, flush=True)
 
+Using Retry Debug on Check Module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A useful trick on debugging with check module is to use Retry Debug feature.
+When enabled, this feature allows CheckCommand to repeat some previously failed test,
+while allowing user to change Engine into some verbose mode, useful for debugging.
+This behavior is enabled by default, but user can also personalize the onFail callaback:
+
+.. code-block:: python
+
+    # declare some personalized onfail callback, that makes Component Log Level be set to Debug
+    def my_personalized_onfail(code: CheckCommandFailCode, engine : Engine) -> bool:
+        engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "4")
+        print("MY ON FAIL! code:", CheckCommandFailCode(code), "cll:", engine.component_loglevel, flush=True)
+        return False
+
+On MAIN pass this callback to check (according to knapsack example):
+
+.. code-block:: python
+
+    # use personalized callback
+    pKP.engine.check(100, 10, False, my_personalized_onfail)
+    # or just use default one, by avoiding last parameter...
+    # pKP.engine.check(100, 10, False)
+
+Finally, we can cause some error in MoveBitFlip knapsack example, and take advantage of the debug flag:
+
+.. code-block:: python
+
+    class MoveBitFlip(object):
+        def __init__(self, _k :int):
+            self.k = _k
+        def __str__(self):
+            return "MoveBitFlip("+str(self.k)+")"
+        @staticmethod
+        def apply(pKP: ExampleKP, m: 'MoveBitFlip', sol: ExampleSol) -> 'MoveBitFlip':
+            if pKP.engine.component_loglevel == LogLevel.Debug:
+                print("DEBUG: apply move: ", m, flush=True)
+            sol.bag[m.k] = 1 - sol.bag[m.k]
+            rev = MoveBitFlip(m.k + 1) # <----- THIS +1 IS A BUG !!!
+            if pKP.engine.component_loglevel == LogLevel.Debug:
+                print("DEBUG: reverse move is: ", rev, flush=True)
+            return rev
+        @staticmethod
+        def canBeApplied(problemCtx: ExampleKP, m: 'MoveBitFlip', sol: ExampleSol) -> bool:
+            return True
+        @staticmethod
+        def eq(problemCtx: ExampleKP, m1: 'MoveBitFlip', m2: 'MoveBitFlip') -> bool:
+            return m1.k == m2.k
+
+In this case, user can expect some message of this kind:
+
+    CheckCommand: ON FAIL! code: CheckCommandFailCode.CMERR_MOVE_EQUALS  cll: LogLevel.Info  set to Debug.
+    DEBUG: apply move:  MoveBitFlip(3)
+    DEBUG: reverse move is:  MoveBitFlip(4)
+
 
 Using specific configurations and Builders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
