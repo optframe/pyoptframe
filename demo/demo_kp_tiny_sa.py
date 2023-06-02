@@ -101,7 +101,7 @@ pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "0")
 #
 print("COMP=",pKP.engine.experimental_get_parameter("COMPONENT_LOG_LEVEL"))
 
-pKP.engine.check(100, 10, False, my_onfail)
+pKP.engine.check(100, 10, False, False, my_onfail)
 
 # reset component_log_level flag (my_onfail may change it!)
 pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
