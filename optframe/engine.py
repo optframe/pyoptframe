@@ -632,17 +632,17 @@ class Engine(object):
         engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "4")
         return False
 
-    def check(self, p1: int, p2: int, verbose : bool = False, retryDebug: bool = True, onfail_callback : Callable[[CheckCommandFailCode, 'Engine'], bool] = default_onfailcallback) -> bool:
-        
+    def check(self, p1: int, p2: int, verbose : bool = False, retry_default_function: bool = True, onfail_callback : Callable[[CheckCommandFailCode, 'Engine'], bool] = default_onfailcallback) -> bool:
+        # if retry_default_function is disabled, user may choose one
         def my_onfail_callback(_code: int) -> bool:
             return onfail_callback(CheckCommandFailCode(_code), self)
-        
+        # if retry_default_function is enabled, function 'default_onfailcallback_retry_debug' is used!
         def my_onfail_callback_retry_debug(_code: int) -> bool:
             return self.default_onfailcallback_retry_debug(CheckCommandFailCode(_code), self)
     
         onfail_callback_ptr = None
-        if retryDebug:
-            # use default retry_debug onfail callback
+        if retry_default_function:
+            # use default retry_default_function onfail callback
             onfail_callback_ptr = FUNC_CHECK_ONFAIL(my_onfail_callback_retry_debug)
         else:
             # use custom onfail callback
