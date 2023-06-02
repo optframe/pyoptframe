@@ -103,7 +103,7 @@ Finally, we can cause some error in MoveBitFlip knapsack example, and take advan
         def eq(problemCtx: ExampleKP, m1: 'MoveBitFlip', m2: 'MoveBitFlip') -> bool:
             return m1.k == m2.k
 
-In this case, user can expect some message of this kind:
+In this case, user can expect some message of this kind::
 
     CheckCommand: ON FAIL! code: CheckCommandFailCode.CMERR_MOVE_EQUALS  cll: LogLevel.Info  set to Debug.
     DEBUG: apply move:  MoveBitFlip(3)
