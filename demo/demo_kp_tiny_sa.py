@@ -75,9 +75,9 @@ class NSBitFlip(object):
 assert isinstance(MoveBitFlip, XMove) # composition tests
 assert isinstance(NSBitFlip, XNS)     # composition tests
 
-def my_onfail(code: CheckCommandFailCode, engine : Engine) -> bool:
+def my_personalized_onfail(code: CheckCommandFailCode, engine : Engine) -> bool:
     engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "4")
-    print("ON FAIL! code:", CheckCommandFailCode(code), "cll:", engine.component_loglevel, flush=True)
+    print("MY ON FAIL! code:", CheckCommandFailCode(code), "cll:", engine.component_loglevel, flush=True)
     return False
 
 #
@@ -101,9 +101,10 @@ pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "0")
 #
 print("COMP=",pKP.engine.experimental_get_parameter("COMPONENT_LOG_LEVEL"))
 
-pKP.engine.check(100, 10, False, False, my_onfail)
+#pKP.engine.check(100, 10, False, my_personalized_onfail)
+pKP.engine.check(100, 10, False)
 
-# reset component_log_level flag (my_onfail may change it!)
+# reset component_log_level flag (retryDebug may change it!)
 pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
 
 sa = BasicSimulatedAnnealing(pKP.engine, 0, 0, list_idx, 0.99, 100, 999)
