@@ -586,6 +586,12 @@ class SingleObjSearch(object):
 class BasicSimulatedAnnealing(SingleObjSearch):
     def __init__(self, _engine: XEngine, _ev: IdGeneralEvaluator, _is: IdInitialSearch, _lns: IdListNS, alpha:float, iter:int, T0:float):
         assert isinstance(_engine, XEngine)
+        if (not isinstance(_ev, IdGeneralEvaluator)):
+            assert (False)
+        if (not isinstance(_is, IdInitialSearch)):
+            assert (False)
+        if (not isinstance(_lns, IdListNS)):
+            assert (False)
         self.engine = _engine
         str_code    = "OptFrame:ComponentBuilder:GlobalSearch:SA:BasicSA"
         str_args    = "OptFrame:GeneralEvaluator:Evaluator "+str(_ev.id)+" OptFrame:InitialSearch "+str(_is.id)+" OptFrame:NS[] "+str(_lns.id)+" "+str(alpha)+" "+str(iter)+" "+str(T0)

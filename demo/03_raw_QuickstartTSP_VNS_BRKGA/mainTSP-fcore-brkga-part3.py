@@ -2,7 +2,7 @@
 #
 # decoder function: receives a problem instance and an array of random keys (as LibArrayDouble)
 #
-def mycallback_decoder_rk(problemCtx: ProblemContextTSP, array_double : engine.LibArrayDouble) -> SolutionTSP:
+def mycallback_decoder_rk(problemCtx: ProblemContextTSP, array_double : optframe.engine.LibArrayDouble) -> SolutionTSP:
     #
     sol = SolutionTSP()
     #

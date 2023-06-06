@@ -10,17 +10,13 @@ pTSP.load('tsp-example.txt')
 #pTSP.vy = [10, 20, 30, 40, 50]
 #pTSP.dist = ...
 
-print("problem=",pTSP)
 # initializes optframe engine
-comp_list = pTSP.engine.setup(pTSP)
-print(comp_list)
-# pTSP.engine = optframe.Engine(optframe.APILevel.API1d)
-
+pTSP.engine = optframe.Engine(optframe.APILevel.API1d)
+print(pTSP)
 
 # Register Basic Components
 
-#ev_idx = pTSP.engine.minimize(pTSP, mycallback_fevaluate)
-ev_idx = comp_list[0]
+ev_idx = pTSP.engine.minimize(pTSP, mycallback_fevaluate)
 print("evaluator id:", ev_idx)
 
 c_rk_idx = pTSP.engine.add_constructive_rk(pTSP, mycallback_constructive_rk)

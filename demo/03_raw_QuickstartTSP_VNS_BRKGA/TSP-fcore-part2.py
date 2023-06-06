@@ -1,8 +1,11 @@
 
+import math
+
 class ProblemContextTSP(object):
     def __init__(self):
-        # float engine for OptFrame
-        self.engine = Engine(APILevel.API1d)
+        print('Init TSP')
+        # may store current optframe engine for local usage
+        self.engine = None
         # number of cities
         self.n = 0
         # x coordinates
@@ -14,7 +17,7 @@ class ProblemContextTSP(object):
         
    # Example: "3\n1 10 10\n2 20 20\n3 30 30\n"
 
-    def load(self, filename: str):
+    def load(self, filename):
         with open(filename, 'r') as f:
             lines = f.readlines()
             self.n = int(lines[0])
@@ -30,7 +33,6 @@ class ProblemContextTSP(object):
                   self.dist[i][j] = round(self.euclidean(self.vx[i], self.vy[i], self.vx[j], self.vy[j]))
 
     def euclidean(self, x1, y1, x2, y2):
-        import math
         return math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
 
     def __str__(self):
