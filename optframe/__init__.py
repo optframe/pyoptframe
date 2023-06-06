@@ -15,3 +15,4 @@ from optframe.engine import XNS
 from optframe.engine import XNSSeq
 from optframe.engine import XNSIterator
 from optframe.engine import BasicSimulatedAnnealing
+from optframe.engine import ILSLevels

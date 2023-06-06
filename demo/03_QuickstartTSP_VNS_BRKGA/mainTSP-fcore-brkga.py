@@ -1,7 +1,13 @@
 # OptFrame Python Demo TSP - Traveling Salesman Problem
 
+import os
 from typing import List
 import random
+# DO NOT REORDER 'import sys ...'
+import sys
+sys.path.insert(0, os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '../..')))
+#
 from optframe import *
 
 class SolutionTSP(object):

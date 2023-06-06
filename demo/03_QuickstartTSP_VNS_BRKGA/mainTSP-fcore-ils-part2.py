@@ -41,7 +41,7 @@ pTSP.engine.print_component(fc)
 solxx = pTSP.engine.fconstructive_gensolution(fc)
 print("solxx:", solxx)
 
-z1 = pTSP.engine.fevaluator_evaluate(fev, False, solxx)
+z1 = pTSP.engine.fevaluator_evaluate(fev, True, solxx)
 print("evaluation:", z1)
 
 # NOT Possible for now... needs more "testing" API0 features...
@@ -62,11 +62,6 @@ print("evaluation:", z1)
 #   std::cout << "end listing NSSeqSwapFancy" << std::endl;
 
 
-# list the required parameters for OptFrame ComponentBuilder
-print("engine will list builders for OptFrame: ")
-print(pTSP.engine.list_builders("OptFrame:"))
-print()
-
 # get index of new NS
 #ns_idx = pTSP.engine.add_ns(pTSP,
 #                           mycallback_ns_rand_swap,
@@ -74,8 +69,8 @@ print()
 #                           eq_swap,
 #                           cba_swap)
 ns_idx = pTSP.engine.add_ns_class(pTSP, NSSeqSwap)
-
 print("ns_idx=", ns_idx)
+
 
 # pack NS into a NS list
 list_idx = pTSP.engine.create_component_list(
@@ -98,18 +93,27 @@ nsseq_idx = pTSP.engine.add_nsseq_class(pTSP, NSSeqSwap)
 print("nsseq_idx=", nsseq_idx)
 
 
-print("building 'BI' neighborhood exploration as local search")
+print("Listing components:")
+pTSP.engine.list_components("OptFrame:")
+# list the required parameters for OptFrame ComponentBuilder
+print("engine will list builders for OptFrame: ")
+#print(pTSP.engine.list_builders("OptFrame:"))
+print()
+
+print("building 'BI' neighborhood exploration as local search", flush=True)
 
 # make next local search component silent (loglevel 0)
 pTSP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
+#pTSP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "4")
+#pTSP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "4")
 
 ls_idx = pTSP.engine.build_local_search(
     "OptFrame:ComponentBuilder:LocalSearch:BI",
     "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:NS:NSFind:NSSeq 0")
-print("ls_idx=", ls_idx)
+print("ls_idx=", ls_idx, flush=True)
 
 
-print("creating local search list")
+print("creating local search list", flush=True)
 
 list_vnd_idx = pTSP.engine.create_component_list(
     "[ OptFrame:LocalSearch 0 ]", "OptFrame:LocalSearch[]")

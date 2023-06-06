@@ -494,6 +494,22 @@ class IdSingleObjSearch(object):
         return self.id
     def __repr__(self) -> str:
         return "IdSingleObjSearch("+str(self.id)+")"
+    
+class IdLocalSearch(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdLocalSearch("+str(self.id)+")"
+    
+class IdILSLevelPert(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdILSLevelPert("+str(self.id)+")"
 
 @runtime_checkable
 class XConstructive(Protocol):
@@ -601,6 +617,32 @@ class BasicSimulatedAnnealing(SingleObjSearch):
         return lout
 
 
+class ILSLevels(SingleObjSearch):
+    def __init__(self, _engine: XEngine, _ev: IdGeneralEvaluator, _is: IdInitialSearch, _ls: IdLocalSearch, _ilslpert: IdILSLevelPert, iterMax:int, maxPert:int):
+        assert isinstance(_engine, XEngine)
+        if (isinstance(_ev, int)):
+            _ev = IdGeneralEvaluator(_ev)
+        if (not isinstance(_ev, IdGeneralEvaluator)):
+            assert (False)
+        if (isinstance(_is, int)):
+            _is = IdInitialSearch(_is)
+        if (not isinstance(_is, IdInitialSearch)):
+            assert (False)
+        if (isinstance(_ls, int)):
+            _ls = IdLocalSearch(_ls)
+        if (not isinstance(_ls, IdLocalSearch)):
+            assert (False)
+        if (isinstance(_ilslpert, int)):
+            _ilslpert = IdILSLevelPert(_ilslpert)
+        if (not isinstance(_ilslpert, IdILSLevelPert)):
+            assert (False)
+        self.engine = _engine
+        str_code    = "OptFrame:ComponentBuilder:SingleObjSearch:ILS:ILSLevels"
+        str_args    = "OptFrame:GeneralEvaluator:Evaluator "+str(_ev.id)+" OptFrame:InitialSearch "+str(_is.id)+" OptFrame:LocalSearch "+str(_ls.id)+" OptFrame:ILS:LevelPert "+str(_ilslpert.id)+" "+str(iterMax)+" "+str(maxPert)
+        self.g_idx  = self.engine.build_global_search(str_code, str_args)
+    def search(self, timelimit: float) -> SearchOutput:
+        lout : SearchOutput = self.engine.run_global_search(self.g_idx, timelimit)
+        return lout
 
 # optframe.Engine
 class Engine(object):
@@ -901,7 +943,7 @@ class Engine(object):
         move_cba_callback_ptr = FUNC_FMOVE_CBA(move_cba_callback)
         self.register_callback(move_cba_callback_ptr)
         #
-        idx_ns = -1
+        idx_ns = IdNS(-1)
         # if NOT Multi Objective
         if not isXMES:
             idx_ns = optframe_lib.optframe_api1d_add_ns(
@@ -913,7 +955,7 @@ class Engine(object):
                 self.hf, ns_rand_callback_ptr, move_apply_callback_ptr,
                 move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
                 self.callback_utils_decref_ptr)
-        return idx_ns
+        return IdNS(idx_ns)
     
     #def add_ns_class(self, problemCtx: XProblem, ns: Type[XNS], m: Type[XMove], isXMES: bool =False):
     def add_ns_class(self, problemCtx: XProblem, ns: Type[XNS], isXMES: bool =False):
@@ -979,7 +1021,7 @@ class Engine(object):
             move_eq_callback_ptr, move_cba_callback_ptr, problemCtx,
             self.callback_utils_decref_ptr)
 
-        return idx_nsseq
+        return IdNSSeq(idx_nsseq)
     
     #def add_nsseq_class(self, problemCtx: XProblem, nsseq: Type[XNSSeq], nsiterator: Type[XNSIterator], m: Type[XMove]):
     def add_nsseq_class(self, problemCtx: XProblem, nsseq: Type[XNSSeq]):
