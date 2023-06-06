@@ -5,6 +5,8 @@ class MoveSwap(object):
     def __init__(self, _i: int = 0, _j: int = 0):
         self.i = _i
         self.j = _j
+    def __str__(self):
+        return "MoveSwap(i="+str(self.i)+";j="+str(self.j)+")"
     @staticmethod
     def apply(problemCtx: ProblemContextTSP, m: 'MoveSwap', sol: SolutionTSP) -> 'MoveSwap':
         aux = sol.cities[m.j]

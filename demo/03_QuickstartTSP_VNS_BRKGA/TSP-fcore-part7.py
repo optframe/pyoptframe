@@ -28,14 +28,7 @@ class IteratorSwap(object):
 class NSSeqSwap(object):
     @staticmethod
     def randomMove(pTSP: ProblemContextTSP, sol: SolutionTSP) -> MoveSwap:
-        # there is no need to repeat from previous NSSwap, but this makes example more clear
-        import random
-        i = random.randint(0, pTSP.n - 1)
-        j = i
-        while  j <= i:
-            i = random.randint(0, pTSP.n - 1)
-            j = random.randint(0, pTSP.n - 1)
-        return MoveSwap(i, j)
+        return NSSwap.randomMove(pTSP, sol) # reuse method from NSSwap
     
     @staticmethod
     def getIterator(pTSP: ProblemContextTSP, sol: SolutionTSP) -> IteratorSwap:

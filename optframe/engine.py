@@ -7,13 +7,16 @@ from ctypes import *
 # https://stackoverflow.com/questions/865115/how-do-i-correctly-clean-up-a-python-object
 import atexit
 #
-from copy import deepcopy
-import sys
 
 import pathlib
 
-from enum import Enum, IntEnum
+from typing import List, Callable, Type
+import inspect   # check: isclass
 
+from enum import Enum
+
+from optframe.core import *
+from optframe.components import *
 
 # ==================== optframe_lib.so ===================
 
@@ -39,9 +42,6 @@ FUNC_SOL_TOSTRING = CFUNCTYPE(
 
 
 # -------------------------------------
-
-
-
 
 # =====================================
 #        OptFrame ADD Component
@@ -74,13 +74,6 @@ optframe_lib.optframe_api0d_add_general_crossover.argtypes = [
     FUNC_SOL_DEEPCOPY, FUNC_SOL_TOSTRING, FUNC_UTILS_DECREF]
 optframe_lib.optframe_api0d_add_general_crossover.restype = ctypes.c_int32
 
-
-class LibArrayDouble(ctypes.Structure):
-    _fields_ = [("size", ctypes.c_int),  
-                ("v", ctypes.POINTER(ctypes.c_double))]
-
-    def __str__(self):
-        return f"LibArrayDouble(size={self.size};v={self.v};)"
 
 # extern "C" int // error or not
 # optframe_api0_set_array_double(int sz, double* vec, LibArrayDouble* lad_ptr)
@@ -262,29 +255,6 @@ optframe_lib.optframe_api1d_engine_experimental_get_parameter.restype = ctypes.c
 
 ########
 
-class SearchStatus(Enum):
-    NO_REPORT = 0x00
-    FAILED = 0x01
-    RUNNING = 0x02
-    # RESERVED = 0x04
-    IMPOSSIBLE = 0x08
-    NO_SOLUTION = 0x10
-    IMPROVEMENT = 0x20
-    LOCAL_OPT = 0x40
-    GLOBAL_OPT = 0x80
-
-
-class SearchOutput(ctypes.Structure):
-    _fields_ = [("status", ctypes.c_int),  # optframe.SearchStatus
-                ("has_best", ctypes.c_bool),
-                ("best_s", ctypes.py_object),
-                ("best_e", ctypes.c_double)]
-
-    def __str__(self):
-        return f"SearchOutput(status={self.status};has_best={self.has_best};best_s={self.best_s};best_e={self.best_e};)"
-
-
-
 #
 optframe_lib.optframe_api0d_engine_simulated_annealing.argtypes = [
     ctypes.c_void_p]
@@ -332,317 +302,11 @@ optframe_lib.optframe_api0_fconstructive_gensolution.restype = ctypes.py_object
 #     OptFrame Engine
 # =========================
 
-def callback_sol_deepcopy_utils(sol):
-    # print("invoking 'callback_sol_deepcopy'... sol=", sol)
-    if (isinstance(sol, ctypes.py_object)):
-        # this should never happen!
-        assert (False)
-    sol2 = deepcopy(sol)
-    return sol2
-
-def callback_adapter_list_to_vecdouble(l: list) -> POINTER(c_double):
-    if (not isinstance(l, list)):
-        assert (False)
-    lad = LibArrayDouble()
-    lad.size = len(l)
-    #
-    seq = ctypes.c_double * len(l)
-    arr = seq(*l)
-    #
-    optframe_lib.optframe_api0_set_array_double(len(l), arr, byref(lad))
-    return lad.v
 
 # optframe.APILevel
 class APILevel(Enum):
     API1d = "1d"  # API 1 for double type
 
-
-# optframe.LogLevel
-class LogLevel(IntEnum):
-    Silent = 0
-    Error = 1
-    Warning = 2
-    Info = 3
-    Debug = 4
-# example:
-# if (loglevel >= LogLevel::Warning) { ... }
-
-
-class CheckCommandFailCode(IntEnum):
-    CMERR_EV_BETTERTHAN = 2001
-    CMERR_EV_BETTEREQUALS = 2002
-    CMERR_MOVE_EQUALS = 3001
-    CMERR_MOVE_HASREVERSE = 3002
-    CMERR_MOVE_REVREV_VALUE = 3004
-    CMERR_MOVE_REVSIMPLE = 3005
-    CMERR_MOVE_REVFASTER = 3006
-    CMERR_MOVE_REALREVFASTER = 3008
-    CMERR_MOVE_COST = 3007
-
-from typing import List, TypeVar, Dict, Any, Protocol, runtime_checkable, Callable, Type
-import inspect   # check: isclass
-
-@runtime_checkable
-class XSolution(Protocol):
-    # this is default, regardless of user implementing it or not...
-    def __str__(self) -> str:
-        ...
-
-@runtime_checkable
-class XProblem(Protocol):
-    # this is default, regardless of user implementing it or not...
-    def __str__(self) -> str:
-        ...
-
-@runtime_checkable
-class XIdComponent(Protocol):
-    def get_id(self) -> int:
-        ...
-    def __repr__(self) -> str:
-        ...
-
-class IdUnknown(object):
-    def __init__(self, id: int):
-        self.id = id
-    def get_id(self):
-        return self.id
-    def __repr__(self) -> str:
-        return "IdUnknown("+str(self.id)+")"
-    
-class IdNone(object):
-    def get_id(self):
-        return -1
-    def __repr__(self) -> str:
-        return "IdNone"
-
-class IdConstructive(object):
-    def __init__(self, id: int):
-        self.id = id
-    def get_id(self):
-        return self.id
-    def __repr__(self) -> str:
-        return "IdConstructive("+str(self.id)+")"
-    
-class IdInitialSearch(object):
-    def __init__(self, id: int):
-        self.id = id
-    def get_id(self):
-        return self.id
-    def __repr__(self) -> str:
-        return "IdInitialSearch("+str(self.id)+")"
-    
-class IdGeneralEvaluator(object):
-    def __init__(self, id: int):
-        self.id = id
-    def get_id(self):
-        return self.id
-    def __repr__(self) -> str:
-        return "IdGeneralEvaluator("+str(self.id)+")"
-    
-class IdEvaluator(object):
-    def __init__(self, id: int):
-        self.id = id
-    def get_id(self):
-        return self.id
-    def __repr__(self) -> str:
-        return "IdEvaluator("+str(self.id)+")"
-    
-class IdNS(object):
-    def __init__(self, id: int):
-        self.id = id
-    def get_id(self):
-        return self.id
-    def __repr__(self) -> str:
-        return "IdNS("+str(self.id)+")"
-    
-class IdNSSeq(object):
-    def __init__(self, id: int):
-        self.id = id
-    def get_id(self):
-        return self.id
-    def __repr__(self) -> str:
-        return "IdNSSeq("+str(self.id)+")"
-    
-class IdListNS(object):
-    def __init__(self, id: int):
-        self.id = id
-    def get_id(self):
-        return self.id
-    def __repr__(self) -> str:
-        return "IdListNS("+str(self.id)+")"
-    
-class IdListNSSeq(object):
-    def __init__(self, id: int):
-        self.id = id
-    def get_id(self):
-        return self.id
-    def __repr__(self) -> str:
-        return "IdListNSSeq("+str(self.id)+")"
-
-class IdGlobalSearch(object):
-    def __init__(self, id: int):
-        self.id = id
-    def get_id(self):
-        return self.id
-    def __repr__(self) -> str:
-        return "IdGlobalSearch("+str(self.id)+")"
-    
-class IdSingleObjSearch(object):
-    def __init__(self, id: int):
-        self.id = id
-    def get_id(self):
-        return self.id
-    def __repr__(self) -> str:
-        return "IdSingleObjSearch("+str(self.id)+")"
-    
-class IdLocalSearch(object):
-    def __init__(self, id: int):
-        self.id = id
-    def get_id(self):
-        return self.id
-    def __repr__(self) -> str:
-        return "IdLocalSearch("+str(self.id)+")"
-    
-class IdILSLevelPert(object):
-    def __init__(self, id: int):
-        self.id = id
-    def get_id(self):
-        return self.id
-    def __repr__(self) -> str:
-        return "IdILSLevelPert("+str(self.id)+")"
-
-@runtime_checkable
-class XConstructive(Protocol):
-    @staticmethod
-    def generateSolution(problem: XProblem) -> XSolution:
-        ...
-
-@runtime_checkable
-class XMaximize(Protocol):
-    @staticmethod
-    def maximize(problem: XProblem, sol: XSolution) -> float:
-        ...
-
-@runtime_checkable
-class XMinimize(Protocol):
-    @staticmethod
-    def minimize(problem: XProblem, sol: XSolution) -> float:
-        ...
-
-@runtime_checkable
-class XMove(Protocol):
-    @staticmethod
-    def apply(problemCtx: XProblem, m: 'XMove', sol: XSolution) -> 'XMove':
-        ...
-    @staticmethod
-    def canBeApplied(problemCtx: XProblem, m: 'XMove', sol: XSolution) -> bool:
-        ...
-    @staticmethod
-    def eq(problemCtx: XProblem, m1: 'XMove', m2: 'XMove') -> bool:
-        ...
-
-@runtime_checkable
-class XNS(Protocol):
-    @staticmethod
-    def randomMove(problem: XProblem, sol: XSolution) -> XMove:
-        ...
-
-@runtime_checkable
-class XNSIterator(Protocol):
-    @staticmethod
-    def first(problemCtx: XProblem, it: 'XNSIterator'):
-        ...
-    @staticmethod
-    def next(problemCtx: XProblem, it: 'XNSIterator'):
-        ...
-    @staticmethod
-    def isDone(problemCtx: XProblem, it: 'XNSIterator') -> bool:
-        ...
-    @staticmethod
-    def current(problemCtx: XProblem, it: 'XNSIterator') -> XMove:
-        ...
-
-@runtime_checkable
-class XNSSeq(Protocol):
-    @staticmethod
-    def randomMove(problem: XProblem, sol: XSolution) -> XMove:
-        ...
-    @staticmethod
-    def getIterator(problem: XProblem, sol: XSolution) -> XNSIterator:
-        ...
-
-
-@runtime_checkable
-class XSingleObjSearch(Protocol):
-    @staticmethod
-    def search(problem: XProblem, sol: XSolution) -> XMove:
-        ... 
-
-@runtime_checkable
-class XGlobalSearch(Protocol):
-    @staticmethod
-    def search(problem: XProblem, sol: XSolution) -> XMove:
-        ... 
-
-@runtime_checkable
-class XEngine(Protocol):
-    @staticmethod
-    def build_global_search(code: str, args: str) -> int:
-        ... 
-    @staticmethod
-    def run_global_search(g_idx: int, timelimit: float) -> SearchOutput:
-        ... 
-
-class SingleObjSearch(object):
-    def __init__(self, _engine: XEngine):
-        self.engine = _engine
-    def search(self, timelimit: float) -> SearchOutput:
-        ...
-
-class BasicSimulatedAnnealing(SingleObjSearch):
-    def __init__(self, _engine: XEngine, _ev: IdGeneralEvaluator, _is: IdInitialSearch, _lns: IdListNS, alpha:float, iter:int, T0:float):
-        assert isinstance(_engine, XEngine)
-        if (not isinstance(_ev, IdGeneralEvaluator)):
-            assert (False)
-        if (not isinstance(_is, IdInitialSearch)):
-            assert (False)
-        if (not isinstance(_lns, IdListNS)):
-            assert (False)
-        self.engine = _engine
-        str_code    = "OptFrame:ComponentBuilder:GlobalSearch:SA:BasicSA"
-        str_args    = "OptFrame:GeneralEvaluator:Evaluator "+str(_ev.id)+" OptFrame:InitialSearch "+str(_is.id)+" OptFrame:NS[] "+str(_lns.id)+" "+str(alpha)+" "+str(iter)+" "+str(T0)
-        self.g_idx  = self.engine.build_global_search(str_code, str_args)
-    def search(self, timelimit: float) -> SearchOutput:
-        lout : SearchOutput = self.engine.run_global_search(self.g_idx, timelimit)
-        return lout
-
-
-class ILSLevels(SingleObjSearch):
-    def __init__(self, _engine: XEngine, _ev: IdGeneralEvaluator, _is: IdInitialSearch, _ls: IdLocalSearch, _ilslpert: IdILSLevelPert, iterMax:int, maxPert:int):
-        assert isinstance(_engine, XEngine)
-        if (isinstance(_ev, int)):
-            _ev = IdGeneralEvaluator(_ev)
-        if (not isinstance(_ev, IdGeneralEvaluator)):
-            assert (False)
-        if (isinstance(_is, int)):
-            _is = IdInitialSearch(_is)
-        if (not isinstance(_is, IdInitialSearch)):
-            assert (False)
-        if (isinstance(_ls, int)):
-            _ls = IdLocalSearch(_ls)
-        if (not isinstance(_ls, IdLocalSearch)):
-            assert (False)
-        if (isinstance(_ilslpert, int)):
-            _ilslpert = IdILSLevelPert(_ilslpert)
-        if (not isinstance(_ilslpert, IdILSLevelPert)):
-            assert (False)
-        self.engine = _engine
-        str_code    = "OptFrame:ComponentBuilder:SingleObjSearch:ILS:ILSLevels"
-        str_args    = "OptFrame:GeneralEvaluator:Evaluator "+str(_ev.id)+" OptFrame:InitialSearch "+str(_is.id)+" OptFrame:LocalSearch "+str(_ls.id)+" OptFrame:ILS:LevelPert "+str(_ilslpert.id)+" "+str(iterMax)+" "+str(maxPert)
-        self.g_idx  = self.engine.build_global_search(str_code, str_args)
-    def search(self, timelimit: float) -> SearchOutput:
-        lout : SearchOutput = self.engine.run_global_search(self.g_idx, timelimit)
-        return lout
 
 # optframe.Engine
 class Engine(object):
@@ -1197,31 +861,16 @@ class Engine(object):
         return lout
 
 
-# ==============================
+# ========== library helpers ========== 
 
-# def callback_utils_incref(pyo: ctypes.py_object):
-#    # print("callback_utils_incref: ", sys.getrefcount(pyo), " will get +1")
-#    ctypes.pythonapi.Py_IncRef(pyo)
-#    return sys.getrefcount(pyo)
-
-def callback_utils_decref(pyo):
-    if (isinstance(pyo, ctypes.py_object)):
-        pyo = pyo.value
-        print("pyo:", pyo)
-    # print("callback_utils_decref: ", sys.getrefcount(pyo), " will get -1")
-    # IMPORTANT: 'pyo' may come as a Real Python Object, not a 'ctypes.py_object'
-    cast_pyo = ctypes.py_object(pyo)
+def callback_adapter_list_to_vecdouble(l: list) -> POINTER(c_double):
+    if (not isinstance(l, list)):
+        assert (False)
+    lad = LibArrayDouble()
+    lad.size = len(l)
     #
-    ctypes.pythonapi.Py_DecRef(cast_pyo)
-    x = sys.getrefcount(pyo)
-    return x
-
-
-def callback_sol_tostring(sol, pt: ctypes.c_char_p, ptsize: ctypes.c_size_t):
-    mystr = sol.__str__()
-    mystr_bytes = mystr.encode()
-    pa = cast(pt, POINTER(c_char * ptsize))
-    pa.contents.value = mystr_bytes
-    return len(mystr)
-
-# ==============================
+    seq = ctypes.c_double * len(l)
+    arr = seq(*l)
+    #
+    optframe_lib.optframe_api0_set_array_double(len(l), arr, byref(lad))
+    return lad.v

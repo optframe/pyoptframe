@@ -34,7 +34,7 @@ print("will start ILS for 3 seconds")
 #lout = pTSP.engine.run_sos_search(sos_idx, 3.0) # 3.0 seconds max
 #print('lout=', lout)
 
-# build ILS Levels with iterMax=10 maxPert=5
+# build Iterated Local Search (ILS) Levels with iterMax=10 maxPert=5
 ilsl = ILSLevels(pTSP.engine, 0, 0, 1, 0, 10, 5)
 lout = ilsl.search(3.0)
 print("Best solution: ",   lout.best_s)

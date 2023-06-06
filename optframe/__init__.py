@@ -1,7 +1,7 @@
 __version__ = '5.0.21rc0'
+from optframe.core import SearchOutput
+from optframe.core import SearchStatus
 from optframe.engine import Engine
-from optframe.engine import SearchOutput
-from optframe.engine import SearchStatus
 from optframe.engine import CheckCommandFailCode
 from optframe.engine import APILevel
 from optframe.engine import LogLevel
@@ -14,5 +14,6 @@ from optframe.engine import XMove
 from optframe.engine import XNS
 from optframe.engine import XNSSeq
 from optframe.engine import XNSIterator
-from optframe.engine import BasicSimulatedAnnealing
-from optframe.engine import ILSLevels
+from optframe.components import IdInitialSearch
+from optframe.heuristics import BasicSimulatedAnnealing
+from optframe.heuristics import ILSLevels
