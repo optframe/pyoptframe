@@ -395,6 +395,107 @@ class XProblem(Protocol):
         ...
 
 @runtime_checkable
+class XIdComponent(Protocol):
+    def get_id(self) -> int:
+        ...
+    def __repr__(self) -> str:
+        ...
+
+class IdUnknown(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdUnknown("+str(self.id)+")"
+    
+class IdNone(object):
+    def get_id(self):
+        return -1
+    def __repr__(self) -> str:
+        return "IdNone"
+
+class IdConstructive(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdConstructive("+str(self.id)+")"
+    
+class IdInitialSearch(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdInitialSearch("+str(self.id)+")"
+    
+class IdGeneralEvaluator(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdGeneralEvaluator("+str(self.id)+")"
+    
+class IdEvaluator(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdEvaluator("+str(self.id)+")"
+    
+class IdNS(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdNS("+str(self.id)+")"
+    
+class IdNSSeq(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdNSSeq("+str(self.id)+")"
+    
+class IdListNS(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdListNS("+str(self.id)+")"
+    
+class IdListNSSeq(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdListNSSeq("+str(self.id)+")"
+
+class IdGlobalSearch(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdGlobalSearch("+str(self.id)+")"
+    
+class IdSingleObjSearch(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdSingleObjSearch("+str(self.id)+")"
+
+@runtime_checkable
 class XConstructive(Protocol):
     @staticmethod
     def generateSolution(problem: XProblem) -> XSolution:
@@ -483,11 +584,11 @@ class SingleObjSearch(object):
         ...
 
 class BasicSimulatedAnnealing(SingleObjSearch):
-    def __init__(self, _engine: XEngine, _ev:int, _is:int, _lns:int, alpha:float, iter:int, T0:float):
+    def __init__(self, _engine: XEngine, _ev: IdGeneralEvaluator, _is: IdInitialSearch, _lns: IdListNS, alpha:float, iter:int, T0:float):
         assert isinstance(_engine, XEngine)
         self.engine = _engine
         str_code    = "OptFrame:ComponentBuilder:GlobalSearch:SA:BasicSA"
-        str_args    = "OptFrame:GeneralEvaluator:Evaluator "+str(_ev)+" OptFrame:InitialSearch "+str(_is)+" OptFrame:NS[] "+str(_lns)+" "+str(alpha)+" "+str(iter)+" "+str(T0)
+        str_args    = "OptFrame:GeneralEvaluator:Evaluator "+str(_ev.id)+" OptFrame:InitialSearch "+str(_is.id)+" OptFrame:NS[] "+str(_lns.id)+" "+str(alpha)+" "+str(iter)+" "+str(T0)
         self.g_idx  = self.engine.build_global_search(str_code, str_args)
     def search(self, timelimit: float) -> SearchOutput:
         lout : SearchOutput = self.engine.run_global_search(self.g_idx, timelimit)
@@ -636,45 +737,54 @@ class Engine(object):
         return optframe_lib.optframe_api1d_engine_check(self.hf, p1, p2, verbose, onfail_callback_ptr)
  
     # ============ SETUP AUTOMATIC TYPES ============
-    def setup(self, p: XProblem, t = None):
+    def setup(self, p: XProblem, t = None) -> List[XIdComponent]:
         if (t is None):
             t = type(p)
-        ev_out = -1
-        c_out  = -1
+        ev_out = IdEvaluator(-1)
+        gev_out = IdGeneralEvaluator(-1)
+        c_out  = IdConstructive(-1)
+        list_out : List[XIdComponent] = []
         if isinstance(p, XMinimize):
             ev_out = self.add_minimize_class(p, t)
-            assert ev_out >= 0
+            assert ev_out.id >= 0
+            gev_out = IdGeneralEvaluator(ev_out.id)
         elif isinstance(p, XMaximize):
             ev_out = self.add_maximize_class(p, t)
-            assert ev_out >= 0
+            assert ev_out.id >= 0
+            gev_out = IdGeneralEvaluator(ev_out.id)
         if isinstance(p, XConstructive):
             c_out = self.add_constructive_class(p, t)
-            assert c_out >= 0
-        is_out = -1
-        if (ev_out >= 0) and (c_out >= 0):
+            assert c_out.id >= 0
+        list_out.append(gev_out)
+        list_out.append(ev_out)
+        list_out.append(c_out)
+        is_out = IdInitialSearch(-1)
+        if (ev_out.id >= 0) and (c_out.id >= 0):
             is_out = self.create_initial_search(ev_out, c_out)
-            assert is_out >= 0
-        return [ev_out, c_out, is_out]
+            assert is_out.id >= 0
+            list_out.append(is_out)
+        # return [ev_out, c_out, is_out]
+        return list_out
 
 
     # =================== ADD =========================
 
     # register GeneralEvaluator (as FEvaluator) for min_callback
-    def minimize(self, problemCtx, min_callback):
+    def minimize(self, problemCtx, min_callback) -> IdEvaluator:
         min_callback_ptr = FUNC_FEVALUATE(min_callback)
         self.register_callback(min_callback_ptr)
         #
         idx_ev = optframe_lib.optframe_api1d_add_evaluator(
             self.hf, min_callback_ptr, True, problemCtx)
-        return idx_ev
+        return IdEvaluator(idx_ev)
 
-    def maximize(self, problemCtx, max_callback):
+    def maximize(self, problemCtx, max_callback) -> IdEvaluator:
         max_callback_ptr = FUNC_FEVALUATE(max_callback)
         self.register_callback(max_callback_ptr)
         #
         idx_ev = optframe_lib.optframe_api1d_add_evaluator(
             self.hf, max_callback_ptr, False, problemCtx)
-        return idx_ev
+        return IdEvaluator(idx_ev)
     
     def add_minimize_class(self, problemCtx: XProblem, f: Type[XMinimize]):
         """
@@ -710,7 +820,7 @@ class Engine(object):
         #
         return self.maximize(problemCtx, f.maximize)
 
-    def add_constructive(self, problemCtx, constructive_callback):
+    def add_constructive(self, problemCtx, constructive_callback) -> IdConstructive:
         constructive_callback_ptr = FUNC_FCONSTRUCTIVE(constructive_callback)
         self.register_callback(constructive_callback_ptr)
         #
@@ -719,7 +829,7 @@ class Engine(object):
             self.callback_sol_deepcopy_ptr,
             self.callback_sol_tostring_ptr,
             self.callback_utils_decref_ptr)
-        return idx_c
+        return IdConstructive(idx_c)
     
     def add_constructive_class(self, problemCtx: XProblem, c: Type[XConstructive]):
         """
@@ -897,12 +1007,16 @@ class Engine(object):
     #            CREATE
     # =============================
 
-    def create_initial_search(self, ev_idx : int, c_idx : int):
+    def create_initial_search(self, ev_idx : IdEvaluator, c_idx : IdConstructive):
+        if isinstance(ev_idx, int):
+            ev_idx = IdEvaluator(ev_idx)
+        if isinstance(c_idx, int):
+            c_idx = IdConstructive(c_idx)
         idx_is = optframe_lib.optframe_api1d_create_initial_search(
-            self.hf, ev_idx, c_idx)
-        return idx_is
+            self.hf, ev_idx.id, c_idx.id)
+        return IdInitialSearch(idx_is)
 
-    def create_component_list(self, str_list : str, str_type : str):
+    def create_component_list(self, str_list : str, str_type : str) -> XIdComponent:
         if (not isinstance(str_list, str)):
             assert (False)
         b_list = str_list.encode('ascii')
@@ -912,13 +1026,15 @@ class Engine(object):
         #
         idx_list = optframe_lib.optframe_api1d_create_component_list(
             self.hf, b_list, b_type)
-        return idx_list
+        if str_type == "OptFrame:NS[]":
+            return IdListNS(idx_list)
+        return IdUnknown(idx_list)
 
     # =========================
     #         BUILD
     # =========================
 
-    def build_global_search(self, str_builder : str, str_params : str):
+    def build_global_search(self, str_builder : str, str_params : str) -> IdGlobalSearch:
         if (not isinstance(str_builder, str)):
             assert (False)
         b_builder = str_builder.encode('ascii')
@@ -928,9 +1044,9 @@ class Engine(object):
         #
         idx_list = optframe_lib.optframe_api1d_build_global(
             self.hf, b_builder, b_params)
-        return idx_list
+        return IdGlobalSearch(idx_list)
 
-    def build_single_obj_search(self, str_builder : str, str_params : str):
+    def build_single_obj_search(self, str_builder : str, str_params : str) -> IdSingleObjSearch:
         if (not isinstance(str_builder, str)):
             assert (False)
         b_builder = str_builder.encode('ascii')
@@ -940,7 +1056,7 @@ class Engine(object):
         #
         idx_list = optframe_lib.optframe_api1d_build_single(
             self.hf, b_builder, b_params)
-        return idx_list
+        return IdSingleObjSearch(idx_list)
 
     def build_local_search(self, str_builder : str, str_params : str):
         if (not isinstance(str_builder, str)):
@@ -971,14 +1087,14 @@ class Engine(object):
 
     # ===================== GET =======================
 
-    def get_evaluator(self, idx_ev : int = 0):
+    def get_evaluator(self, idx_ev: IdEvaluator = IdEvaluator(0)):
         fevaluator = optframe_lib.optframe_api0d_get_evaluator(
-            self.hf, idx_ev)
+            self.hf, idx_ev.id)
         return fevaluator
 
-    def get_constructive(self, idx_c : int = 0):
+    def get_constructive(self, idx_c: IdConstructive = IdConstructive(0)):
         fconstructive = optframe_lib.optframe_api0d_get_constructive(
-            self.hf, idx_c)
+            self.hf, idx_c.id)
         return fconstructive
 
     # ==================================================
@@ -1020,15 +1136,15 @@ class Engine(object):
         # print("XXXXX FINISHED 'fconstructive_gensolution'!")
         return cast_pyo.value
 
-    def run_global_search(self, g_idx: int, timelimit: float) -> SearchOutput:
+    def run_global_search(self, g_idx: IdGlobalSearch, timelimit: float) -> SearchOutput:
         lout = optframe_lib.optframe_api1d_run_global_search(
-            self.hf, g_idx, timelimit)
+            self.hf, g_idx.id, timelimit)
         # l2out = SearchOutput(lout)
         return lout
 
-    def run_sos_search(self, sos_idx: int, timelimit: float) -> SearchOutput:
+    def run_sos_search(self, sos_idx: IdSingleObjSearch, timelimit: float) -> SearchOutput:
         lout = optframe_lib.optframe_api1d_run_sos_search(
-            self.hf, sos_idx, timelimit)
+            self.hf, sos_idx.id, timelimit)
         # l2out = SearchOutput(lout)
         return lout
 

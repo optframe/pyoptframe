@@ -1300,6 +1300,7 @@ optframe_api1d_add_rk_constructive(FakeEnginePtr _engine,
       vobj_local.v = 0;
       //
       int ret_sz = _fconstructive(problem_view, &vobj_local);
+      (void)ret_sz; // prevent unused
       assert(ret_sz >= 0);
       std::vector<double> vec(vobj_local.v, vobj_local.v + vobj_local.size);
       //
@@ -1334,6 +1335,7 @@ optframe_api0_set_array_double(int sz, double* vec, LibArrayDouble* lad_ptr)
    assert(sz >= 0);
    // arbitrary limit, just for safety...
    constexpr int LIMIT_ARRAY_DOUBLE = 10'000;
+   (void)LIMIT_ARRAY_DOUBLE; // prevent unused
    assert(sz <= LIMIT_ARRAY_DOUBLE);
    (*lad_ptr).size = sz;
    (*lad_ptr).v = new double[sz];

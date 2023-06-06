@@ -107,7 +107,7 @@ pKP.engine.check(100, 10, False)
 # reset component_log_level flag (retryDebug may change it!)
 pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
 
-sa = BasicSimulatedAnnealing(pKP.engine, 0, 0, list_idx, 0.99, 100, 999)
+sa = BasicSimulatedAnnealing(pKP.engine, v[0], v[3], list_idx, 0.99, 100, 999)
 sout = sa.search(4.0)
 print("Best solution: ",   sout.best_s)
 print("Best evaluation: ", sout.best_e)
