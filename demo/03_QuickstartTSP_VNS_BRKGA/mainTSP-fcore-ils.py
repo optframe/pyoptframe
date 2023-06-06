@@ -98,7 +98,7 @@ class MoveSwap(object):
     def eq(problemCtx: ProblemContextTSP, m1: 'MoveSwap', m2: 'MoveSwap') -> bool:
         return (m1.i == m2.i) and (m1.j == m2.j)
 
-class NSSeqBitFlip(object):
+class NSSwap(object):
     @staticmethod
     def randomMove(pTSP: ProblemContextTSP, sol: SolutionTSP) -> MoveSwap:
         import random
@@ -110,33 +110,45 @@ class NSSeqBitFlip(object):
         return MoveSwap(i, j)
 # For NSSeq, one must provide a Move Iterator
 # A Move Iterator has five actions: Init, First, Next, IsDone and Current
-#class NSSeqBitFlip(object):
-    class IteratorSwap(object):
-        def __init__(self, _i: int, _j: int):
-            self.i = _i
-            self.j = _j
-#class NSSeqBitFlip(object):
+
+class IteratorSwap(object):
+    def __init__(self, _i: int, _j: int):
+        self.i = _i
+        self.j = _j
     @staticmethod
-    def getIterator(pTSP: ProblemContextTSP, sol: SolutionTSP) -> IteratorSwap:
-        return IteratorSwap(-1, -1)
-    @staticmethod
-    def first(pTSP: ProblemContextTSP, it: IteratorSwap):
+    def first(pTSP: ProblemContextTSP, it: 'IteratorSwap'):
         it.i = 0
         it.j = 1
     @staticmethod
-    def next(pTSP: ProblemContextTSP, it: IteratorSwap):
+    def next(pTSP: ProblemContextTSP, it: 'IteratorSwap'):
         if it.j < pTSP.n - 1:
             it.j = it.j+1
         else:
             it.i = it.i + 1
             it.j = it.i + 1
     @staticmethod
-    def isDone(pTSP: ProblemContextTSP, it: IteratorSwap):
+    def isDone(pTSP: ProblemContextTSP, it: 'IteratorSwap'):
         return it.i >= pTSP.n - 1
 
     @staticmethod
-    def current(pTSP: ProblemContextTSP, it: IteratorSwap):
+    def current(pTSP: ProblemContextTSP, it: 'IteratorSwap'):
         return MoveSwap(it.i, it.j)
+    
+class NSSeqSwap(object):
+    @staticmethod
+    def randomMove(pTSP: ProblemContextTSP, sol: SolutionTSP) -> MoveSwap:
+        # there is no need to repeat from previous NSSwap, but this makes example more clear
+        import random
+        i = random.randint(0, pTSP.n - 1)
+        j = i
+        while  j <= i:
+            i = random.randint(0, pTSP.n - 1)
+            j = random.randint(0, pTSP.n - 1)
+        return MoveSwap(i, j)
+    
+    @staticmethod
+    def getIterator(pTSP: ProblemContextTSP, sol: SolutionTSP) -> IteratorSwap:
+        return IteratorSwap(-1, -1)
 # ===========================================
 # begins main() python script for TSP ILS/VNS
 # ===========================================
@@ -153,18 +165,23 @@ pTSP.load('tsp-example.txt')
 #pTSP.dist = ...
 
 # initializes optframe engine
-pTSP.engine = optframe.Engine(optframe.APILevel.API1d)
+#pTSP.engine = optframe.Engine(optframe.APILevel.API1d)
 print(pTSP)
 
 # Register Basic Components
+comp_list = pTSP.engine.setup(pTSP)
+print(comp_list)
 
-ev_idx = pTSP.engine.minimize(pTSP, mycallback_fevaluate)
+#ev_idx = pTSP.engine.minimize(pTSP, mycallback_fevaluate)
+ev_idx = comp_list[0]
 print("evaluator id:", ev_idx)
 
-c_idx = pTSP.engine.add_constructive(pTSP, mycallback_constructive)
+#c_idx = pTSP.engine.add_constructive(pTSP, mycallback_constructive)
+c_idx = comp_list[2]
 print("c_idx=", c_idx)
 
-is_idx = pTSP.engine.create_initial_search(ev_idx, c_idx)
+#is_idx = pTSP.engine.create_initial_search(ev_idx, c_idx)
+is_idx = 0
 print("is_idx=", is_idx)
 
 # test each component
@@ -205,11 +222,13 @@ print(pTSP.engine.list_builders("OptFrame:"))
 print()
 
 # get index of new NS
-ns_idx = pTSP.engine.add_ns(pTSP,
-                           mycallback_ns_rand_swap,
-                           apply_swap,
-                           eq_swap,
-                           cba_swap)
+#ns_idx = pTSP.engine.add_ns(pTSP,
+#                           mycallback_ns_rand_swap,
+#                           apply_swap,
+#                           eq_swap,
+#                           cba_swap)
+ns_idx = pTSP.engine.add_ns_class(pTSP, NSSeqSwap)
+
 print("ns_idx=", ns_idx)
 
 # pack NS into a NS list
@@ -219,20 +238,24 @@ print("list_idx=", list_idx)
 
 
 # get index of new NSSeq
-nsseq_idx = pTSP.engine.add_nsseq(pTSP,
-                                 mycallback_ns_rand_swap,
-                                 mycallback_nsseq_it_init_swap,
-                                 mycallback_nsseq_it_first_swap,
-                                 mycallback_nsseq_it_next_swap,
-                                 mycallback_nsseq_it_isdone_swap,
-                                 mycallback_nsseq_it_current_swap,
-                                 apply_swap,
-                                 eq_swap,
-                                 cba_swap)
+#nsseq_idx = pTSP.engine.add_nsseq(pTSP,
+#                                 mycallback_ns_rand_swap,
+#                                 mycallback_nsseq_it_init_swap,
+#                                 mycallback_nsseq_it_first_swap,
+#                                 mycallback_nsseq_it_next_swap,
+#                                 mycallback_nsseq_it_isdone_swap,
+#                                 mycallback_nsseq_it_current_swap,
+#                                 apply_swap,
+#                                 eq_swap,
+#                                 cba_swap)
+nsseq_idx = pTSP.engine.add_nsseq_class(pTSP, NSSeqSwap)
 print("nsseq_idx=", nsseq_idx)
 
 
 print("building 'BI' neighborhood exploration as local search")
+
+# make next local search component silent (loglevel 0)
+pTSP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
 
 ls_idx = pTSP.engine.build_local_search(
     "OptFrame:ComponentBuilder:LocalSearch:BI",
@@ -275,6 +298,9 @@ pTSP.engine.list_components("OptFrame:")
 print("")
 print("testing builder (build_single_obj_search) for ILS...")
 print("")
+
+# make next global search component info (loglevel 3)
+pTSP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "3")
 
 sos_idx = pTSP.engine.build_single_obj_search(
     "OptFrame:ComponentBuilder:SingleObjSearch:ILS:ILSLevels",

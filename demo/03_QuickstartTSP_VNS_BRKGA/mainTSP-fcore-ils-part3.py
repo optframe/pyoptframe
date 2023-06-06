@@ -21,6 +21,9 @@ print("")
 print("testing builder (build_single_obj_search) for ILS...")
 print("")
 
+# make next global search component info (loglevel 3)
+pTSP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "3")
+
 sos_idx = pTSP.engine.build_single_obj_search(
     "OptFrame:ComponentBuilder:SingleObjSearch:ILS:ILSLevels",
     "OptFrame:GeneralEvaluator:Evaluator 0 OptFrame:InitialSearch 0  OptFrame:LocalSearch 1 OptFrame:ILS:LevelPert 0  10  5")

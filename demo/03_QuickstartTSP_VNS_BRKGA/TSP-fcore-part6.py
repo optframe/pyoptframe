@@ -1,5 +1,5 @@
 
-class NSSeqBitFlip(object):
+class NSSwap(object):
     @staticmethod
     def randomMove(pTSP: ProblemContextTSP, sol: SolutionTSP) -> MoveSwap:
         import random

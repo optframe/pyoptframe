@@ -11,18 +11,23 @@ pTSP.load('tsp-example.txt')
 #pTSP.dist = ...
 
 # initializes optframe engine
-pTSP.engine = optframe.Engine(optframe.APILevel.API1d)
+#pTSP.engine = optframe.Engine(optframe.APILevel.API1d)
 print(pTSP)
 
 # Register Basic Components
+comp_list = pTSP.engine.setup(pTSP)
+print(comp_list)
 
-ev_idx = pTSP.engine.minimize(pTSP, mycallback_fevaluate)
+#ev_idx = pTSP.engine.minimize(pTSP, mycallback_fevaluate)
+ev_idx = comp_list[0]
 print("evaluator id:", ev_idx)
 
-c_idx = pTSP.engine.add_constructive(pTSP, mycallback_constructive)
+#c_idx = pTSP.engine.add_constructive(pTSP, mycallback_constructive)
+c_idx = comp_list[2]
 print("c_idx=", c_idx)
 
-is_idx = pTSP.engine.create_initial_search(ev_idx, c_idx)
+#is_idx = pTSP.engine.create_initial_search(ev_idx, c_idx)
+is_idx = 0
 print("is_idx=", is_idx)
 
 # test each component
@@ -63,11 +68,13 @@ print(pTSP.engine.list_builders("OptFrame:"))
 print()
 
 # get index of new NS
-ns_idx = pTSP.engine.add_ns(pTSP,
-                           mycallback_ns_rand_swap,
-                           apply_swap,
-                           eq_swap,
-                           cba_swap)
+#ns_idx = pTSP.engine.add_ns(pTSP,
+#                           mycallback_ns_rand_swap,
+#                           apply_swap,
+#                           eq_swap,
+#                           cba_swap)
+ns_idx = pTSP.engine.add_ns_class(pTSP, NSSeqSwap)
+
 print("ns_idx=", ns_idx)
 
 # pack NS into a NS list
@@ -77,20 +84,24 @@ print("list_idx=", list_idx)
 
 
 # get index of new NSSeq
-nsseq_idx = pTSP.engine.add_nsseq(pTSP,
-                                 mycallback_ns_rand_swap,
-                                 mycallback_nsseq_it_init_swap,
-                                 mycallback_nsseq_it_first_swap,
-                                 mycallback_nsseq_it_next_swap,
-                                 mycallback_nsseq_it_isdone_swap,
-                                 mycallback_nsseq_it_current_swap,
-                                 apply_swap,
-                                 eq_swap,
-                                 cba_swap)
+#nsseq_idx = pTSP.engine.add_nsseq(pTSP,
+#                                 mycallback_ns_rand_swap,
+#                                 mycallback_nsseq_it_init_swap,
+#                                 mycallback_nsseq_it_first_swap,
+#                                 mycallback_nsseq_it_next_swap,
+#                                 mycallback_nsseq_it_isdone_swap,
+#                                 mycallback_nsseq_it_current_swap,
+#                                 apply_swap,
+#                                 eq_swap,
+#                                 cba_swap)
+nsseq_idx = pTSP.engine.add_nsseq_class(pTSP, NSSeqSwap)
 print("nsseq_idx=", nsseq_idx)
 
 
 print("building 'BI' neighborhood exploration as local search")
+
+# make next local search component silent (loglevel 0)
+pTSP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
 
 ls_idx = pTSP.engine.build_local_search(
     "OptFrame:ComponentBuilder:LocalSearch:BI",
