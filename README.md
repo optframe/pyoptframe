@@ -10,7 +10,7 @@ Version: `pyoptframe v5.0.21rc0`
 
 Documentation and Tutorials: see [Draft PyOptFrame Quickstart](https://pyoptframe.readthedocs.io/en/latest/quickstart.html)
 
-Play on Colab: [BRKGA TSP Example](https://colab.research.google.com/drive/1UCP5t5DIMxKk1Vd25WRLLbPevv1t4Zoq?usp=sharing)
+Play on Jupyter Notebook: [BRKGA TSP Example](demo/OptFrame_BRKGA_Official.ipynb)
 
 [OptFrame](https://github.com/optframe/optframe) is a C++ framework for optimization problems, including techniques such as classic metaheuristics Simulated Annealing, Genetic Algorithm, 
 Variable Neighborhood Search, Iterated Local Search, Tabu Search, Particle Swarm Optimization, NSGA-II, and other single and multi-objective methods.
