@@ -54,6 +54,33 @@ class ILSLevels(SingleObjSearch):
     def search(self, timelimit: float) -> SearchOutput:
         lout : SearchOutput = self.engine.run_global_search(self.g_idx, timelimit)
         return lout
+    
+# ================================
+#       Helper Components
+# ================================
+
+class ILSLevelPertLPlus2(object):
+    def __init__(self, _engine: XEngine, _ev: IdGeneralEvaluator, _ns: IdNS):
+        assert isinstance(_engine, XEngine)
+        if (isinstance(_ev, int)):
+            _ev = IdGeneralEvaluator(_ev)
+        if (not isinstance(_ev, IdGeneralEvaluator)):
+            print(_ev)
+            assert (False)
+        if (isinstance(_ns, int)):
+            _ns = IdNS(_ns)
+        if (not isinstance(_ns, IdNS)):
+            print(_ns)
+            assert (False)
+        self.engine = _engine
+        str_code    = "OptFrame:ComponentBuilder:ILS:LevelPert:LPlus2"
+        str_args    = "OptFrame:GeneralEvaluator "+str(_ev.id)+" OptFrame:NS "+str(_ns.id)
+        str_target  = "OptFrame:ILS:LevelPert"
+        self.comp_idx  = IdILSLevelPert(self.engine.build_component(str_code, str_args, str_target))
+    def get_id(self) -> IdILSLevelPert:
+        return self.comp_idx
+
+
 
 
 # ================================
@@ -75,6 +102,28 @@ class BestImprovement(LocalSearch):
             assert (False)
         self.engine = _engine
         str_code    = "OptFrame:ComponentBuilder:LocalSearch:BI"
-        str_args    = "OptFrame:GeneralEvaluator:Evaluator "+str(_ev.id)+" OptFrame:NS:NSFind:NSSeq "+str(_nsseq.id)
+        str_args    = "OptFrame:GeneralEvaluator "+str(_ev.id)+" OptFrame:NS:NSFind:NSSeq "+str(_nsseq.id)
         self.ls_idx  = self.engine.build_local_search(str_code, str_args)
-    
+    def get_id(self) -> IdLocalSearch:
+        return self.ls_idx
+
+class VariableNeighborhoodDescent(LocalSearch):
+    def __init__(self, _engine: XEngine, _ev: IdGeneralEvaluator, _lslist: IdListLocalSearch):
+        assert isinstance(_engine, XEngine)
+        if (isinstance(_ev, int)):
+            _ev = IdGeneralEvaluator(_ev)
+        if (not isinstance(_ev, IdGeneralEvaluator)):
+            print(_ev)
+            assert (False)
+        if (isinstance(_lslist, int)):
+            _lslist = IdListLocalSearch(_lslist)
+        if (not isinstance(_lslist, IdListLocalSearch)):
+            print(_lslist)
+            assert (False)
+        self.engine = _engine
+        str_code    = "OptFrame:ComponentBuilder:LocalSearch:VND"
+        str_args    = "OptFrame:GeneralEvaluator "+str(_ev.id)+" OptFrame:LocalSearch[] "+str(_lslist.id)
+        self.ls_idx  = self.engine.build_local_search(str_code, str_args)
+    def get_id(self) -> IdLocalSearch:
+        return self.ls_idx
+

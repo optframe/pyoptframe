@@ -738,8 +738,11 @@ class Engine(object):
         #
         idx_list = optframe_lib.optframe_api1d_create_component_list(
             self.hf, b_list, b_type)
+        #
         if str_type == "OptFrame:NS[]":
             return IdListNS(idx_list)
+        if str_type == "OptFrame:LocalSearch[]":
+            return IdListLocalSearch(idx_list)
         return IdUnknown(idx_list)
 
     # =========================
@@ -780,7 +783,7 @@ class Engine(object):
         #
         idx_list = optframe_lib.optframe_api1d_build_local_search(
             self.hf, b_builder, b_params)
-        return idx_list
+        return IdLocalSearch(idx_list)
 
     def build_component(self, str_builder : str, str_params : str, str_component_type : str):
         if (not isinstance(str_builder, str)):

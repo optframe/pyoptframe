@@ -106,6 +106,14 @@ class IdLocalSearch(object):
     def __repr__(self) -> str:
         return "IdLocalSearch("+str(self.id)+")"
     
+class IdListLocalSearch(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdListLocalSearch("+str(self.id)+")"
+    
 class IdILSLevelPert(object):
     def __init__(self, id: int):
         self.id = id

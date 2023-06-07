@@ -79,25 +79,17 @@ print("list_idx=", list_idx)
 pTSP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
 
 print("building 'BI' neighborhood exploration as local search", flush=True)
-
 bi = BestImprovement(pTSP.engine, 0, 0)
-ls_idx = bi.ls_idx
-#ls_idx = pTSP.engine.build_local_search(
-#    "OptFrame:ComponentBuilder:LocalSearch:BI",
-#    "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:NS:NSFind:NSSeq 0")
+ls_idx = bi.get_id()
 print("ls_idx=", ls_idx, flush=True)
 
-
 print("creating local search list", flush=True)
-
 list_vnd_idx = pTSP.engine.create_component_list(
     "[ OptFrame:LocalSearch 0 ]", "OptFrame:LocalSearch[]")
 print("list_vnd_idx=", list_vnd_idx)
 
 
 print("building 'VND' local search")
-
-vnd_idx = pTSP.engine.build_local_search(
-    "OptFrame:ComponentBuilder:LocalSearch:VND",
-    "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:LocalSearch[] 0")
+vnd = VariableNeighborhoodDescent(pTSP.engine, 0, 0)
+vnd_idx = vnd.get_id()
 print("vnd_idx=", vnd_idx)
