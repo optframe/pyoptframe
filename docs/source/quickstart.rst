@@ -160,7 +160,7 @@ In this case, the `move structure` (representation of the move) is just an :code
     // COMMENTS
     MoveBitFlip ...
 
-Note the three static methods `apply`, `canBeApplied` and `equals`.
+Note the three class methods `apply`, `canBeApplied` and `equals`.
 
 .. literalinclude:: ../../demo/02_QuickstartKP_SA/KP-fcore-ex-part5.py
     :linenos:
