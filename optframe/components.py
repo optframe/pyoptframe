@@ -122,6 +122,30 @@ class IdILSLevelPert(object):
     def __repr__(self) -> str:
         return "IdILSLevelPert("+str(self.id)+")"
 
+#############
+
+class Move(object):
+    def __str__(self) -> str:
+        ...
+    def apply(self, problemCtx: XProblem, sol: XSolution) -> 'Move':
+        ...
+    def canBeApplied(self, problemCtx: XProblem, sol: XSolution) -> bool:
+        return True
+    def eq(self, problemCtx: XProblem, m2: 'Move') -> bool:
+        ...
+
+class NSIterator(object):
+    def first(self, p: XProblem):
+        ...
+    def next(self, p: XProblem):
+        ...
+    def isDone(self, p: XProblem) -> bool:
+        ...
+    def current(self, p: XProblem) -> Move:
+        ...
+
+# there is no NS component, only XNS protocol
+# there is no NSSeq component, only XNSSeq protocol
 
 #############
 

@@ -1,15 +1,14 @@
 
-class MoveBitFlip(object):
+from optframe.components import Move
+
+class MoveBitFlip(Move):
     def __init__(self, _k :int):
         self.k = _k
-    @staticmethod
-    def apply(problemCtx: ExampleKP, m: 'MoveBitFlip', sol: SolutionKP) -> 'MoveBitFlip':
-        sol.bag[m.k] = 1 - sol.bag[m.k]
-        return MoveBitFlip(m.k)
-    @staticmethod
-    def canBeApplied(problemCtx: ExampleKP, m: 'MoveBitFlip', sol: SolutionKP) -> bool:
+    def apply(self, problemCtx: ExampleKP, sol: SolutionKP) -> 'MoveBitFlip':
+        sol.bag[self.k] = 1 - sol.bag[self.k]
+        return MoveBitFlip(self.k)
+    def canBeApplied(self, problemCtx: ExampleKP, sol: SolutionKP) -> bool:
         return True
-    @staticmethod
-    def eq(problemCtx: ExampleKP, m1: 'MoveBitFlip', m2: 'MoveBitFlip') -> bool:
-        return m1.k == m2.k
+    def eq(self, problemCtx: ExampleKP, m2: 'MoveBitFlip') -> bool:
+        return self.k == m2.k
     

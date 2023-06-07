@@ -13,7 +13,7 @@ ns_idx = 0
 # make engine silent (loglevel 0)
 pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "0")
 
-# test each component
+# ======= play a little bit ========
 
 fev = pKP.engine.get_evaluator(ev_idx)
 pKP.engine.print_component(fev)
@@ -26,3 +26,5 @@ print("solxx:", solxx)
 
 z1 = pKP.engine.fevaluator_evaluate(fev, False, solxx)
 print("evaluation:", z1)
+
+# ====== end playing ======

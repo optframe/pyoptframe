@@ -46,18 +46,18 @@ z1 = pTSP.engine.fevaluator_evaluate(fev, True, solxx)
 print("test evaluation:", z1)
 
 # some basic tests with moves and iterator
-move = MoveSwap(0,1) # swap 0 with 1
-print(move)
+move = MoveSwapClass(0,1) # swap 0 with 1
+print("move=",move)
 m1 = NSSwap.randomMove(pTSP, solxx)
 print(m1)
 
 print("begin test with iterator")
-it1 = NSSeqSwap.getIterator(pTSP, solxx)
-IteratorSwap.first(pTSP, it1)
-while not IteratorSwap.isDone(pTSP, it1):
-    m = IteratorSwap.current(pTSP, it1)
+it = NSSeqSwap.getIterator(pTSP, solxx)
+it.first(pTSP)
+while not it.isDone(pTSP):
+    m = it.current(pTSP)
     print(m)
-    IteratorSwap.next(pTSP, it1)
+    it.next(pTSP)
 print("end test with iterator")
 
 # ======== end playing ========

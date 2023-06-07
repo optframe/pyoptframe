@@ -67,19 +67,18 @@ assert isinstance(ExampleKP,  XProblem)      # composition tests
 assert isinstance(ExampleKP,  XConstructive) # composition tests    
 assert isinstance(ExampleKP,  XMaximize)     # composition tests
 
-class MoveBitFlip(object):
+from optframe.components import Move
+
+class MoveBitFlip(Move):
     def __init__(self, _k :int):
         self.k = _k
-    @staticmethod
-    def apply(problemCtx: ExampleKP, m: 'MoveBitFlip', sol: SolutionKP) -> 'MoveBitFlip':
-        sol.bag[m.k] = 1 - sol.bag[m.k]
-        return MoveBitFlip(m.k)
-    @staticmethod
-    def canBeApplied(problemCtx: ExampleKP, m: 'MoveBitFlip', sol: SolutionKP) -> bool:
+    def apply(self, problemCtx: ExampleKP, sol: SolutionKP) -> 'MoveBitFlip':
+        sol.bag[self.k] = 1 - sol.bag[self.k]
+        return MoveBitFlip(self.k)
+    def canBeApplied(self, problemCtx: ExampleKP, sol: SolutionKP) -> bool:
         return True
-    @staticmethod
-    def eq(problemCtx: ExampleKP, m1: 'MoveBitFlip', m2: 'MoveBitFlip') -> bool:
-        return m1.k == m2.k
+    def eq(self, problemCtx: ExampleKP, m2: 'MoveBitFlip') -> bool:
+        return self.k == m2.k
     
 class NSBitFlip(object):
     @staticmethod
@@ -87,7 +86,6 @@ class NSBitFlip(object):
         import random
         return MoveBitFlip(random.randint(0, pKP.n - 1))
 
-assert isinstance(MoveBitFlip, XMove) # composition tests
 assert isinstance(NSBitFlip, XNS)     # composition tests
 
 # ===========================
@@ -124,7 +122,7 @@ ns_idx = 0
 # make engine silent (loglevel 0)
 pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "0")
 
-# test each component
+# ======= play a little bit ========
 
 fev = pKP.engine.get_evaluator(ev_idx)
 pKP.engine.print_component(fev)
@@ -137,6 +135,8 @@ print("solxx:", solxx)
 
 z1 = pKP.engine.fevaluator_evaluate(fev, False, solxx)
 print("evaluation:", z1)
+
+# ====== end playing ======
 
 # list the required parameters for OptFrame SA ComponentBuilder
 print("engine will list builders for :BasicSA ")

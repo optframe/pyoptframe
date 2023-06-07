@@ -1,35 +1,37 @@
 
+#from optframe.components import NSSeq
+from optframe.components import NSIterator
+
 # For NSSeq, one must provide a Move Iterator
 # A Move Iterator has five actions: Init, First, Next, IsDone and Current
 
-class IteratorSwap(object):
+class IteratorSwap(NSIterator):
     def __init__(self, _i: int, _j: int):
         self.i = _i
         self.j = _j
-    @staticmethod
-    def first(pTSP: ProblemContextTSP, it: 'IteratorSwap'):
-        it.i = 0
-        it.j = 1
-    @staticmethod
-    def next(pTSP: ProblemContextTSP, it: 'IteratorSwap'):
-        if it.j < pTSP.n - 1:
-            it.j = it.j+1
+    def first(self, pTSP: ProblemContextTSP):
+        self.i = 0
+        self.j = 1
+    def next(self, pTSP: ProblemContextTSP):
+        if self.j < pTSP.n - 1:
+            self.j = self.j+1
         else:
-            it.i = it.i + 1
-            it.j = it.i + 1
-    @staticmethod
-    def isDone(pTSP: ProblemContextTSP, it: 'IteratorSwap'):
-        return it.i >= pTSP.n - 1
-
-    @staticmethod
-    def current(pTSP: ProblemContextTSP, it: 'IteratorSwap'):
-        return MoveSwap(it.i, it.j)
+            self.i = self.i + 1
+            self.j = self.i + 1
+    def isDone(self, pTSP: ProblemContextTSP):
+        return self.i >= pTSP.n - 1
+    def current(self, pTSP: ProblemContextTSP):
+        return MoveSwapClass(self.i, self.j)
+    
+assert IteratorSwap in NSIterator.__subclasses__()   # optional test
     
 class NSSeqSwap(object):
     @staticmethod
-    def randomMove(pTSP: ProblemContextTSP, sol: SolutionTSP) -> MoveSwap:
-        return NSSwap.randomMove(pTSP, sol) # reuse method from NSSwap
+    def randomMove(pTSP: ProblemContextTSP, sol: SolutionTSP) -> MoveSwapClass:
+        return NSSwap.randomMove(pTSP, sol)  # composition
     
     @staticmethod
     def getIterator(pTSP: ProblemContextTSP, sol: SolutionTSP) -> IteratorSwap:
         return IteratorSwap(-1, -1)
+
+#assert NSSeqSwap in NSSeq.__subclasses__()   # optional test

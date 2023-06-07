@@ -637,12 +637,29 @@ class Engine(object):
         assert isinstance(ns, XNS)
         assert inspect.isclass(ns)
         assert not inspect.isclass(problemCtx)
+        # get move type
+        mType = inspect.signature(ns.randomMove).return_annotation
+        print("ns::mType = ", mType)
+        assert isinstance(mType, XMove)
+        assert inspect.isclass(mType)
         #
-        m = inspect.signature(ns.randomMove).return_annotation
-        assert isinstance(m, XMove)
-        assert inspect.isclass(m)
+        funcApply        : Callable[[XProblem, mType, XSolution], mType] = None
+        funcCanBeApplied : Callable[[XProblem, mType, XSolution], bool] = None
+        funcEq           : Callable[[XProblem, mType, mType], bool] = None
+        if mType in Move.__subclasses__():
+            # mType inherits Move! must wrap 'self'
+            funcApply        = lambda p, m, sol: m.apply(p, sol) 
+            funcCanBeApplied = lambda p, m, sol: m.canBeApplied(p, sol) 
+            funcEq           = lambda p, m1, m2: m1.eq(p, m2) 
+        else:
+            # mType does not inherit Move! must use static methods
+            funcApply        = mType.apply
+            funcEq           = mType.eq
+            funcCanBeApplied = mType.canBeApplied
         #
-        return self.add_ns(problemCtx, ns.randomMove, m.apply, m.eq, m.canBeApplied, isXMES)
+        funcRandomMove : Callable[[XProblem, XSolution], mType] = ns.randomMove
+        #
+        return self.add_ns(problemCtx, funcRandomMove, funcApply, funcEq, funcCanBeApplied, isXMES)
 
     def add_nsseq(self, problemCtx,
                   ns_rand_callback,
@@ -703,17 +720,52 @@ class Engine(object):
         assert inspect.isclass(nsseq)
         assert not inspect.isclass(problemCtx)
         #
-        m = inspect.signature(nsseq.randomMove).return_annotation
-        assert isinstance(m, XMove)
-        assert inspect.isclass(m)
+        mType = inspect.signature(nsseq.randomMove).return_annotation
+        print("nsseq::mType = ", mType)
+        assert isinstance(mType, XMove)
+        assert inspect.isclass(mType)
+        #
+        funcApply        : Callable[[XProblem, mType, XSolution], mType] = None
+        funcCanBeApplied : Callable[[XProblem, mType, XSolution], bool] = None
+        funcEq           : Callable[[XProblem, mType, mType], bool] = None
+        if mType in Move.__subclasses__():
+            # mType inherits Move! must wrap 'self'
+            funcApply        = lambda p, m, sol: m.apply(p, sol) 
+            funcCanBeApplied = lambda p, m, sol: m.canBeApplied(p, sol) 
+            funcEq           = lambda p, m1, m2: m1.eq(p, m2) 
+        else:
+            # mType does not inherit Move! must use static methods
+            funcApply = mType.apply
+            funcEq = mType.eq
+            funcCanBeApplied = mType.canBeApplied
+        #
+        funcRandomMove : Callable[[XProblem, XSolution], mType] = nsseq.randomMove
         #
         nsiterator = inspect.signature(nsseq.getIterator).return_annotation
         assert isinstance(nsiterator, XNSIterator)
         assert inspect.isclass(nsiterator)
         #
-        return self.add_nsseq(problemCtx, nsseq.randomMove,
-                  nsseq.getIterator, nsiterator.first, nsiterator.next, nsiterator.isDone, nsiterator.current,
-                  m.apply, m.eq, m.canBeApplied)
+        funcFirst   : Callable[[XProblem, nsiterator], None]  = None
+        funcNext    : Callable[[XProblem, nsiterator], None]  = None
+        funcIsDone  : Callable[[XProblem, nsiterator], bool]  = None
+        funcCurrent : Callable[[XProblem, nsiterator], mType] = None
+        if nsiterator in NSIterator.__subclasses__():
+            # nsiterator inherits NSIterator! must wrap 'self'
+            funcFirst   = lambda p, it: it.first(p) 
+            funcNext    = lambda p, it: it.next(p) 
+            funcIsDone  = lambda p, it: it.isDone(p) 
+            funcCurrent = lambda p, it: it.current(p) 
+        else:
+            # nsiterator does not inherit NSIterator! must use static methods
+            funcFirst   = nsiterator.first
+            funcNext    = nsiterator.next
+            funcIsDone  = nsiterator.isDone
+            funcCurrent = nsiterator.current
+            assert False
+        #
+        return self.add_nsseq(problemCtx, funcRandomMove,
+                  nsseq.getIterator, funcFirst, funcNext, funcIsDone, funcCurrent,
+                  funcApply, funcEq, funcCanBeApplied)
 
     # =============================
     #            CREATE
