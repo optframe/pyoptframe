@@ -800,11 +800,21 @@ class Engine(object):
     # ===================== GET =======================
 
     def get_evaluator(self, idx_ev: IdEvaluator = IdEvaluator(0)):
+        if (isinstance(idx_ev, int)):
+            idx_ev = IdEvaluator(idx_ev)
+        if (not isinstance(idx_ev, IdEvaluator)):
+            print(idx_ev)
+            assert (False)
         fevaluator = optframe_lib.optframe_api0d_get_evaluator(
             self.hf, idx_ev.id)
         return fevaluator
 
     def get_constructive(self, idx_c: IdConstructive = IdConstructive(0)):
+        if (isinstance(idx_c, int)):
+            idx_c = IdConstructive(idx_c)
+        if (not isinstance(idx_c, IdConstructive)):
+            print(idx_c)
+            assert (False)
         fconstructive = optframe_lib.optframe_api0d_get_constructive(
             self.hf, idx_c.id)
         return fconstructive

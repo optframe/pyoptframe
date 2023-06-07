@@ -122,3 +122,8 @@ class SingleObjSearch(object):
         self.engine = _engine
     def search(self, timelimit: float) -> SearchOutput:
         ...
+
+class LocalSearch(object):
+    def __init__(self, _engine: XEngine):
+        self.engine = _engine
+    # no 'searchFrom' here, yet...

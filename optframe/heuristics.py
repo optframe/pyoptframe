@@ -6,9 +6,13 @@ from optframe.components import *
 class BasicSimulatedAnnealing(SingleObjSearch):
     def __init__(self, _engine: XEngine, _ev: IdGeneralEvaluator, _is: IdInitialSearch, _lns: IdListNS, alpha:float, iter:int, T0:float):
         assert isinstance(_engine, XEngine)
+        if (isinstance(_ev, int)):
+            _ev = IdGeneralEvaluator(_ev)
         if (not isinstance(_ev, IdGeneralEvaluator)):
             print(_ev)
             assert (False)
+        if (isinstance(_is, int)):
+            _is = IdInitialSearch(_is)
         if (not isinstance(_is, IdInitialSearch)):
             print(_is)
             assert (False)
@@ -50,3 +54,27 @@ class ILSLevels(SingleObjSearch):
     def search(self, timelimit: float) -> SearchOutput:
         lout : SearchOutput = self.engine.run_global_search(self.g_idx, timelimit)
         return lout
+
+
+# ================================
+#         Local Search
+# ================================
+
+class BestImprovement(LocalSearch):
+    def __init__(self, _engine: XEngine, _ev: IdGeneralEvaluator, _nsseq: IdNSSeq):
+        assert isinstance(_engine, XEngine)
+        if (isinstance(_ev, int)):
+            _ev = IdGeneralEvaluator(_ev)
+        if (not isinstance(_ev, IdGeneralEvaluator)):
+            print(_ev)
+            assert (False)
+        if (isinstance(_nsseq, int)):
+            _nsseq = IdNSSeq(_nsseq)
+        if (not isinstance(_nsseq, IdNSSeq)):
+            print(_nsseq)
+            assert (False)
+        self.engine = _engine
+        str_code    = "OptFrame:ComponentBuilder:LocalSearch:BI"
+        str_args    = "OptFrame:GeneralEvaluator:Evaluator "+str(_ev.id)+" OptFrame:NS:NSFind:NSSeq "+str(_nsseq.id)
+        self.ls_idx  = self.engine.build_local_search(str_code, str_args)
+    

@@ -1,8 +1,17 @@
 # OptFrame Python Demo 0-1 Knapsack Problem + Simulated Annealing
 
-import os
 from typing import List
+
+# DO NOT REORDER 'import sys ...'
+# ****** REMOVE THIS BLOCK IF YOU HAVE INSTALLED OPTFRAME LIBRARY ******
+import sys
+import os
+sys.path.insert(0, os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '../..')))
+# **********************************************************************
+
 from optframe import *
+from optframe.protocols import *
 
 class SolutionKP(object):
     def __init__(self):
@@ -85,6 +94,9 @@ assert isinstance(NSBitFlip, XNS)     # composition tests
 # begins main() python script
 # ===========================
 
+# get SimulatedAnnealing
+from optframe.heuristics import *
+
 # set random seed for system
 # random.seed(10)
 
@@ -105,6 +117,10 @@ c_idx = 0
 is_idx = 0
 # is_idx = pKP.engine.create_initial_search(ev_idx, c_idx)
 
+# register NS class
+pKP.engine.add_ns_class(pKP, NSBitFlip) 
+ns_idx = 0
+
 # make engine silent (loglevel 0)
 pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "0")
 
@@ -124,26 +140,23 @@ print("evaluation:", z1)
 
 # list the required parameters for OptFrame SA ComponentBuilder
 print("engine will list builders for :BasicSA ")
-print(pKP.engine.list_builders(":BasicSA"))
-print()
-
-# register NS class
-pKP.engine.add_ns_class(pKP, NSBitFlip) 
-ns_idx = 0
+nbuilders=pKP.engine.list_builders(":BasicSA")
+print("nbuilders =", nbuilders)
 
 # pack NS into a NS list
 list_idx = pKP.engine.create_component_list(
     "[ OptFrame:NS 0 ]", "OptFrame:NS[]")
 
-
 # make global search silent (loglevel 0)
 pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
 
 # check components!
+print("will invoke check module")
 pKP.engine.check(100, 10, False)
 
 # build Simulated Annealing with alpha=0.98 T0=99999 and IterMax=100
 sa = BasicSimulatedAnnealing(pKP.engine, 0, 0, list_idx, 0.98, 100, 99999)
+print("will invoke Simulated Annealing")
 sout = sa.search(10.0)
 print("Best solution: ",   sout.best_s)
 print("Best evaluation: ", sout.best_e)

@@ -21,7 +21,8 @@ print("nsseq_idx=", nsseq_idx)
 
 # ========= play a little bit =========
 
-ev_idx = comp_list[0]
+gev_idx = comp_list[0] # GeneralEvaluator
+ev_idx  = comp_list[1] # Evaluator
 print("evaluator id:", ev_idx)
 
 c_idx = comp_list[2]
@@ -74,14 +75,16 @@ print("list_idx=", list_idx)
 # print(pTSP.engine.list_builders("OptFrame:"))
 # print()
 
-print("building 'BI' neighborhood exploration as local search", flush=True)
-
 # make next local search component silent (loglevel 0)
 pTSP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
 
-ls_idx = pTSP.engine.build_local_search(
-    "OptFrame:ComponentBuilder:LocalSearch:BI",
-    "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:NS:NSFind:NSSeq 0")
+print("building 'BI' neighborhood exploration as local search", flush=True)
+
+bi = BestImprovement(pTSP.engine, 0, 0)
+ls_idx = bi.ls_idx
+#ls_idx = pTSP.engine.build_local_search(
+#    "OptFrame:ComponentBuilder:LocalSearch:BI",
+#    "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:NS:NSFind:NSSeq 0")
 print("ls_idx=", ls_idx, flush=True)
 
 
