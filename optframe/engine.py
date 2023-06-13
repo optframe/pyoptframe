@@ -761,6 +761,7 @@ class Engine(object):
             funcNext    = nsiterator.next
             funcIsDone  = nsiterator.isDone
             funcCurrent = nsiterator.current
+            print("Error: your iterator does not inherit from optframe.components.NSIterator! "+str(nsiterator))
             assert False
         #
         return self.add_nsseq(problemCtx, funcRandomMove,

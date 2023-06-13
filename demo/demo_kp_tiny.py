@@ -11,7 +11,9 @@ sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')))
 #
 #import optframe
-from optframe import Engine, XProblem, XSolution, XMaximize, XConstructive, XMove, XNS, XNSIterator, XNSSeq
+from optframe import Engine
+from optframe.components import NSIterator
+from optframe.protocols import XProblem, XSolution, XMaximize, XConstructive, XMove, XNS, XNSIterator, XNSSeq
 from optframe.engine import LibArrayDouble, callback_adapter_list_to_vecdouble
 from optframe import APILevel, LogLevel, SearchStatus
 
@@ -72,21 +74,17 @@ class NSBitFlip(object):
 assert isinstance(MoveBitFlip, XMove) # composition tests
 assert isinstance(NSBitFlip, XNS)     # composition tests
 
-class IteratorBitFlip(object):
+class IteratorBitFlip(NSIterator):
     def __init__(self, _k:int):
         self.k = _k
-    @staticmethod
-    def first(pKP: ExampleKP, it: 'IteratorBitFlip'):
-        it.k = 0
-    @staticmethod
-    def next(pKP: ExampleKP, it: 'IteratorBitFlip'):
-        it.k = it.k + 1
-    @staticmethod
-    def isDone(pKP: ExampleKP, it: 'IteratorBitFlip') -> bool:
-        return it.k >= pKP.n
-    @staticmethod
-    def current(pKP: ExampleKP, it: 'IteratorBitFlip'):
-        return MoveBitFlip(it.k)
+    def first(self, p: ExampleKP):
+        self.k = 0
+    def next(self, p: ExampleKP):
+        self.k = self.k + 1
+    def isDone(self, p: ExampleKP) -> bool:
+        return self.k >= p.n
+    def current(self, p: ExampleKP):
+        return MoveBitFlip(self.k)
 
 class NSSeqBitFlip(object):
     @staticmethod

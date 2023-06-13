@@ -10,7 +10,8 @@ import sys
 sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')))
 #
-from optframe import *
+# from optframe import *
+import optframe
 
 class ExampleSol(object):
     def __init__(self):
@@ -21,7 +22,7 @@ class ExampleSol(object):
 
 class ExampleKP(object):
     def __init__(self):
-        self.engine = Engine()
+        self.engine = optframe.Engine()
         self.n : int = 0          # number of items
         self.w : List[float] = [] # item weights
         self.p : List[float] = [] # item profits
@@ -41,10 +42,10 @@ class ExampleKP(object):
             return -1000.0*(wsum - pKP.Q)
         return np.dot(sol.bag, pKP.p)
 
-assert isinstance(ExampleSol, XSolution)    # composition tests 
-assert isinstance(ExampleKP, XProblem)      # composition tests 
-assert isinstance(ExampleKP, XConstructive) # composition tests    
-assert isinstance(ExampleKP, XMaximize)     # composition tests
+assert isinstance(ExampleSol, optframe.protocols.XSolution)     # composition tests 
+assert isinstance(ExampleKP,  optframe.protocols.XProblem)      # composition tests 
+assert isinstance(ExampleKP,  optframe.protocols.XConstructive) # composition tests    
+assert isinstance(ExampleKP,  optframe.protocols.XMaximize)     # composition tests
 
 class MoveBitFlip(object):
     def __init__(self, _k :int):
@@ -53,11 +54,11 @@ class MoveBitFlip(object):
         return "MoveBitFlip("+str(self.k)+")"
     @staticmethod
     def apply(pKP: ExampleKP, m: 'MoveBitFlip', sol: ExampleSol) -> 'MoveBitFlip':
-        if pKP.engine.component_loglevel == LogLevel.Debug:
+        if pKP.engine.component_loglevel == optframe.LogLevel.Debug:
             print("DEBUG: apply move: ", m, flush=True)
         sol.bag[m.k] = 1 - sol.bag[m.k]
         rev = MoveBitFlip(m.k)
-        if pKP.engine.component_loglevel == LogLevel.Debug:
+        if pKP.engine.component_loglevel == optframe.LogLevel.Debug:
             print("DEBUG: reverse move is: ", rev, flush=True)
         return rev
     @staticmethod
@@ -72,10 +73,10 @@ class NSBitFlip(object):
     def randomMove(pKP: ExampleKP, sol: ExampleSol) -> MoveBitFlip:
         return MoveBitFlip(random.randint(0, pKP.n - 1))
 
-assert isinstance(MoveBitFlip, XMove) # composition tests
-assert isinstance(NSBitFlip, XNS)     # composition tests
+assert isinstance(MoveBitFlip, optframe.protocols.XMove) # composition tests
+assert isinstance(NSBitFlip,   optframe.protocols.XNS)   # composition tests
 
-def my_personalized_onfail(code: CheckCommandFailCode, engine : Engine) -> bool:
+def my_personalized_onfail(code: optframe.CheckCommandFailCode, engine : optframe.Engine) -> bool:
     engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "4")
     print("MY ON FAIL! code:", CheckCommandFailCode(code), "cll:", engine.component_loglevel, flush=True)
     return False
@@ -107,7 +108,7 @@ pKP.engine.check(100, 10, False)
 # reset component_log_level flag (retryDebug may change it!)
 pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
 
-sa = BasicSimulatedAnnealing(pKP.engine, v[0], v[3], list_idx, 0.99, 100, 999)
+sa = optframe.heuristics.BasicSimulatedAnnealing(pKP.engine, v[0], v[3], list_idx, 0.99, 100, 999)
 sout = sa.search(4.0)
 print("Best solution: ",   sout.best_s)
 print("Best evaluation: ", sout.best_e)

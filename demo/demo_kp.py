@@ -46,7 +46,7 @@ count_minus_move_bitflip = 0
 count_it_bitflip = 0
 
 
-class ExampleSol(optframe.XSolution):
+class ExampleSol(optframe.protocols.XSolution):
 
     def __init__(self):
         #print('__init__ ExampleSol')
@@ -84,7 +84,7 @@ class ExampleSol(optframe.XSolution):
 # =========================
 
 
-class ExampleKP(optframe.XProblem):
+class ExampleKP(optframe.protocols.XProblem):
     def __init__(self):
         if not KP_EXAMPLE_SILENT:
             print('Init KP')
@@ -148,7 +148,7 @@ class KPMaximize(object):
         #print("result is: ", sum_p)
         return sum_p
     
-assert isinstance(KPMaximize, optframe.XMaximize) # composition tests
+assert isinstance(KPMaximize, optframe.protocols.XMaximize) # composition tests
 
 
 def mycallback_constructive(problemCtx: ExampleKP) -> ExampleSol:
@@ -174,7 +174,7 @@ class KPRandom(object):
         #print("\tfinished mycallback_constructive with sol: ", sol, flush=True)
         return sol
     
-assert isinstance(KPRandom, optframe.XConstructive) # composition tests
+assert isinstance(KPRandom, optframe.protocols.XConstructive) # composition tests
 
 # ========================================================
 # IMPORTANT: MoveBitFlip represents a move here,
@@ -214,7 +214,7 @@ class MoveBitFlip(object):
     def eq(problemCtx: ExampleKP, m1: 'MoveBitFlip', m2: 'MoveBitFlip') -> bool:
         return m1.k == m2.k
 
-assert isinstance(MoveBitFlip, optframe.XMove) # composition tests
+assert isinstance(MoveBitFlip, optframe.protocols.XMove) # composition tests
 
 
 # TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
@@ -247,7 +247,7 @@ class NSBitFlip(object):
         mv.k = k
         return mv
     
-assert isinstance(NSBitFlip, optframe.XNS) # composition tests
+assert isinstance(NSBitFlip, optframe.protocols.XNS) # composition tests
 
 
 # TODO: 'sol: ExampleSol' should become 'esol: ESolutionKP'.. but lib must receive both sol and evaluation (as double, or double ptr... TODO think)
@@ -260,7 +260,7 @@ def mycallback_ns_rand_bitflip(pKP: ExampleKP, sol: ExampleSol) -> MoveBitFlip:
 
 
 
-class IteratorBitFlip(object):
+class IteratorBitFlip(optframe.components.NSIterator):
     def __init__(self):
         # print('__init__ IteratorBitFlip')
         self.k = 0
@@ -272,22 +272,18 @@ class IteratorBitFlip(object):
         global count_it_bitflip
         count_it_bitflip = count_it_bitflip - 1
         pass
-    @staticmethod
-    def first(pKP: ExampleKP, it: 'IteratorBitFlip'):
-        it.k = 0
-    @staticmethod
-    def next(pKP: ExampleKP, it: 'IteratorBitFlip'):
-        it.k = it.k + 1
-    @staticmethod
-    def isDone(pKP: ExampleKP, it: 'IteratorBitFlip') -> bool:
-        return it.k >= pKP.n
-    @staticmethod
-    def current(pKP: ExampleKP, it: 'IteratorBitFlip'):
+    def first(self, pKP: ExampleKP):
+        self.k = 0
+    def next(self, pKP: ExampleKP):
+        self.k = self.k + 1
+    def isDone(self, pKP: ExampleKP) -> bool:
+        return self.k >= pKP.n
+    def current(self, pKP: ExampleKP):
         mv = MoveBitFlip()
-        mv.k = it.k
+        mv.k = self.k
         return mv
 
-assert isinstance(IteratorBitFlip, optframe.XNSIterator) # composition tests
+assert isinstance(IteratorBitFlip, optframe.protocols.XNSIterator) # composition tests
 
 
 def mycallback_nsseq_it_first_bitflip(pKP: ExampleKP, it: IteratorBitFlip):
@@ -317,7 +313,7 @@ class NSSeqBitFlip(object):
         it.k = 0
         return it
     
-assert isinstance(NSSeqBitFlip, optframe.XNSSeq) # composition tests
+assert isinstance(NSSeqBitFlip, optframe.protocols.XNSSeq) # composition tests
 
 def mycallback_nsseq_it_init_bitflip(pKP: ExampleKP, sol: ExampleSol) -> IteratorBitFlip:
     it = IteratorBitFlip()
