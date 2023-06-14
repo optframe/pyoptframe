@@ -68,7 +68,8 @@ test:   #install
 install:
 	#pip install  --global-option=build_ext --global-option="-I${OPTFRAME_SRC}/include" .
 	rm -rf ./optframe-git/
-	python3 -m pip install -e .
+	# python3 -m pip install --no-cache-dir -e .
+	python3 -m pip install --no-cache-dir .
 
 clean:
 	rm -f optframe/*.so

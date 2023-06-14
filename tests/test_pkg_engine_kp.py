@@ -208,7 +208,7 @@ pKP.w = [1, 2, 3, 4, 5]
 pKP.p = [5, 4, 3, 2, 1]
 pKP.Q = 6.0
 # initializes optframe engine
-pKP.engine = optframe.Engine(optframe.APILevel.API1d)
+pKP.engine = optframe.engine.Engine(optframe.engine.APILevel.API1d)
 print(pKP)
 
 ev_idx = pKP.engine.maximize(pKP, mycallback_fevaluate)

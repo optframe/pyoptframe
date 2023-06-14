@@ -15,8 +15,8 @@ import inspect   # check: isclass
 
 from enum import Enum
 
-from optframe.core import *
-from optframe.components import *
+from .core import *
+from .components import *
 
 # ==================== optframe_lib.so ===================
 
