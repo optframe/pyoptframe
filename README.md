@@ -170,8 +170,10 @@ Also thanks for the encouragement and fruitful discussions with my students, spe
 
 ## License
 
-- [LICENSE-MIT](./LICENSE-MIT)
-- [LICENSE-LGPLv3](./LICENSE-LGPLv3)
+At your choice:
+
+- [LICENSE-MIT](./LICENSE-MIT.txt)
+- [LICENSE-LGPLv3+](./LICENSE-LGPL-3.0-or-later.txt)
 
 Copyleft 2023
 
