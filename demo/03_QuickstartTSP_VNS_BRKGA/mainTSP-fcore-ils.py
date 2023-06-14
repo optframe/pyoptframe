@@ -89,15 +89,15 @@ class MoveSwapClass(Move):
         self.j = _j
     def __str__(self):
         return "MoveSwapClass(i="+str(self.i)+";j="+str(self.j)+")"
-    def apply(self, problemCtx: ProblemContextTSP, sol: SolutionTSP) -> 'MoveSwapClass':
+    def apply(self, problemCtx, sol: SolutionTSP) -> 'MoveSwapClass':
         aux = sol.cities[self.j]
         sol.cities[self.j] = sol.cities[self.i]
         sol.cities[self.i] = aux
         # must create reverse move (j,i)
         return MoveSwapClass(self.j, self.i)
-    def canBeApplied(self, problemCtx: ProblemContextTSP, sol: SolutionTSP) -> bool:
+    def canBeApplied(self, problemCtx, sol: SolutionTSP) -> bool:
         return True
-    def eq(self, problemCtx: ProblemContextTSP, m2: 'MoveSwapClass') -> bool:
+    def eq(self, problemCtx, m2: 'MoveSwapClass') -> bool:
         return (self.i == m2.i) and (self.j == m2.j)
 
 assert isinstance(MoveSwapClass, XMove)       # composition tests
@@ -107,13 +107,14 @@ assert MoveSwapClass in Move.__subclasses__() # classmethod style
 
 class NSSwap(object):
     @staticmethod
-    def randomMove(pTSP: ProblemContextTSP, sol: SolutionTSP) -> MoveSwapClass:
+    def randomMove(pTSP, sol: SolutionTSP) -> MoveSwapClass:
         import random
-        i = random.randint(0, pTSP.n - 1)
+        n = sol.n
+        i = random.randint(0, n - 1)
         j = i
         while  j <= i:
-            i = random.randint(0, pTSP.n - 1)
-            j = random.randint(0, pTSP.n - 1)
+            i = random.randint(0, n - 1)
+            j = random.randint(0, n - 1)
         # return MoveSwap(i, j)
         return MoveSwapClass(i, j)
     

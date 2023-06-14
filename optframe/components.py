@@ -50,6 +50,14 @@ class IdEvaluator(object):
     def __repr__(self) -> str:
         return "IdEvaluator("+str(self.id)+")"
     
+class IdListEvaluator(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdListEvaluator("+str(self.id)+")"
+    
 class IdNS(object):
     def __init__(self, id: int):
         self.id = id

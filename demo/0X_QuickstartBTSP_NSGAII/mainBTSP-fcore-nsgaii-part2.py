@@ -93,13 +93,18 @@ print("engine will list builders for OptFrame: ")
 print()
 
 # get index of new NS
-ns_idx = pBTSP.engine.add_ns(pBTSP,
-                           mycallback_ns_rand_swap,
-                           apply_swap,
-                           eq_swap,
-                           cba_swap,
-                           True) # This is XMES (Multi Objective)
+#ns_idx = pBTSP.engine.add_ns(pBTSP,
+#                           mycallback_ns_rand_swap,
+#                           apply_swap,
+#                           eq_swap,
+#                           cba_swap,
+#                           True) # This is XMES (Multi Objective)
+#print("ns_idx=", ns_idx)
+
+# get index of new NS
+ns_idx = pBTSP.engine.add_ns_class(pBTSP, NSSwap, True)
 print("ns_idx=", ns_idx)
+
 
 # pack NS<XMESf64>'s into a NS<XMESf64> list
 list_ns_mev_idx = pBTSP.engine.create_component_list(

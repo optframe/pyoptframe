@@ -3,13 +3,14 @@
 
 class NSSwap(object):
     @staticmethod
-    def randomMove(pTSP: ProblemContextTSP, sol: SolutionTSP) -> MoveSwapClass:
+    def randomMove(pTSP, sol: SolutionTSP) -> MoveSwapClass:
         import random
-        i = random.randint(0, pTSP.n - 1)
+        n = sol.n
+        i = random.randint(0, n - 1)
         j = i
         while  j <= i:
-            i = random.randint(0, pTSP.n - 1)
-            j = random.randint(0, pTSP.n - 1)
+            i = random.randint(0, n - 1)
+            j = random.randint(0, n - 1)
         # return MoveSwap(i, j)
         return MoveSwapClass(i, j)
     

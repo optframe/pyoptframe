@@ -896,6 +896,8 @@ class Engine(object):
             return IdListNS(idx_list)
         if str_type == "OptFrame:LocalSearch[]":
             return IdListLocalSearch(idx_list)
+        if str_type == "OptFrame:GeneralEvaluator:Evaluator[]":
+            return IdListEvaluator(idx_list)
         return IdUnknown(idx_list)
 
     # =========================

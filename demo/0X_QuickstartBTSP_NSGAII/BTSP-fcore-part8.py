@@ -21,7 +21,7 @@ def ox_cross_parts(p1, p2, k1, k2):
         k = k + 1
     return s
 
-def btsp_ox_crossover(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: SolutionBTSP ) -> Tuple[SolutionBTSP, SolutionBTSP]:
+def btsp_ox_crossover(pBTSP: ProblemContextBTSP, p1: SolutionTSP, p2: SolutionTSP ) -> Tuple[SolutionTSP, SolutionTSP]:
     assert(pBTSP.n == p1.n)
     assert(p1.n == p2.n)
     assert(pBTSP.n >= 3)
@@ -40,11 +40,11 @@ def btsp_ox_crossover(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: SolutionB
 # crossover pair may not be fully consistent, as each side can have a different fixed point
 # This is a simple workaround for this first version
 
-def mycallback_cross1(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: SolutionBTSP) -> SolutionBTSP:
+def mycallback_cross1(pBTSP: ProblemContextBTSP, p1: SolutionTSP, p2: SolutionTSP) -> SolutionTSP:
     s1, s2 = btsp_ox_crossover(pBTSP, p1, p2)
     return s1
 
-def mycallback_cross2(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: SolutionBTSP) -> SolutionBTSP:
+def mycallback_cross2(pBTSP: ProblemContextBTSP, p1: SolutionTSP, p2: SolutionTSP) -> SolutionTSP:
     s1, s2 = btsp_ox_crossover(pBTSP, p1, p2)
     return s2
     

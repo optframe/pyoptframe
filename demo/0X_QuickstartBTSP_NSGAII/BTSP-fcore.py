@@ -1,19 +1,5 @@
 # OptFrame Python Demo BTSP - Bi-objective Traveling Salesman Problem
 
-import os
-
-# DO NOT REORDER 'import sys ...'
-#import sys
-#str_path=os.path.abspath(
-#    os.path.join(os.path.dirname(__file__), '../../'))
-#sys.path.insert(0, str_path)
-
-# THIS PACKAGE IS LOCAL (../optframe), NOT FROM PACKAGE MANAGER...
-# GOOD FOR LOCAL TESTING!
-
-# DO NOT REORDER 'from optframe.engine ...'
-#from optframe.engine import Engine
-
 # DO NOT REORDER 'import sys ...'
 # ****** REMOVE THIS BLOCK IF YOU HAVE INSTALLED OPTFRAME LIBRARY ******
 import sys
@@ -24,27 +10,19 @@ sys.path.insert(0, os.path.abspath(
 
 import optframe
 
-class SolutionBTSP(object):
+from optframe import *
+from optframe.protocols import *
+class SolutionTSP(object):
     def __init__(self):
         # number of cities in solution
-        self.n = 0
+        self.n : int = 0
         # visited cities as a list
-        self.cities = []
+        self.cities : List[int] = []
 
     # MUST provide some printing mechanism
     def __str__(self):
-        return f"SolutionBTSP(n={self.n};cities={self.cities})"
-
-    # MUST provide some deepcopy mechanism
-    def __deepcopy__(self, memo):
-        sol2 = SolutionBTSP()
-        sol2.n = self.n
-        sol2.cities = [i for i in self.cities]
-        return sol2
-
-    def __del__(self):
-        # print("~SolutionBTSP")
-        pass
+        return f"SolutionTSP(n={self.n};cities={self.cities})"
+    
 import math
 
 class ProblemContextBTSP(object):
@@ -102,7 +80,7 @@ class ProblemContextBTSP(object):
 
 # define two objective functions
 
-def mycallback_fevaluate0(pBTSP: ProblemContextBTSP, s: SolutionBTSP):
+def mycallback_fevaluate0(pBTSP: ProblemContextBTSP, s: SolutionTSP):
     assert (s.n == pBTSP.n)
     assert (len(s.cities) == s.n)
     # remember this is an API1d method
@@ -112,7 +90,7 @@ def mycallback_fevaluate0(pBTSP: ProblemContextBTSP, s: SolutionBTSP):
     f += pBTSP.dist0[s.cities[int(pBTSP.n) - 1]][s.cities[0]];
     return f
 
-def mycallback_fevaluate1(pBTSP: ProblemContextBTSP, s: SolutionBTSP):
+def mycallback_fevaluate1(pBTSP: ProblemContextBTSP, s: SolutionTSP):
     assert (s.n == pBTSP.n)
     assert (len(s.cities) == s.n)
     # remember this is an API1d method
@@ -123,7 +101,7 @@ def mycallback_fevaluate1(pBTSP: ProblemContextBTSP, s: SolutionBTSP):
     return f
 
 # THIRD OBJECTIVE
-def mycallback_fevaluate2(pBTSP: ProblemContextBTSP, s: SolutionBTSP):
+def mycallback_fevaluate2(pBTSP: ProblemContextBTSP, s: SolutionTSP):
     assert (s.n == pBTSP.n)
     assert (len(s.cities) == s.n)
     # remember this is an API1d method
@@ -135,59 +113,52 @@ def mycallback_fevaluate2(pBTSP: ProblemContextBTSP, s: SolutionBTSP):
 
 import random
 
-def mycallback_constructive(problemCtx: ProblemContextBTSP) -> SolutionBTSP:
-    sol = SolutionBTSP()
+def mycallback_constructive(problemCtx: ProblemContextBTSP) -> SolutionTSP:
+    sol = SolutionTSP()
     for i in range(problemCtx.n):
         sol.cities.append(i)
     random.shuffle(sol.cities)
     sol.n = problemCtx.n
     return sol
 
+from optframe.components import Move
 
-# move
-class MoveSwap(object):
-    def __init__(self):
-        #print('__init__ MoveSwap')
-        self.i = 0
-        self.j = 0
+class MoveSwapClass(Move):
+    def __init__(self, _i: int = 0, _j: int = 0):
+        self.i = _i
+        self.j = _j
+    def __str__(self):
+        return "MoveSwapClass(i="+str(self.i)+";j="+str(self.j)+")"
+    def apply(self, problemCtx, sol: SolutionTSP) -> 'MoveSwapClass':
+        aux = sol.cities[self.j]
+        sol.cities[self.j] = sol.cities[self.i]
+        sol.cities[self.i] = aux
+        # must create reverse move (j,i)
+        return MoveSwapClass(self.j, self.i)
+    def canBeApplied(self, problemCtx, sol: SolutionTSP) -> bool:
+        return True
+    def eq(self, problemCtx, m2: 'MoveSwapClass') -> bool:
+        return (self.i == m2.i) and (self.j == m2.j)
 
-    def __del__(self):
-        # print("~MoveSwap")
-        pass
+assert isinstance(MoveSwapClass, XMove)       # composition tests
+assert MoveSwapClass in Move.__subclasses__() # classmethod style
 
-# Move Apply MUST return an Undo Move or Reverse Move (a Move that can undo current application)
-def apply_swap(problemCtx: ProblemContextBTSP, m: MoveSwap, sol: SolutionBTSP) -> MoveSwap:
-    i = m.i
-    j = m.j
-    #
-    aux = sol.cities[j]
-    sol.cities[j] = sol.cities[i]
-    sol.cities[i] = aux
-    # must create reverse move (j,i)
-    mv = MoveSwap()
-    mv.i = j
-    mv.j = i
-    return mv
+#from optframe.components import NS
 
-# Moves can be applied or not (best performance is to have a True here)
-def cba_swap(problemCtx: ProblemContextBTSP, m: MoveSwap, sol: SolutionBTSP) -> bool:
-    return True
-
-# Move equality must be provided
-def eq_swap(problemCtx: ProblemContextBTSP, m1: MoveSwap, m2: MoveSwap) -> bool:
-    return (m1.i == m2.i) and (m1.j == m2.j)
-
-def mycallback_ns_rand_swap(pBTSP: ProblemContextBTSP, sol: SolutionBTSP) -> MoveSwap:
-    i = random.randint(0, pBTSP.n - 1)
-    j = i
-    while  j<= i:
-        i = random.randint(0, pBTSP.n - 1)
-        j = random.randint(0, pBTSP.n - 1)
-    mv = MoveSwap()
-    mv.i = i
-    mv.j = j
-    return mv
-
+class NSSwap(object):
+    @staticmethod
+    def randomMove(pTSP, sol: SolutionTSP) -> MoveSwapClass:
+        import random
+        n = sol.n
+        i = random.randint(0, n - 1)
+        j = i
+        while  j <= i:
+            i = random.randint(0, n - 1)
+            j = random.randint(0, n - 1)
+        # return MoveSwap(i, j)
+        return MoveSwapClass(i, j)
+    
+#assert NSSwap in NS.__subclasses__()   # optional test
 
 # A Crossover must combine two parent solutions and return two new ones
 # Workaround: at this version, this is divided into two callbacks...
@@ -211,7 +182,7 @@ def ox_cross_parts(p1, p2, k1, k2):
         k = k + 1
     return s
 
-def btsp_ox_crossover(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: SolutionBTSP ) -> Tuple[SolutionBTSP, SolutionBTSP]:
+def btsp_ox_crossover(pBTSP: ProblemContextBTSP, p1: SolutionTSP, p2: SolutionTSP ) -> Tuple[SolutionTSP, SolutionTSP]:
     assert(pBTSP.n == p1.n)
     assert(p1.n == p2.n)
     assert(pBTSP.n >= 3)
@@ -230,11 +201,11 @@ def btsp_ox_crossover(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: SolutionB
 # crossover pair may not be fully consistent, as each side can have a different fixed point
 # This is a simple workaround for this first version
 
-def mycallback_cross1(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: SolutionBTSP) -> SolutionBTSP:
+def mycallback_cross1(pBTSP: ProblemContextBTSP, p1: SolutionTSP, p2: SolutionTSP) -> SolutionTSP:
     s1, s2 = btsp_ox_crossover(pBTSP, p1, p2)
     return s1
 
-def mycallback_cross2(pBTSP: ProblemContextBTSP, p1: SolutionBTSP, p2: SolutionBTSP) -> SolutionBTSP:
+def mycallback_cross2(pBTSP: ProblemContextBTSP, p1: SolutionTSP, p2: SolutionTSP) -> SolutionTSP:
     s1, s2 = btsp_ox_crossover(pBTSP, p1, p2)
     return s2
     
