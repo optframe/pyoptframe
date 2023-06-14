@@ -1,5 +1,8 @@
 
 from optframe.core import LibArrayDouble
+from typing import Tuple
+
+import ctypes
 
 #
 # decoder function: receives a problem instance and an array of random keys (as LibArrayDouble)
@@ -25,4 +28,19 @@ class DecoderTSP(object):
         for i in range(array_double.size):
             sol.cities.append(sorted_list[i][1]) # append index of city in order
         return sol
+
+    @staticmethod
+    def decodeSolutionOp(pTSP: ProblemContextTSP, array_double : LibArrayDouble, needsSolution: bool) -> Tuple[SolutionTSP|None, float]:
+        #
+        # print("decodeSolutionOp! needsSolution="+str(needsSolution), flush=True)
+        sol = DecoderTSP.decodeSolution(pTSP, array_double)
+        #
+        # NOW WILL GET EVALUATION VALUE
+        e = ProblemContextTSP.minimize(pTSP, sol)
+        # FINALLY, WILL RETURN WHAT IS REQUIRED
+        if not needsSolution:
+            return (None, e)
+        else:
+            return (sol, e)
+
 

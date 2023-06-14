@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from typing import Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable, Tuple
 
 # protocols should only depend on 'core'
 from optframe.core import SearchOutput
@@ -90,6 +90,12 @@ from optframe.core import LibArrayDouble
 class XDecoderRandomKeysNoEvaluation(Protocol):
     @staticmethod
     def decodeSolution(p: XProblem, rk : LibArrayDouble) -> XSolution:
+        ...
+
+@runtime_checkable
+class XDecoderRandomKeys(Protocol):
+    @staticmethod
+    def decodeSolutionOp(p: XProblem, rk : LibArrayDouble, needsSolution: bool) -> Tuple[XSolution|None, float]:
         ...
 
 @runtime_checkable

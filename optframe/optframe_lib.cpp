@@ -12,6 +12,7 @@
 #include <vector>
 //
 #include <OptFCore/FCore.hpp>
+#include <OptFCore/EA/RK/FDecoderOpRK.hpp>
 #include <OptFCore/FxCore.hpp>
 #include <OptFrame/BaseConcepts.hpp> // XESolution
 #include <OptFrame/Heuristics/EA/RK/BasicDecoderRandomKeys.hpp>
@@ -1383,6 +1384,59 @@ optframe_api1d_add_rk_decoder(FakeEnginePtr _engine,
    sref<optframe::Component> fc(fc2);
 
    int id = engine->loader.factory.addComponent(fc, "OptFrame:EA:RK:DecoderRandomKeysNoEvaluation");
+   //
+   return id;
+}
+
+extern "C" int // index of Decoder (for RK)
+optframe_api1d_add_rk_edecoder_op(FakeEnginePtr _engine,
+                              FakePythonObjPtr (*_fdecoder)(FakePythonObjPtr, LibArrayDouble, double*, bool), // evaluation (passed by reference) 
+                              FakePythonObjPtr problem_view,
+                              //
+                              bool is_minimization,
+                              // Support necessary for Solution construction and maintainance
+                              FakePythonObjPtr (*f_sol_deepcopy)(FakePythonObjPtr),
+                              size_t (*f_sol_tostring)(FakePythonObjPtr, char*, size_t),
+                              int (*f_utils_decref)(FakePythonObjPtr))
+{
+   auto* engine = (FCoreApi1Engine*)_engine;
+   //
+   using DecoderPair = std::pair<optframe::Evaluation<double>, optframe::op<FCoreLibSolution>>;
+   auto funcdecoder = [_fdecoder,
+                       problem_view,
+                       f_sol_deepcopy,
+                       f_sol_tostring,
+                       f_utils_decref](const std::vector<double>& vec, bool needsSolution) -> DecoderPair {
+      LibArrayDouble lad;
+      lad.size = vec.size();
+      // removes constness (afterall, LAD is supposed to be a view!)
+      lad.v = const_cast<double*>(vec.data());
+      //
+      double eval = 0;
+      FakePythonObjPtr vobj_owned = _fdecoder(problem_view, lad, &eval, needsSolution);
+      if(!vobj_owned) {
+         // nullopt solution
+         return DecoderPair{optframe::Evaluation<double>{eval}, std::nullopt};
+      }
+      else {
+         //std::cout << "'optframe_api1d_add_constructive' -> _fconstructive generated pointer: " << vobj_owned << std::endl;
+         assert(vobj_owned); // check void* (TODO: for FxConstructive, return nullopt)
+         FCoreLibSolution sol(vobj_owned, f_sol_deepcopy, f_sol_tostring, f_utils_decref);
+         //std::cout << "'optframe_api1d_add_constructive' -> solution created!" << std::endl;
+         return DecoderPair{optframe::Evaluation<double>{eval}, sol};
+      }
+   };
+   //
+   optframe::DecoderRandomKeys<FCoreLibESolution, double>* dec_ptr;
+   if(is_minimization)
+      dec_ptr = new optframe::FDecoderOpRK<FCoreLibESolution, double, optframe::MinOrMax::MINIMIZE>{ funcdecoder };
+   else 
+      dec_ptr = new optframe::FDecoderOpRK<FCoreLibESolution, double, optframe::MinOrMax::MAXIMIZE>{ funcdecoder };
+
+   sref<optframe::DecoderRandomKeys<FCoreLibESolution, double>> fc2(dec_ptr);
+   sref<optframe::Component> fc(fc2);
+
+   int id = engine->loader.factory.addComponent(fc, "OptFrame:EA:RK:DecoderRandomKeys");
    //
    return id;
 }

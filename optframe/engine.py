@@ -39,6 +39,12 @@ FUNC_UTILS_DECREF = CFUNCTYPE(
 # py_object, buffer, sz -> count
 FUNC_SOL_TOSTRING = CFUNCTYPE(
     ctypes.c_size_t, ctypes.py_object, POINTER(c_char), ctypes.c_size_t)
+# helper can be used to detect if object is None (useful for Optional[XSolution] type)
+FUNC_UTILS_ISNONE = CFUNCTYPE(
+    ctypes.c_bool, ctypes.py_object)
+# helper can be used to return internal object if not None (useful for Optional[XSolution] type)
+FUNC_UTILS_GET_SOMETHING = CFUNCTYPE(
+    ctypes.py_object, ctypes.py_object)
 
 
 # -------------------------------------
@@ -90,6 +96,15 @@ optframe_lib.optframe_api1d_add_rk_decoder.argtypes = [
     FUNC_SOL_DEEPCOPY, FUNC_SOL_TOSTRING, FUNC_UTILS_DECREF]
 optframe_lib.optframe_api1d_add_rk_decoder.restype = ctypes.c_int32
 
+# problem* -> solution* (optional)
+FUNC_FDECODER_RK_OP = CFUNCTYPE(
+    ctypes.py_object, ctypes.py_object, LibArrayDouble, POINTER(ctypes.c_double), ctypes.c_bool) # double* (by reference)
+
+optframe_lib.optframe_api1d_add_rk_edecoder_op.argtypes = [
+    ctypes.c_void_p, FUNC_FDECODER_RK_OP, ctypes.py_object,
+    ctypes.c_bool, # IS_MINIMIZATION
+    FUNC_SOL_DEEPCOPY, FUNC_SOL_TOSTRING, FUNC_UTILS_DECREF]
+optframe_lib.optframe_api1d_add_rk_edecoder_op.restype = ctypes.c_int32
 
 # problem* -> LibArrayDouble
 FUNC_FCONSTRUCTIVE_RK = CFUNCTYPE(
@@ -627,6 +642,46 @@ class Engine(object):
             self.callback_sol_tostring_ptr,
             self.callback_utils_decref_ptr)
         return IdDecoderRandomKeysNoEvaluation(idx_dec)
+    
+    def add_edecoder_op_rk_class(self, p : XProblem, decoder_rk: Type[XDecoderRandomKeys], isMin: bool):
+        """
+        Add a XDecoderRandomKeys class to the engine.
+
+        Parameters:
+        - p: XProblem object representing the problem context.
+        - decoder_rk: Class object representing the XDecoderRandomKeys class.
+        - isMin: bool indicating if its minimization
+
+        Note: 'decoder_rk' should be class, not object instances.
+        """
+        assert isinstance(p, XProblem)
+        assert isinstance(decoder_rk, XDecoderRandomKeys)
+        assert inspect.isclass(decoder_rk)
+        assert not inspect.isclass(p)
+        #
+        # DEFINE HELPER FUNCTION
+        def rawDecodeSolutionOp(prob: XProblem, array_double : LibArrayDouble, e_ptr: ctypes.POINTER(ctypes.c_double), needsSolution: bool) -> ctypes.py_object:
+            op_s_e = decoder_rk.decodeSolutionOp(prob, array_double, needsSolution)
+            e_ptr.contents.value = op_s_e[1]
+            if op_s_e[0] is None:
+                return object() # null?
+            else:
+                return op_s_e[0]
+        #
+        return self.add_edecoder_op_rk(p, rawDecodeSolutionOp, isMin)
+
+    def add_edecoder_op_rk(self, problemCtx, edecoderop_rk_callback, isMin: bool):
+        decoder_rk_callback_ptr = FUNC_FDECODER_RK_OP(edecoderop_rk_callback)
+        self.register_callback(decoder_rk_callback_ptr)
+        #
+        idx_dec = optframe_lib.optframe_api1d_add_rk_edecoder_op(
+            self.hf, decoder_rk_callback_ptr, 
+            problemCtx,
+            isMin,
+            self.callback_sol_deepcopy_ptr,
+            self.callback_sol_tostring_ptr,
+            self.callback_utils_decref_ptr)
+        return IdDecoderRandomKeys(idx_dec)
 
 
     def add_ns(self, problemCtx, ns_rand_callback, move_apply_callback, move_eq_callback, move_cba_callback, isXMES=False):

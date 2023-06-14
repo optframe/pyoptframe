@@ -186,6 +186,9 @@ class RKConstructiveTSP(object):
 
 
 from optframe.core import LibArrayDouble
+from typing import Tuple
+
+import ctypes
 
 #
 # decoder function: receives a problem instance and an array of random keys (as LibArrayDouble)
@@ -212,6 +215,21 @@ class DecoderTSP(object):
             sol.cities.append(sorted_list[i][1]) # append index of city in order
         return sol
 
+    @staticmethod
+    def decodeSolutionOp(pTSP: ProblemContextTSP, array_double : LibArrayDouble, needsSolution: bool) -> Tuple[SolutionTSP|None, float]:
+        #
+        # print("decodeSolutionOp! needsSolution="+str(needsSolution), flush=True)
+        sol = DecoderTSP.decodeSolution(pTSP, array_double)
+        #
+        # NOW WILL GET EVALUATION VALUE
+        e = ProblemContextTSP.minimize(pTSP, sol)
+        # FINALLY, WILL RETURN WHAT IS REQUIRED
+        if not needsSolution:
+            return (None, e)
+        else:
+            return (sol, e)
+
+
 
 # set random seed for system
 random.seed(0) # bad generator, just an example..
@@ -236,19 +254,21 @@ print("")
 dec_rk_idx = pTSP.engine.add_decoder_rk_class(pTSP, DecoderTSP)
 print("dec_rk_idx=", dec_rk_idx)
 
-# pTSP.engine.list_components("OptFrame:")
-
 print("")
-print("WILL CREATE DecoderRandomKeys FROM DecoderRandomKeysNoEvaluation!")
-drk = DecoderRandomKeys(pTSP.engine, ev_idx, dec_rk_idx)
-drk_rk_id = drk.get_id()
-#drk_rk_id = pTSP.engine.build_component(
-#    "OptFrame:ComponentBuilder:EA:RK:BasicDecoderRandomKeysBuilder", 
-#    "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:EA:RK:DecoderRandomKeysNoEvaluation 0",
-#    "OptFrame:EA:RK:DecoderRandomKeys")
+print("WILL CREATE DecoderRandomKeys directly with simultaneous evaluation and optional solution!")
+drk_rk_id = pTSP.engine.add_edecoder_op_rk_class(pTSP, DecoderTSP, True)
 print("drk_rk_id=", drk_rk_id)
 
+# pTSP.engine.list_components("OptFrame:")
+
+#print("")
+#print("WILL CREATE DecoderRandomKeys FROM DecoderRandomKeysNoEvaluation!")
+#drk = DecoderRandomKeys(pTSP.engine, ev_idx, dec_rk_idx)
+#drk_rk_id = drk.get_id()
+#print("drk_rk_id=", drk_rk_id)
+
 # =======================
+# pTSP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "4")
 print("")
 print("will start BRKGA for 3 seconds")
 brkga = BRKGA(pTSP.engine, drk_rk_id, c_rk_idx, 30, 1000, 0.4, 0.3, 0.6)
