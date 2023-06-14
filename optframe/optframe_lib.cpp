@@ -9,6 +9,7 @@
 #include <map>
 #include <string>
 #include <iomanip> // std::setprecision
+#include <vector>
 //
 #include <OptFCore/FCore.hpp>
 #include <OptFCore/FxCore.hpp>

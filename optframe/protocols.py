@@ -84,6 +84,19 @@ class XNSSeq(Protocol):
     def getIterator(problem: XProblem, sol: XSolution) -> XNSIterator:
         ...
 
+from optframe.core import LibArrayDouble
+
+@runtime_checkable
+class XDecoderRandomKeysNoEvaluation(Protocol):
+    @staticmethod
+    def decodeSolution(p: XProblem, rk : LibArrayDouble) -> XSolution:
+        ...
+
+@runtime_checkable
+class XConstructiveRK(Protocol):
+    @staticmethod
+    def generateRK(p: XProblem, rk : LibArrayDouble) -> int:
+        ...
 
 @runtime_checkable
 class XSingleObjSearch(Protocol):

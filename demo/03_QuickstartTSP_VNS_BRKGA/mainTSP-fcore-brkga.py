@@ -165,41 +165,51 @@ class NSSeqSwap(object):
 # begins main() python script for TSP BRKGA
 # =========================================
 
+from optframe.protocols import XConstructiveRK
+from optframe.core import LibArrayDouble
+
 #
 # random constructive: updates parameter ptr_array_double of type (LibArrayDouble*)
 #
-def mycallback_constructive_rk(problemCtx: ProblemContextTSP, ptr_array_double) -> int:
-    rkeys = []
-    for i in range(problemCtx.n):
-        key = random.random() # [0,1] uniform
-        rkeys.append(key)
-    #
-    ptr_array_double.contents.size = len(rkeys)
-    ptr_array_double.contents.v = engine.callback_adapter_list_to_vecdouble(rkeys)
-    return len(rkeys)
+class RKConstructiveTSP(object):
+    @staticmethod
+    def generateRK(problemCtx: ProblemContextTSP, ptr_array_double : LibArrayDouble) -> int:
+        rkeys = []
+        for i in range(problemCtx.n):
+            key = random.random() # [0,1] uniform
+            rkeys.append(key)
+        #
+        ptr_array_double.contents.size = len(rkeys)
+        ptr_array_double.contents.v = engine.callback_adapter_list_to_vecdouble(rkeys)
+        return len(rkeys)
 
+
+from optframe.core import LibArrayDouble
 
 #
 # decoder function: receives a problem instance and an array of random keys (as LibArrayDouble)
 #
-def mycallback_decoder_rk(problemCtx: ProblemContextTSP, array_double : engine.LibArrayDouble) -> SolutionTSP:
-    #
-    sol = SolutionTSP()
-    #
-    lpairs = []
-    for i in range(array_double.size):
-        p = [array_double.v[i], i]
-        lpairs.append(p)
-    #
-    #print("lpairs: ", lpairs)
-    sorted_list = sorted(lpairs)
-    #print("sorted_list: ", sorted_list)
-    #
-    sol.n = problemCtx.n
-    sol.cities = []
-    for i in range(array_double.size):
-        sol.cities.append(sorted_list[i][1]) # append index of city in order
-    return sol
+
+class DecoderTSP(object):
+    @staticmethod
+    def decodeSolution(pTSP: ProblemContextTSP, array_double : LibArrayDouble) -> SolutionTSP:
+        #
+        sol = SolutionTSP()
+        #
+        lpairs = []
+        for i in range(array_double.size):
+            p = [array_double.v[i], i]
+            lpairs.append(p)
+        #
+        #print("lpairs: ", lpairs)
+        sorted_list = sorted(lpairs)
+        #print("sorted_list: ", sorted_list)
+        #
+        sol.n = pTSP.n
+        sol.cities = []
+        for i in range(array_double.size):
+            sol.cities.append(sorted_list[i][1]) # append index of city in order
+        return sol
 
 
 # set random seed for system
@@ -226,7 +236,7 @@ print(comp_list)
 ev_idx = comp_list[0]
 print("evaluator id:", ev_idx)
 
-c_rk_idx = pTSP.engine.add_constructive_rk(pTSP, mycallback_constructive_rk)
+c_rk_idx = pTSP.engine.add_constructive_rk_class(pTSP, RKConstructiveTSP)
 print("c_rk_idx=", c_rk_idx)
 
 pTSP.engine.list_components("OptFrame:")
@@ -239,7 +249,7 @@ print("initepop_rk_id=", initepop_rk_id)
 
 print("")
 print("WILL CREATE DECODER!!")
-dec_rk_idx = pTSP.engine.add_decoder_rk(pTSP, mycallback_decoder_rk)
+dec_rk_idx = pTSP.engine.add_decoder_rk_class(pTSP, DecoderTSP)
 print("dec_rk_idx=", dec_rk_idx)
 
 pTSP.engine.list_components("OptFrame:")

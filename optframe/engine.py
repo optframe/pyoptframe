@@ -573,6 +573,23 @@ class Engine(object):
             self.callback_sol_tostring_ptr,
             self.callback_utils_decref_ptr)
         return idx_c
+    
+    def add_constructive_rk_class(self, p : XProblem, constructive_rk: Type[XConstructiveRK]):
+        """
+        Add a XConstructiveRK class to the engine.
+
+        Parameters:
+        - p: XProblem object representing the problem context.
+        - constructive_rk: Class object representing the XConstructiveRK class.
+
+        Note: 'constructive_rk' should be class, not object instances.
+        """
+        assert isinstance(p, XProblem)
+        assert isinstance(constructive_rk, XConstructiveRK)
+        assert inspect.isclass(constructive_rk)
+        assert not inspect.isclass(p)
+        #
+        return self.add_constructive_rk(p, constructive_rk.generateRK)
 
     def add_constructive_rk(self, problemCtx, constructive_rk_callback):
         constructive_rk_callback_ptr = FUNC_FCONSTRUCTIVE_RK(constructive_rk_callback)
@@ -580,7 +597,24 @@ class Engine(object):
         #
         idx_c = optframe_lib.optframe_api1d_add_rk_constructive(
             self.hf, constructive_rk_callback_ptr, problemCtx)
-        return idx_c
+        return IdConstructiveRK(idx_c)
+    
+    def add_decoder_rk_class(self, p : XProblem, decoder_rk: Type[XDecoderRandomKeysNoEvaluation]):
+        """
+        Add a XDecoderRandomKeysNoEvaluation class to the engine.
+
+        Parameters:
+        - p: XProblem object representing the problem context.
+        - decoder_rk: Class object representing the XDecoderRandomKeysNoEvaluation class.
+
+        Note: 'decoder_rk' should be class, not object instances.
+        """
+        assert isinstance(p, XProblem)
+        assert isinstance(decoder_rk, XDecoderRandomKeysNoEvaluation)
+        assert inspect.isclass(decoder_rk)
+        assert not inspect.isclass(p)
+        #
+        return self.add_decoder_rk(p, decoder_rk.decodeSolution)
 
     def add_decoder_rk(self, problemCtx, decoder_rk_callback):
         decoder_rk_callback_ptr = FUNC_FDECODER_RK(decoder_rk_callback)
@@ -592,8 +626,7 @@ class Engine(object):
             self.callback_sol_deepcopy_ptr,
             self.callback_sol_tostring_ptr,
             self.callback_utils_decref_ptr)
-        return idx_dec
-
+        return IdDecoderRandomKeysNoEvaluation(idx_dec)
 
 
     def add_ns(self, problemCtx, ns_rand_callback, move_apply_callback, move_eq_callback, move_cba_callback, isXMES=False):

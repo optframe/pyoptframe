@@ -23,7 +23,7 @@ print(comp_list)
 ev_idx = comp_list[0]
 print("evaluator id:", ev_idx)
 
-c_rk_idx = pTSP.engine.add_constructive_rk(pTSP, mycallback_constructive_rk)
+c_rk_idx = pTSP.engine.add_constructive_rk_class(pTSP, RKConstructiveTSP)
 print("c_rk_idx=", c_rk_idx)
 
 pTSP.engine.list_components("OptFrame:")
@@ -36,7 +36,7 @@ print("initepop_rk_id=", initepop_rk_id)
 
 print("")
 print("WILL CREATE DECODER!!")
-dec_rk_idx = pTSP.engine.add_decoder_rk(pTSP, mycallback_decoder_rk)
+dec_rk_idx = pTSP.engine.add_decoder_rk_class(pTSP, DecoderTSP)
 print("dec_rk_idx=", dec_rk_idx)
 
 pTSP.engine.list_components("OptFrame:")

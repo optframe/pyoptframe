@@ -81,6 +81,24 @@ class IdListNSSeq(object):
         return self.id
     def __repr__(self) -> str:
         return "IdListNSSeq("+str(self.id)+")"
+    
+class IdDecoderRandomKeysNoEvaluation(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdDecoderRandomKeysNoEvaluation("+str(self.id)+")"
+
+class IdConstructiveRK(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdConstructiveRK("+str(self.id)+")"
+
+############
 
 class IdGlobalSearch(object):
     def __init__(self, id: int):
@@ -146,6 +164,10 @@ class NSIterator(object):
 
 # there is no NS component, only XNS protocol
 # there is no NSSeq component, only XNSSeq protocol
+
+##############
+
+
 
 #############
 
