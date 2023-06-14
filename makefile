@@ -59,18 +59,22 @@ demo_local_tiny: optframe/optframe_lib.so
 docs:
 	cd docs && make clean && make html
 
+test_local: load_thirdparty optframe_lib
+	echo ""
+	echo "Running DEV Demos as tests..."
+	echo ""
+	(cd demo/02_QuickstartKP_SA/ && ./join.sh && python3 dev-mainKP-fcore-ex.py > /dev/null)
+	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 dev-mainTSP-fcore-brkga.py > /dev/null)
+	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 dev-mainTSP-fcore-ils.py > /dev/null)
 
-test: install
+test: test_local install
 	# (cd demo/ && python3 demo_pyfcore.py)
 	(cd tests/ && python3 test_pkg_engine_kp.py)
 	echo ""
-	echo "Running Demo as tests..."
+	echo "Running PACKAGE Demos as tests..."
 	echo ""
-	(cd demo/02_QuickstartKP_SA/ && ./join.sh && python3 dev-mainKP-fcore-ex.py > /dev/null)
 	(cd demo/02_QuickstartKP_SA/ && ./join.sh && python3 mainKP-fcore-ex.py > /dev/null)
-	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 dev-mainTSP-fcore-brkga.py > /dev/null)
 	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 mainTSP-fcore-brkga.py > /dev/null)
-	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 dev-mainTSP-fcore-ils.py > /dev/null)
 	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 mainTSP-fcore-ils.py > /dev/null)
 	
 	
