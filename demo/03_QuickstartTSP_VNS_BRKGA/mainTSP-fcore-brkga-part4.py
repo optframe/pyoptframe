@@ -12,7 +12,7 @@ print("problem=",pTSP)
 comp_list = pTSP.engine.setup(pTSP)
 print(comp_list)
 #
-ev_idx = comp_list[0]
+ev_idx = comp_list[1]
 print("evaluator id:", ev_idx)
 
 c_rk_idx = pTSP.engine.add_constructive_rk_class(pTSP, RKConstructiveTSP)
@@ -26,16 +26,18 @@ print("dec_rk_idx=", dec_rk_idx)
 
 print("")
 print("WILL CREATE DecoderRandomKeys FROM DecoderRandomKeysNoEvaluation!")
-drk_rk_id = pTSP.engine.build_component(
-    "OptFrame:ComponentBuilder:EA:RK:BasicDecoderRandomKeysBuilder", 
-    "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:EA:RK:DecoderRandomKeysNoEvaluation 0",
-    "OptFrame:EA:RK:DecoderRandomKeys")
+drk = DecoderRandomKeys(pTSP.engine, ev_idx, dec_rk_idx)
+drk_rk_id = drk.get_id()
+#drk_rk_id = pTSP.engine.build_component(
+#    "OptFrame:ComponentBuilder:EA:RK:BasicDecoderRandomKeysBuilder", 
+#    "OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:EA:RK:DecoderRandomKeysNoEvaluation 0",
+#    "OptFrame:EA:RK:DecoderRandomKeys")
 print("drk_rk_id=", drk_rk_id)
 
 # =======================
 print("")
 print("will start BRKGA for 3 seconds")
-brkga = BRKGA(pTSP.engine, 0, c_rk_idx, 30, 1000, 0.4, 0.3, 0.6)
+brkga = BRKGA(pTSP.engine, drk_rk_id, c_rk_idx, 30, 1000, 0.4, 0.3, 0.6)
 lout = brkga.search(3.0)
 print("Best solution: ",   lout.best_s)
 print("Best evaluation: ", lout.best_e)

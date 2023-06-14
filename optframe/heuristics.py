@@ -82,6 +82,27 @@ class ILSLevelPertLPlus2(object):
 
 
 
+class DecoderRandomKeys(object):
+    def __init__(self, _engine: XEngine, _ev: IdEvaluator, _decoder: IdDecoderRandomKeysNoEvaluation):
+        assert isinstance(_engine, XEngine)
+        if (isinstance(_ev, int)):
+            _ev = IdEvaluator(_ev)
+        if (not isinstance(_ev, IdEvaluator)):
+            print(_ev)
+            assert (False)
+        if (isinstance(_decoder, int)):
+            _decoder = IdDecoderRandomKeysNoEvaluation(_decoder)
+        if (not isinstance(_decoder, IdDecoderRandomKeysNoEvaluation)):
+            print(_decoder)
+            assert (False)
+        self.engine = _engine
+        str_code    = "OptFrame:ComponentBuilder:EA:RK:BasicDecoderRandomKeysBuilder"
+        str_args    = "OptFrame:GeneralEvaluator:Evaluator "+str(_ev.id)+" OptFrame:EA:RK:DecoderRandomKeysNoEvaluation "+str(_decoder.id)
+        str_target  = "OptFrame:EA:RK:DecoderRandomKeys"
+        self.comp_idx  = IdDecoderRandomKeys(self.engine.build_component(str_code, str_args, str_target))
+    def get_id(self) -> IdDecoderRandomKeys:
+        return self.comp_idx
+
 
 # ================================
 #         Local Search
