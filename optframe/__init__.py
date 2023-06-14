@@ -1,4 +1,4 @@
-__version__ = '5.0.23rc0'
+__version__ = '5.0.24rc0'
 # only useful stuff for root level here!
 from optframe.engine import Engine
 from optframe.engine import APILevel
