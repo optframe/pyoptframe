@@ -170,9 +170,10 @@ Also thanks for the encouragement and fruitful discussions with my students, spe
 
 ## License
 
-MIT License || LGPLv3 License  (at your choice)
+- [LICENSE-MIT](./LICENSE-MIT)
+- [LICENSE-LGPLv3](./LICENSE-LGPLv3)
 
-Copyleft 2022
+Copyleft 2023
 
 Igor Machado Coelho
 
