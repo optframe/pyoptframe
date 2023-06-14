@@ -127,3 +127,34 @@ class VariableNeighborhoodDescent(LocalSearch):
     def get_id(self) -> IdLocalSearch:
         return self.ls_idx
 
+
+class BRKGA(SingleObjSearch):
+    def __init__(self, _engine: XEngine, _decoder: IdDecoderRandomKeys, _init_rk: IdInitialEPopulationRK, popSize: int, numGen: int, fracTop: float, fracBOT:float, probElitism: float):
+        assert isinstance(_engine, XEngine)
+        if (isinstance(_decoder, int)):
+            _decoder = IdDecoderRandomKeys(_decoder)
+        if (not isinstance(_decoder, IdDecoderRandomKeys)):
+            print(_decoder)
+            assert (False)
+        if (isinstance(_init_rk, int)):
+            _init_rk = IdInitialEPopulationRK(_init_rk)
+        if (isinstance(_init_rk, IdConstructiveRK)):
+            print("WARNING: will create InitialEPopulationRK")
+            initepop_rk_id = _engine.build_component(
+                "OptFrame:ComponentBuilder:EA:RK:BasicInitialEPopulationRKBuilder", 
+                "OptFrame:Constructive:EA:RK:ConstructiveRK "+str(_init_rk.id),
+                "OptFrame:InitialEPopulation:EA:RK:InitialEPopulationRK")
+            # print("initepop_rk_id=", initepop_rk_id)
+            _init_rk = IdInitialEPopulationRK(initepop_rk_id)
+        if (not isinstance(_init_rk, IdInitialEPopulationRK)):
+            print(_init_rk)
+            assert (False)
+        self.engine = _engine
+        str_code    = "OptFrame:ComponentBuilder:GlobalSearch:EA:RK:BRKGA"
+        str_args    = "OptFrame:EA:RK:DecoderRandomKeys "+str(_decoder.id)+" OptFrame:InitialEPopulation:EA:RK:InitialEPopulationRK "+str(_init_rk.id)+" "+str(popSize)+" "+str(numGen)+" "+str(fracTop)+" "+ str(fracBOT)+ " "+ str(probElitism)
+        self.g_idx  = self.engine.build_global_search(str_code, str_args)
+    def search(self, timelimit: float) -> SearchOutput:
+        lout : SearchOutput = self.engine.run_global_search(self.g_idx, timelimit)
+        return lout
+
+

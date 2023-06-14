@@ -98,6 +98,23 @@ class IdConstructiveRK(object):
     def __repr__(self) -> str:
         return "IdConstructiveRK("+str(self.id)+")"
 
+class IdDecoderRandomKeys(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdDecoderRandomKeys("+str(self.id)+")"
+
+class IdInitialEPopulationRK(object):
+    def __init__(self, id: int):
+        self.id = id
+    def get_id(self):
+        return self.id
+    def __repr__(self) -> str:
+        return "IdInitialEPopulationRK("+str(self.id)+")"
+    
+    
 ############
 
 class IdGlobalSearch(object):
