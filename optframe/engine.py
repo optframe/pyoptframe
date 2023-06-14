@@ -643,7 +643,7 @@ class Engine(object):
             self.callback_utils_decref_ptr)
         return IdDecoderRandomKeysNoEvaluation(idx_dec)
     
-    def add_edecoder_op_rk_class(self, p : XProblem, decoder_rk: Type[XDecoderRandomKeys], isMin: bool):
+    def add_edecoder_op_rk_class(self, p : XProblem, decoder_rk: Type[XDecoderRandomKeysMinimize|XDecoderRandomKeysMaximize]):
         """
         Add a XDecoderRandomKeys class to the engine.
 
@@ -655,19 +655,31 @@ class Engine(object):
         Note: 'decoder_rk' should be class, not object instances.
         """
         assert isinstance(p, XProblem)
-        assert isinstance(decoder_rk, XDecoderRandomKeys)
+        isMin = isinstance(decoder_rk, XDecoderRandomKeysMinimize)
+        isMax = isinstance(decoder_rk, XDecoderRandomKeysMaximize)
+        print(isMin)
+        print(isMax)
+        assert isMin or isMax
         assert inspect.isclass(decoder_rk)
         assert not inspect.isclass(p)
         #
         # DEFINE HELPER FUNCTION
         def rawDecodeSolutionOp(prob: XProblem, array_double : LibArrayDouble, e_ptr: ctypes.POINTER(ctypes.c_double), needsSolution: bool) -> ctypes.py_object:
-            op_s_e = decoder_rk.decodeSolutionOp(prob, array_double, needsSolution)
+            op_s_e = None
+            if isinstance(decoder_rk, XDecoderRandomKeysMinimize):
+                op_s_e = decoder_rk.decodeMinimize(prob, array_double, needsSolution)
+            elif isinstance(decoder_rk, XDecoderRandomKeysMaximize):
+                op_s_e = decoder_rk.decodeMaximize(prob, array_double, needsSolution)
+            else:
+                assert False
+            #
             e_ptr.contents.value = op_s_e[1]
             if op_s_e[0] is None:
                 return object() # null?
             else:
                 return op_s_e[0]
         #
+        isMin = isinstance(decoder_rk, XDecoderRandomKeysMinimize)
         return self.add_edecoder_op_rk(p, rawDecodeSolutionOp, isMin)
 
     def add_edecoder_op_rk(self, problemCtx, edecoderop_rk_callback, isMin: bool):

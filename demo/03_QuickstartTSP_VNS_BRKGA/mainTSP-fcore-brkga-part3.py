@@ -30,9 +30,9 @@ class DecoderTSP(object):
         return sol
 
     @staticmethod
-    def decodeSolutionOp(pTSP: ProblemContextTSP, array_double : LibArrayDouble, needsSolution: bool) -> Tuple[SolutionTSP|None, float]:
+    def decodeMinimize(pTSP: ProblemContextTSP, array_double : LibArrayDouble, needsSolution: bool) -> Tuple[SolutionTSP|None, float]:
         #
-        # print("decodeSolutionOp! needsSolution="+str(needsSolution), flush=True)
+        # print("decodeMinimize! needsSolution="+str(needsSolution), flush=True)
         sol = DecoderTSP.decodeSolution(pTSP, array_double)
         #
         # NOW WILL GET EVALUATION VALUE

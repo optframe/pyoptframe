@@ -216,9 +216,9 @@ class DecoderTSP(object):
         return sol
 
     @staticmethod
-    def decodeSolutionOp(pTSP: ProblemContextTSP, array_double : LibArrayDouble, needsSolution: bool) -> Tuple[SolutionTSP|None, float]:
+    def decodeMinimize(pTSP: ProblemContextTSP, array_double : LibArrayDouble, needsSolution: bool) -> Tuple[SolutionTSP|None, float]:
         #
-        # print("decodeSolutionOp! needsSolution="+str(needsSolution), flush=True)
+        # print("decodeMinimize! needsSolution="+str(needsSolution), flush=True)
         sol = DecoderTSP.decodeSolution(pTSP, array_double)
         #
         # NOW WILL GET EVALUATION VALUE
@@ -256,7 +256,7 @@ print("dec_rk_idx=", dec_rk_idx)
 
 print("")
 print("WILL CREATE DecoderRandomKeys directly with simultaneous evaluation and optional solution!")
-drk_rk_id = pTSP.engine.add_edecoder_op_rk_class(pTSP, DecoderTSP, True)
+drk_rk_id = pTSP.engine.add_edecoder_op_rk_class(pTSP, DecoderTSP)
 print("drk_rk_id=", drk_rk_id)
 
 # pTSP.engine.list_components("OptFrame:")

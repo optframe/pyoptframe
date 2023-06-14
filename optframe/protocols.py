@@ -93,9 +93,15 @@ class XDecoderRandomKeysNoEvaluation(Protocol):
         ...
 
 @runtime_checkable
-class XDecoderRandomKeys(Protocol):
+class XDecoderRandomKeysMinimize(Protocol):
     @staticmethod
-    def decodeSolutionOp(p: XProblem, rk : LibArrayDouble, needsSolution: bool) -> Tuple[XSolution|None, float]:
+    def decodeMinimize(p: XProblem, rk : LibArrayDouble, needsSolution: bool) -> Tuple[XSolution|None, float]:
+        ...
+
+@runtime_checkable
+class XDecoderRandomKeysMaximize(Protocol):
+    @staticmethod
+    def decodeMaximize(p: XProblem, rk : LibArrayDouble, needsSolution: bool) -> Tuple[XSolution|None, float]:
         ...
 
 @runtime_checkable
