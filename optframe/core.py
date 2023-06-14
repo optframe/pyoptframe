@@ -85,7 +85,7 @@ def callback_utils_decref(pyo):
 def callback_sol_tostring(sol, pt: ctypes.c_char_p, ptsize: ctypes.c_size_t):
     mystr = sol.__str__()
     mystr_bytes = mystr.encode()
-    pa = cast(pt, POINTER(c_char * ptsize))
+    pa = ctypes.cast(pt, ctypes.POINTER(ctypes.c_char * ptsize))
     pa.contents.value = mystr_bytes
     return len(mystr)
 
