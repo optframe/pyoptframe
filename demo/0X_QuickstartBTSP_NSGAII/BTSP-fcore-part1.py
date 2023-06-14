@@ -1,19 +1,5 @@
 # OptFrame Python Demo BTSP - Bi-objective Traveling Salesman Problem
 
-import os
-
-# DO NOT REORDER 'import sys ...'
-#import sys
-#str_path=os.path.abspath(
-#    os.path.join(os.path.dirname(__file__), '../../'))
-#sys.path.insert(0, str_path)
-
-# THIS PACKAGE IS LOCAL (../optframe), NOT FROM PACKAGE MANAGER...
-# GOOD FOR LOCAL TESTING!
-
-# DO NOT REORDER 'from optframe.engine ...'
-#from optframe.engine import Engine
-
 # DO NOT REORDER 'import sys ...'
 # ****** REMOVE THIS BLOCK IF YOU HAVE INSTALLED OPTFRAME LIBRARY ******
 import sys

@@ -5,6 +5,7 @@ from typing import List
 from optframe import *
 from optframe.protocols import *
 
+
 class SolutionKP(object):
     def __init__(self):
         self.n   : int = 0        # number of items in solution

@@ -6,6 +6,7 @@ import random
 from optframe import *
 from optframe.protocols import *
 
+
 class SolutionTSP(object):
     def __init__(self):
         # number of cities in solution
