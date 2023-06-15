@@ -78,7 +78,7 @@ this_directory = os.path.abspath(os.path.dirname(__file__))
 
 setup(
     name="optframe",
-    version="5.0.24rc0",
+    version="5.0.25rc0",
     py_modules=["optframe.components","optframe.core","optframe.engine","optframe.heuristics","optframe.protocols"],
     ext_modules=[
         CTypesExtension(
