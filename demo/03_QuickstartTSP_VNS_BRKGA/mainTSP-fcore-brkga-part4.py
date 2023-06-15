@@ -1,4 +1,5 @@
 
+
 # set random seed for system
 random.seed(0) # bad generator, just an example..
 
@@ -7,6 +8,11 @@ pTSP = ProblemContextTSP()
 pTSP.load('tsp-example.txt')
 
 print("problem=",pTSP)
+
+import optframe
+print(str(optframe.__version__))
+pTSP.engine.welcome()
+
 
 # Register Basic Components
 comp_list = pTSP.engine.setup(pTSP)

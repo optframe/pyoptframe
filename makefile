@@ -69,7 +69,7 @@ test_local: load_thirdparty optframe_lib
 
 test: test_local test_package
 
-test_package: install
+test_package: clean install
 	# (cd demo/ && python3 demo_pyfcore.py)
 	(cd tests/ && python3 test_pkg_engine_kp.py)
 	echo ""
@@ -78,19 +78,24 @@ test_package: install
 	(cd demo/02_QuickstartKP_SA/ && ./join.sh && python3 mainKP-fcore-ex.py > /dev/null)
 	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 mainTSP-fcore-brkga.py > /dev/null)
 	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 mainTSP-fcore-ils.py > /dev/null)
+	echo "OK"
 	
 	
 
-install:
-	#pip install  --global-option=build_ext --global-option="-I${OPTFRAME_SRC}/include" .
-	rm -rf ./optframe-git/
-	rm -f dist/*
+install: clean
+	echo "***** BUILDING AND INSTALLING ***** "
 	python3 -m build
-	# python3 -m pip install --no-cache-dir -e .
 	python3 -m pip install --no-cache-dir .
 
 clean:
-	rm -f optframe/*.so
+	echo "***** CLEANING ***** "
+	rm -f  optframe/*.so
+	rm -rf optframe/__pycache__
+	rm -f  dist/*
+	rm -rf ./optframe-git/
+	rm -rf ./optframe.egg-info
+	rm -rf venv/
+	rm -rf build/
 
 load_thirdparty:
 	git submodule update --init --recursive 
