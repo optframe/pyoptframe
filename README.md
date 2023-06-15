@@ -133,7 +133,7 @@ Build:
 
 `python3 -m pip install build twine`
 
-`python3 -m build`
+`rm -f dist/* && python3 -m build`
 
 `twine check dist/*`
 

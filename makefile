@@ -67,7 +67,9 @@ test_local: load_thirdparty optframe_lib
 	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 dev-mainTSP-fcore-brkga.py > /dev/null)
 	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 dev-mainTSP-fcore-ils.py > /dev/null)
 
-test: test_local install
+test: test_local test_package
+
+test_package: install
 	# (cd demo/ && python3 demo_pyfcore.py)
 	(cd tests/ && python3 test_pkg_engine_kp.py)
 	echo ""
@@ -82,6 +84,8 @@ test: test_local install
 install:
 	#pip install  --global-option=build_ext --global-option="-I${OPTFRAME_SRC}/include" .
 	rm -rf ./optframe-git/
+	rm -f dist/*
+	python3 -m build
 	# python3 -m pip install --no-cache-dir -e .
 	python3 -m pip install --no-cache-dir .
 
