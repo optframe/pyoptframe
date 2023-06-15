@@ -63,13 +63,13 @@ print("list_ev_idx=", list_ev_idx)
 #####
 
 print("engine will list builders for :MultiEvaluator")
-#print("count=", pBTSP.engine.list_builders(":MultiEvaluator"))
+print("count=", pBTSP.engine.list_builders(":MultiEvaluator"))
 print()
 
 mev_idx = pBTSP.engine.build_component(
     "OptFrame:ComponentBuilder:MultiEvaluator",
     "OptFrame:GeneralEvaluator:Evaluator[] 0",
-    "OptFrame:GeneralEvaluator:MultiEvaluator")
+    "OptFrame:GeneralEvaluator<XMESf64>:MultiEvaluator")
 print("mev_idx=", mev_idx)
 
 cross_idx = pBTSP.engine.add_crossover(pBTSP, mycallback_cross1, mycallback_cross2)
@@ -79,10 +79,13 @@ print("cross_idx=", cross_idx)
 pBTSP.engine.list_components("OptFrame:")
 ####
 
+print("")
+print("will build BasicInitialMultiESolution")
+print("")
 pop_init_idx = pBTSP.engine.build_component(
     "OptFrame:ComponentBuilder:BasicInitialMultiESolution",
-    "OptFrame:Constructive 0  OptFrame:GeneralEvaluator:MultiEvaluator 0",
-    "OptFrame:InitialMultiESolution:BasicInitialMultiESolution")
+    "OptFrame:Constructive 0  OptFrame:GeneralEvaluator<XMESf64>:MultiEvaluator 0",
+    "OptFrame:InitialMultiESolution<X2MESf64>:BasicInitialMultiESolution")
 print("pop_init_idx=", pop_init_idx)
 
 
@@ -123,9 +126,12 @@ print("list_cross_idx=", list_cross_idx)
 pBTSP.engine.list_components("OptFrame:")
 ####
 
+print("")
+print("will build BasicMOPopulationManagement")
+print("")
 mopop_manage_idx = pBTSP.engine.build_component(
     "OptFrame:ComponentBuilder:BasicMOPopulationManagement",
-    "OptFrame:InitialMultiESolution:BasicInitialMultiESolution 0 "
+    "OptFrame:InitialMultiESolution<X2MESf64>:BasicInitialMultiESolution 0 "
     "OptFrame:NS<XMESf64>[] 0  0.5  OptFrame:GeneralCrossover[] 0  0.1",
     "OptFrame:MOPopulationManagement")
 print("mopop_manage_idx=", mopop_manage_idx)

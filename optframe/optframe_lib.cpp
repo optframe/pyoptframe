@@ -717,7 +717,7 @@ optframe_api0d_engine_classic_nsgaii_params(FakeEnginePtr _engine, double timeli
 
    // will try to get evaluator to build InitialSolution component...
    std::shared_ptr<MyMEval> _mev;
-   engine->loader.factory.assign(_mev, id_mevaluator, "OptFrame:GeneralEvaluator:MultiEvaluator");
+   engine->loader.factory.assign(_mev, id_mevaluator, "OptFrame:GeneralEvaluator<XMESf64>:MultiEvaluator");
    assert(_mev);
    sref<MyMEval> multi_ev{ _mev };
    if (engine->loader.factory.getLogLevel() >= optframe::LogLevel::Info)
