@@ -1326,7 +1326,7 @@ optframe_api1d_add_rk_constructive(FakeEnginePtr _engine,
    //std::vector<double> vd = *opv;
    //std::cout << "   ==== optframe_api1d_add_rk_constructive: vd.size()=" << vd.size() << std::endl;
 
-   int id = engine->loader.factory.addComponent(fc, "OptFrame:Constructive:EA:RK:ConstructiveRK");
+   int id = engine->loader.factory.addComponent(fc, "OptFrame:Constructive<XRKf64>:EA:RK:ConstructiveRK");
    //
    return id;
 }

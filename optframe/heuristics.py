@@ -163,7 +163,7 @@ class BRKGA(SingleObjSearch):
             print("WARNING: will create InitialEPopulationRK")
             initepop_rk_id = _engine.build_component(
                 "OptFrame:ComponentBuilder:EA:RK:BasicInitialEPopulationRKBuilder", 
-                "OptFrame:Constructive:EA:RK:ConstructiveRK "+str(_init_rk.id),
+                "OptFrame:Constructive<XRKf64>:EA:RK:ConstructiveRK "+str(_init_rk.id),
                 "OptFrame:InitialEPopulation:EA:RK:InitialEPopulationRK")
             # print("initepop_rk_id=", initepop_rk_id)
             _init_rk = IdInitialEPopulationRK(initepop_rk_id)

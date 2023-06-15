@@ -254,7 +254,7 @@ print("WILL CREATE DecoderRandomKeys directly with simultaneous evaluation and o
 drk_rk_id = pTSP.engine.add_edecoder_op_rk_class(pTSP, DecoderTSP)
 print("drk_rk_id=", drk_rk_id)
 
-# pTSP.engine.list_components("OptFrame:")
+pTSP.engine.list_components("OptFrame:")
 
 #print("")
 #print("WILL CREATE DecoderRandomKeys FROM DecoderRandomKeysNoEvaluation!")
