@@ -273,6 +273,9 @@ pTSP.engine.list_components("OptFrame:")
 print("")
 print("will start BRKGA for 3 seconds")
 brkga = BRKGA(pTSP.engine, drk_rk_id, c_rk_idx, 30, 1000, 0.4, 0.3, 0.6)
+
+pTSP.engine.list_components("OptFrame:")
+
 lout = brkga.search(3.0)
 print("Best solution: ",   lout.best_s)
 print("Best evaluation: ", lout.best_e)
