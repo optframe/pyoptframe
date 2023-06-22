@@ -17,5 +17,9 @@ jobs:
     - name: Run basic make
       run: make
 
-    - name: Run tests
-      run: make test
+    - name: Run tests (test_local)
+      run: make test_local
+
+    - name: Run tests (test_package)
+      run: make test_package
+      
