@@ -7,7 +7,7 @@ Development repo for draft versions of Python bindings for OptFrame Functional C
 
 Install: `python -m pip install optframe`
 
-Version: `pyoptframe v5.0.25rc0`
+Version: `pyoptframe v5.0.26rc0`
 
 Play on Jupyter Notebook: [BRKGA Traveling Salesman Problem Example](demo/OptFrame_BRKGA_Official.ipynb)
 
