@@ -19,7 +19,7 @@ OPTFRAME_SRC=./thirdparty/optframe-external
 ##########################################
 
 
-all: optframe_lib demo_local
+all: load_thirdparty optframe_lib demo_local
 
 optframe_lib:
 	# mkdir -p build/
