@@ -683,19 +683,21 @@ print('SA status =', ss)
 
 c_rk_idx = pKP.engine.add_constructive_rk(pKP, mycallback_constructive_rk)
 
-#if not KP_EXAMPLE_SILENT:
-print("c_rk_idx=", c_rk_idx)
+if not KP_EXAMPLE_SILENT:
+    print("c_rk_idx=", c_rk_idx)
 
 #if not KP_EXAMPLE_SILENT:
 pKP.engine.list_components("OptFrame:")
+
+#pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "3")
 
 initepop_rk_id = pKP.engine.build_component(
     "OptFrame:ComponentBuilder:EA:RK:BasicInitialEPopulationRKBuilder", 
     "OptFrame:Constructive<XRKf64>:EA:RK:ConstructiveRK 0",
     "OptFrame:InitialEPopulation<X2RKf64Ef64>:EA:RK:InitialEPopulationRK")
 
-#if not KP_EXAMPLE_SILENT:
-print("initepop_rk_id=", initepop_rk_id)
+if not KP_EXAMPLE_SILENT:
+    print("initepop_rk_id=", initepop_rk_id)
 
 if not KP_EXAMPLE_SILENT:
     print("")
@@ -728,7 +730,7 @@ if not KP_EXAMPLE_SILENT:
 
 g_idx = pKP.engine.build_global_search(
     "OptFrame:ComponentBuilder:GlobalSearch:EA:RK:BRKGA",
-    "OptFrame:EA:RK:DecoderRandomKeys 0  OptFrame:InitialEPopulation:EA:RK:InitialEPopulationRK 0 "
+    "OptFrame:EA:RK:DecoderRandomKeys 0  OptFrame:InitialEPopulation<X2RKf64Ef64>:EA:RK:InitialEPopulationRK 0 "
     "30 100 0.2 0.4 0.6")
 
 if not KP_EXAMPLE_SILENT:
@@ -773,6 +775,7 @@ lout = pKP.engine.run_global_search(g_idx, 4.7)
 
 print('BasicTabuSearch output =', lout)
 
+print("finished!")
 ##################
 
 if not KP_EXAMPLE_SILENT:
