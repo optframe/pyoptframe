@@ -85,6 +85,8 @@ test_package: clean install
 
 install: clean
 	echo "***** BUILDING AND INSTALLING ***** "
+	python3 -m pip install build twine
+	(cd docs && python3 -m pip install -r requirements.txt)
 	python3 -m build
 	python3 -m pip install --no-cache-dir .
 
