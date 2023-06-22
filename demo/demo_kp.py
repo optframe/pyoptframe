@@ -15,6 +15,9 @@ sys.path.insert(0, os.path.abspath(
 
 import optframe
 
+from optframe.engine import APILevel, LogLevel
+from optframe.core import SearchStatus
+
 # DO NOT REORDER 'from optframe.engine ...'
 import random  # TODO: get from hf engine ?
 
@@ -385,9 +388,9 @@ pKP.p = [5, 4, 3, 2, 1]
 pKP.Q = 6.0
 #
 if not KP_EXAMPLE_SILENT:
-    pKP.engine = optframe.Engine(optframe.APILevel.API1d, optframe.LogLevel.Debug)
+    pKP.engine = optframe.Engine(APILevel.API1d, LogLevel.Debug)
 else:
-    pKP.engine = optframe.Engine(optframe.APILevel.API1d, optframe.LogLevel.Silent)
+    pKP.engine = optframe.Engine(APILevel.API1d, LogLevel.Silent)
 
 if not KP_EXAMPLE_SILENT:
     print(pKP)
@@ -673,26 +676,26 @@ if not KP_EXAMPLE_SILENT:
 lout = pKP.engine.run_sos_search(sos_idx, 4.5)
 
 print('SA output =', lout)
-ss = optframe.SearchStatus(lout.status)
+ss = SearchStatus(lout.status)
 print('SA status =', ss)
 
 ###########
 
 c_rk_idx = pKP.engine.add_constructive_rk(pKP, mycallback_constructive_rk)
 
-if not KP_EXAMPLE_SILENT:
-    print("c_rk_idx=", c_rk_idx)
+#if not KP_EXAMPLE_SILENT:
+print("c_rk_idx=", c_rk_idx)
 
-if not KP_EXAMPLE_SILENT:
-    pKP.engine.list_components("OptFrame:")
+#if not KP_EXAMPLE_SILENT:
+pKP.engine.list_components("OptFrame:")
 
 initepop_rk_id = pKP.engine.build_component(
     "OptFrame:ComponentBuilder:EA:RK:BasicInitialEPopulationRKBuilder", 
-    "OptFrame:Constructive:EA:RK:ConstructiveRK 0",
-    "OptFrame:InitialEPopulation:EA:RK:InitialEPopulationRK")
+    "OptFrame:Constructive<XRKf64>:EA:RK:ConstructiveRK 0",
+    "OptFrame:InitialEPopulation<X2RKf64Ef64>:EA:RK:InitialEPopulationRK")
 
-if not KP_EXAMPLE_SILENT:
-    print("initepop_rk_id=", initepop_rk_id)
+#if not KP_EXAMPLE_SILENT:
+print("initepop_rk_id=", initepop_rk_id)
 
 if not KP_EXAMPLE_SILENT:
     print("")

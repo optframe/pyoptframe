@@ -1,39 +1,34 @@
 # pyoptframe-dev
 
-Development repo for draft versions of Python bindings for OptFrame Functional Core.
+[![Documentation Status](https://readthedocs.org/projects/optframe/badge/?version=latest)](https://pyoptframe.readthedocs.io/en/latest/?badge=latest)
 
-Beware that, after officially launched, this project will be migrated into [Official Optframe C++](https://github.com/optframe/optframe) repo (and same strategy applies to other future external language bindings).
+Development repo for draft versions of Python bindings for OptFrame Functional Core C++.
+
 
 Install: `python -m pip install optframe`
 
 Version: `pyoptframe v5.0.25rc0`
 
-Documentation and Tutorials: see [Draft PyOptFrame Quickstart](https://pyoptframe.readthedocs.io/en/latest/quickstart.html)
+Play on Jupyter Notebook: [BRKGA Traveling Salesman Problem Example](demo/OptFrame_BRKGA_Official.ipynb)
 
-Play on Jupyter Notebook: [BRKGA TSP Example](demo/OptFrame_BRKGA_Official.ipynb)
+Documentation and Tutorials: see [PyOptFrame Quickstart](https://pyoptframe.readthedocs.io/en/latest/quickstart.html)
+
+Beware that, after officially launched, this project may be migrated into [Official Optframe C++](https://github.com/optframe/optframe) repo (and same strategy applies to other future external language bindings).
+
+### About OptFrame C++
 
 [OptFrame](https://github.com/optframe/optframe) is a C++ framework for optimization problems, including techniques such as classic metaheuristics Simulated Annealing, Genetic Algorithm, 
 Variable Neighborhood Search, Iterated Local Search, Tabu Search, Particle Swarm Optimization, NSGA-II, and other single and multi-objective methods.
-This is a 10-year project with several practical applications in industry and academia, so feel free to use it.
+This is a 10+ year project with several practical applications in industry and academia, so feel free to use it.
 
-## How to test locally (devs only)
+## For Developers
 
-### With Local Package Manager
+If you want to help, please see instructions on [Development.md](./Development.md).
 
-`make install` or `pip install .`
-
-`make test`
-
-### Without Package Manager (local only)
-
-```
-make optframe_lib
-make demo_local
-```
 
 ### Advice for online environments
 
-Before installing, check C++ compiler (typically GCC) version:
+Before installing optframe online (such as google colab), check C++ compiler (typically GCC) version:
 
 `x86_64-linux-gnu-gcc -v`
 
@@ -47,18 +42,31 @@ At least gcc-10 is required for C++20... if not enough, try to install g++-10 an
 !update-alternatives --install /usr/bin/x86_64-linux-gnu-gcc gcc /usr/bin/gcc-10 10
 ```
 
-
 ## Tutorials
 
-Please read the official tutorials for OptFrame C++: https://optframe.readthedocs.io/
+### Demos
 
-Tutorials specific for OptFrame Python is coming!
+Documentation and Tutorials: see [PyOptFrame Quickstart](https://pyoptframe.readthedocs.io/en/latest/quickstart.html)
 
-### Example with 0-1 Knapsack Problem
+Please see the demos on demo/ folder.
 
-Please see file `tests/test_engine_kp.py` for an example with 0-1 Knapsack Problem.
+We also include some jupyter notebooks for playing.
 
-## Technical discussions
+
+### Example with 0-1 Knapsack Problem (tests)
+
+Also see file `tests/test_engine_kp.py` for an example with 0-1 Knapsack Problem,
+used on internal tests.
+
+### More tutorials
+
+Please read the official tutorials for OptFrame C++, 
+as they may give ideas for python too: https://optframe.readthedocs.io/
+
+Also see the Examples and demo folders on C++ project: [github.com/optframe/optframe](https://github.com/optframe/optframe).
+
+
+## Technical discussions and Roadmap
 ### C++ Standard and Compiler Support
 
 We love Concepts and Optionals, so we require `C++20` as default. 
@@ -98,65 +106,6 @@ Versioning should follow OptFrame C++ project on MAJOR and MINOR, leaving PATCH 
 
 - v 5 dot 1 dot 3 should include OptFrame C++ 5 dot 1.
 - v 5 dot 4 dot 5 could include OptFrame C++ 5 dot 4 dot 8 OR 5 dot 4 dot 1, but NOT 5 dot 6 dot x.
-
-### Packaging instructions
-
-Edit `setup.py`.
-
-Edit `pyproject.toml`.
-
-`virtualenv venv`
-
-`source venv/bin/activate`
-
-`python -m pip install pip-tools`
-
-`pip-compile pyproject.toml`
-
-`pip-sync`
-
-For versioning:
-
-`python3 -m pip install bumpver`
-
-`bumpver init`
-
-**To increase PATCH number:**
-
-`bumpver update --patch`
-
-Test locally:
-
-`python3 -m pip install -e .`
-
-Build:
-
-`python3 -m pip install build twine`
-
-`rm -f dist/* && python3 -m build`
-
-`twine check dist/*`
-
-`twine upload -r testpypi dist/* --verbose`
-
-Error: Binary wheel 'optframe-5.0.25rc0-cp39-cp39-linux_x86_64.whl' has an unsupported platform tag 'linux_x86_64'. See [1](https://stackoverflow.com/questions/59451069/binary-wheel-cant-be-uploaded-on-pypi-using-twine) and [2](https://peps.python.org/pep-0513/#rationale).
-
-Solution: `rm -f dist/*.whl`
-
-`twine upload -r testpypi dist/* --verbose`
-
-Test if OK on test package website:
-
-`python3 -m pip install -i https://test.pypi.org/simple optframe --upgrade`
-
-Finally:
-
-`twine upload dist/*`
-
-`python3 -m pip install optframe --upgrade`
-
-Thanks again to: https://realpython.com/pypi-publish-python-package/
-
 
 ## Known Issues
 

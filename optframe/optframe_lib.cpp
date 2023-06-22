@@ -336,11 +336,11 @@ public:
 using optframe::Move; // let's simplify things!!
 
 // class FMoveLib : public optframe::Move<FCoreLibESolution, typename FCoreLibESolution::second_type>
-template<typename XES = FCoreLibESolution, typename XEv = typename XES::second_type>
-class FMoveLib : public optframe::Move<XES, XEv>
+template<typename XES = FCoreLibESolution>
+class FMoveLib : public optframe::Move<XES>
 {
    // using XES = FCoreLibESolution;
-   // using XEv = typename XES::second_type;
+   using XEv = typename XES::second_type;
    using XSH = XES; // only single objective
    using M = FakePythonObjPtr;
 
@@ -387,25 +387,25 @@ public:
       //std::cout << "~FMoveLib count(m) = " << x << std::endl;
    }
 
-   virtual bool canBeApplied(const XES& se) override
+   bool canBeApplied(const XES& se) override
    {
       return fCanBeApplied(m, se);
    }
 
-   virtual optframe::uptr<Move<XES, XEv, XSH>> apply(XSH& se) override
+   optframe::uptr<Move<XES>> apply(XSH& se) override
    {
-      return optframe::uptr<Move<XES, XEv, XSH>>{
+      return optframe::uptr<Move<XES>>{
          new FMoveLib{ fApply(m, se), fApply, fCanBeApplied, fCompareEq, f_utils_decref }
       };
    }
 
-   virtual bool operator==(const Move<XES, XEv, XSH>& move) const override
+   bool operator==(const Move<XES>& move) const override
    {
       const Move<XES>& move2 = (Move<XES>&)move;
       return fCompareEq(this->m, move2);
    }
 
-   bool operator!=(const Move<XES, XEv, XSH>& m) const
+   bool operator!=(const Move<XES>& m) const
    {
       return !(*this == m);
    }
@@ -417,13 +417,13 @@ public:
       return ss.str();
    }
 
-   virtual std::string id() const override
+   std::string id() const override
    {
       return idComponent();
    }
 
    // use 'operator<<' for M
-   virtual void print() const override
+   void print() const override
    {
       std::cout << m << std::endl;
    }
@@ -670,7 +670,7 @@ optframe_api0d_engine_simulated_annealing_params(FakeEnginePtr _engine, double t
       new optframe::BasicInitialSearch<FCoreLibESolution>(initial, single_ev)
    };
    //
-   using MyNS = optframe::NS<FCoreLibESolution, optframe::Evaluation<double>>;
+   using MyNS = optframe::NS<FCoreLibESolution>;
    //
    std::shared_ptr<MyNS> ns;
    engine->loader.factory.assign(ns, id_ns, "OptFrame:NS");
@@ -681,7 +681,7 @@ optframe_api0d_engine_simulated_annealing_params(FakeEnginePtr _engine, double t
 
    //sref<optframe::GeneralEvaluator<FCoreLibESolution, optframe::Evaluation<double>>> evaluator{ gev };
    sref<optframe::InitialSearch<FCoreLibESolution>> constructive{ initSol };
-   vsref<optframe::NS<FCoreLibESolution, optframe::Evaluation<double>>> neighbors;
+   vsref<optframe::NS<FCoreLibESolution>> neighbors;
    neighbors.push_back(ns);
 
    single_ev->print();
@@ -1876,7 +1876,7 @@ optframe_api0d_get_evaluator(FakeEnginePtr _engine, int idx_ev)
 {
    auto* engine = (FCoreApi1Engine*)_engine;
 
-   std::shared_ptr<optframe::GeneralEvaluator<FCoreLibESolution, FCoreLibESolution::second_type>> component;
+   std::shared_ptr<optframe::GeneralEvaluator<FCoreLibESolution>> component;
 
    engine->loader.factory.assign(component, idx_ev, "OptFrame:GeneralEvaluator");
    if (!component)
