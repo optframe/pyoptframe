@@ -17,7 +17,7 @@ When changes are consolidated and tested, one may want to push these changes on 
 
 ```
         subprocess.check_call(
-            ['git', 'clone', '--depth', '1', '--branch', '5.0.14', 'https://github.com/optframe/optframe', 'optframe-git'])
+            ['git', 'clone', '--depth', '1', '--branch', '5.0.X', 'https://github.com/optframe/optframe', 'optframe-git'])
 ```
 
 Then, it's possible to locally test the package (with `make clean` and `make install`), 
