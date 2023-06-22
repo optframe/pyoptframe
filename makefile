@@ -66,6 +66,7 @@ test_local: load_thirdparty optframe_lib
 	(cd demo/02_QuickstartKP_SA/ && ./join.sh && python3 dev-mainKP-fcore-ex.py > /dev/null)
 	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 dev-mainTSP-fcore-brkga.py > /dev/null)
 	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 dev-mainTSP-fcore-ils.py > /dev/null)
+	echo "Finished 'make test_local'"
 
 test: test_local test_package
 
@@ -78,7 +79,7 @@ test_package: clean install
 	(cd demo/02_QuickstartKP_SA/ && ./join.sh && python3 mainKP-fcore-ex.py > /dev/null)
 	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 mainTSP-fcore-brkga.py > /dev/null)
 	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 mainTSP-fcore-ils.py > /dev/null)
-	echo "OK"
+	echo "Finished 'make test_package'"
 	
 	
 
