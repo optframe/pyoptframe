@@ -1854,7 +1854,11 @@ optframe_api1d_create_initial_search(FakeEnginePtr _engine, int ev_idx, int c_id
    //
    std::shared_ptr<MyConstructive> initial;
    engine->loader.factory.assign(initial, c_idx, "OptFrame:Constructive");
-   assert(initial);
+   if(!initial) {
+      std::cout << "ERROR: failed to assign component '" << MyConstructive::idComponent()
+                << "' as 'OptFrame:Constructive'" << std::endl;
+      assert(initial);
+   }
    //
    sref<optframe::InitialSearch<FCoreLibESolution>> initSol{
       new optframe::BasicInitialSearch<FCoreLibESolution>(initial, single_ev)
@@ -1879,8 +1883,11 @@ optframe_api0d_get_evaluator(FakeEnginePtr _engine, int idx_ev)
    std::shared_ptr<optframe::GeneralEvaluator<FCoreLibESolution>> component;
 
    engine->loader.factory.assign(component, idx_ev, "OptFrame:GeneralEvaluator");
-   if (!component)
+   if (!component) {
+      std::cout << "ERROR: failed to assign component '" << optframe::GeneralEvaluator<FCoreLibESolution>::idComponent()
+                << "' as 'OptFrame:GeneralEvaluator'" << std::endl;
       assert(false);
+   }
    void* ptr = component.get();
    return ptr;
 }
