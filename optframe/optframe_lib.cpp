@@ -13,7 +13,7 @@
 //
 #include <OptFCore/FCore.hpp>
 #include <OptFCore/EA/RK/FDecoderOpRK.hpp>
-#include <OptFCore/FxCore.hpp>
+// #include <OptFCore/FxCore.hpp>
 #include <OptFrame/Concepts/BaseConcepts.hpp> // XESolution
 #include <OptFrame/Heuristics/EA/RK/BasicDecoderRandomKeys.hpp>
 #include <OptFrame/Heuristics/EA/RK/BasicInitialEPopulationRK.hpp>
