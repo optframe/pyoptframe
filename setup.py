@@ -43,7 +43,7 @@ class MyBuildExt(build_ext_orig):
         # git fetch
         # git checkout origin/master -ft
         subprocess.check_call(
-            ['git', 'clone', '--depth', '1', '--branch', '5.0.14', 'https://github.com/optframe/optframe', 'optframe-git'])
+            ['git', 'clone', '--depth', '1', '--branch', '5.0.15', 'https://github.com/optframe/optframe', 'optframe-git'])
         # ===== check that clone() was done fine ======
         # subprocess.check_call(
         #    ['ls', '-la', 'optframe-git'])
@@ -94,12 +94,8 @@ setup(
                 this_directory, "./optframe-git/include")],
             #
             # ====================================================
-            # TODO: we should start using c++20 ASAP...
-            # Are Ubuntu / Windows / WSL2 users ready?
-            #
-            extra_compile_args=['--std=c++20']
-            # IF ONLY C++17 IS SUPPORTED, ON GCC, USE THIS (WE NEED CONCEPTS):
-            # extra_compile_args=['--std=c++17', '-fconcepts']
+            # In the future, try c++20. For now, too early.
+            extra_compile_args=['--std=c++17']
         ),
     ],
     # package_data includes data from 'src/' folder, by default

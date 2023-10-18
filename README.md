@@ -28,6 +28,8 @@ If you want to help, please see instructions on [Development.md](./Development.m
 
 ### Advice for online environments
 
+OptFrame now supports both `c++17` and `c++20`.
+
 Before installing optframe online (such as google colab), check C++ compiler (typically GCC) version:
 
 `x86_64-linux-gnu-gcc -v`
