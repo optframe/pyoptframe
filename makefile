@@ -3,7 +3,7 @@ CC_GCC=g++
 CC_CLANG=clang++
 #CC=clang++
 #CPPSTD=-std=c++20   # -fconcepts-diagnostics-depth=2  # -Wfatal-errors
-CPPSTD=--std=c++17 # -Wfatal-errors
+CPPSTD=--std=c++17 -Wfatal-errors # TODO REMOVE # -Wfatal-errors
 
 ##########################################
 #         SUBMODULE LOCATION

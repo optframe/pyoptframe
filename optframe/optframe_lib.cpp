@@ -14,14 +14,14 @@
 #include <OptFCore/FCore.hpp>
 #include <OptFCore/EA/RK/FDecoderOpRK.hpp>
 #include <OptFCore/FxCore.hpp>
-#include <OptFrame/BaseConcepts.hpp> // XESolution
+#include <OptFrame/Concepts/BaseConcepts.hpp> // XESolution
 #include <OptFrame/Heuristics/EA/RK/BasicDecoderRandomKeys.hpp>
 #include <OptFrame/Heuristics/EA/RK/BasicInitialEPopulationRK.hpp>
 #include <OptFrame/Heuristics/MultiObjective/ClassicNSGAII.hpp>
 #include <OptFrame/Hyper/HeuristicFactory.hpp>
 #include <OptFrame/Hyper/Loader.hpp>
 #include <OptFrame/Hyper/OptFrameList.hpp>
-#include <OptFrame/MyConcepts.hpp> // sref
+#include <OptFrame/Concepts/MyConcepts.hpp> // sref
 #include <OptFrame/Util/CheckCommand.hpp>
 
 class FCoreLibSolution
