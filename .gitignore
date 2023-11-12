@@ -13,3 +13,4 @@ app_*
 bazel-*
 optframe-local
 0Y_*
+.cache

@@ -21,15 +21,17 @@ OPTFRAME_SRC=./thirdparty/optframe-external
 
 all: load_thirdparty optframe_lib demo_local
 
+OPTFRAME_C_LIB=thirdparty/optframe-external/src/OptFrameLib/OptFrameLib.cpp
+
 optframe_lib:
 	# mkdir -p build/
 	# -Wextra
 	#
 	@echo "BUILD WITH ${CC_GCC} (PART 1/2)"
-	$(CC_GCC) $(CPPSTD) -g -I${OPTFRAME_SRC}/include -Wall -pedantic -Ofast --shared optframe/optframe_lib.cpp -o optframe/optframe_lib.so -fPIC
+	$(CC_GCC) $(CPPSTD) -g -I${OPTFRAME_SRC}/include   -Wall -pedantic -Ofast --shared optframe/optframe_lib.cpp $(OPTFRAME_C_LIB)  -o optframe/optframe_lib.so -fPIC
 	#
 	@echo "BUILD WITH ${CC_CLANG} (PART 2/2)"
-	$(CC_CLANG) $(CPPSTD) -g -I${OPTFRAME_SRC}/include -Wall -pedantic -Ofast --shared optframe/optframe_lib.cpp -o optframe/optframe_lib.so -fPIC
+	$(CC_CLANG) $(CPPSTD) -g -I${OPTFRAME_SRC}/include -Wall -pedantic -Ofast --shared optframe/optframe_lib.cpp $(OPTFRAME_C_LIB) -o optframe/optframe_lib.so -fPIC
 	#
 	#readelf -s build/optframe_lib.so | grep fcore
 
