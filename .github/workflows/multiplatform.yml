@@ -57,10 +57,17 @@ jobs:
       shell: bash
       run: |
         make load_thirdparty
-    - name: make optframe_lib_cmake
+    - name: make optframe_lib (ubuntu)
       shell: bash
+      if: contains(matrix.os, 'ubuntu')
       run: |
-        make optframe_lib_cmake
+        make optframe_lib
+    - name: make optframe_lib_cmake (windows)
+      if: contains(matrix.os, 'windows')
+      run: |
+        cmake -S. -Bbuild -GNinja
+        ninja -Cbuild
+        mv optframe/liboptframe_lib.so optframe/optframe_lib.so
     - name: make test_package
       shell: bash
       run: |
