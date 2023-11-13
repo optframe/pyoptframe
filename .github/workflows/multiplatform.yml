@@ -67,8 +67,8 @@ jobs:
       shell: bash
       run: |
         cmake --version
+        mkdir -p build
         ls -la
-        chmod 777 . -R 
         cmake -S. -Bbuild -GNinja
         ninja -Cbuild
         mv optframe/liboptframe_lib.so optframe/optframe_lib.so
