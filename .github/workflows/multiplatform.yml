@@ -46,6 +46,9 @@ jobs:
       if: contains(matrix.os, 'ubuntu')
       run: |
         sudo apt-get install ninja-build -y
+    - name: Install cmake with pip
+      run: |
+        python3 -m pip install cmake --upgrade
     - name: Git Submodules
       run: |
         git submodule update --init --recursive
