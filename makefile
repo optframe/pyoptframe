@@ -35,6 +35,13 @@ optframe_lib:
 	#
 	#readelf -s build/optframe_lib.so | grep fcore
 
+optframe_lib_cmake:
+	@echo "BUILD WITH CL (default)"
+	cmake -S. -Bbuild -GNinja
+	ninja -Cbuild
+	mv optframe/liboptframe_lib.so optframe/optframe_lib.so
+
+	
 publish_test:
 	rm -f dist/*
 	python -m build
@@ -61,7 +68,7 @@ demo_local_tiny: optframe/optframe_lib.so
 docs:
 	cd docs && make clean && make html
 
-test_local: load_thirdparty optframe_lib
+test_local: load_thirdparty
 	echo ""
 	echo "Running DEV Demos as tests..."
 	echo ""
@@ -70,7 +77,7 @@ test_local: load_thirdparty optframe_lib
 	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 dev-mainTSP-fcore-ils.py > /dev/null)
 	echo "Finished 'make test_local'"
 
-test: test_local test_package
+test: optframe_lib test_local test_package
 
 test_package: clean install
 	# (cd demo/ && python3 demo_pyfcore.py)

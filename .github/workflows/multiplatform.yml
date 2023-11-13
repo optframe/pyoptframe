@@ -42,6 +42,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: ilammy/msvc-dev-cmd@v1
+    - name: Install ninja-build (Ubuntu)
+      if: contains(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get install ninja-build -y
     - name: Git Submodules
       run: |
         git submodule update --init --recursive
@@ -50,12 +54,12 @@ jobs:
       shell: bash
       run: |
         make load_thirdparty
-    - name: make test_local
+    - name: make optframe_lib_cmake
       shell: bash
       run: |
-        make test_local
+        make optframe_lib_cmake
     - name: make test_package
       shell: bash
       run: |
-        make test_local
+        make test_package
 
