@@ -43,7 +43,10 @@ class MyBuildExt(build_ext_orig):
         # git fetch
         # git checkout origin/master -ft
         subprocess.check_call(
-            ['git', 'clone', '--depth', '1', '--branch', '5.0.15', 'https://github.com/optframe/optframe', 'optframe-git'])
+            ['git', 'clone', '--depth', '1', '--branch', '5.0.16', 'https://github.com/optframe/optframe', 'optframe-git'])
+        subprocess.check_call(
+            ['ls', '-la'])
+        
         # ===== check that clone() was done fine ======
         # subprocess.check_call(
         #    ['ls', '-la', 'optframe-git'])
@@ -83,7 +86,7 @@ setup(
     ext_modules=[
         CTypesExtension(
             "optframe.optframe_lib",
-            ["optframe/optframe_lib.cpp"],
+            ["optframe/optframe_lib.cpp", "optframe-git/src/OptFrameLib/OptFrameLib.cpp"],
             #
             # ========== ONLY IF LOCAL TESTING IS USED ===========
             # include_dirs=[os.path.join(
@@ -91,7 +94,10 @@ setup(
             #
             # ============ ONLY IF REMOTE GIT IS USED ============
             include_dirs=[os.path.join(
-                this_directory, "./optframe-git/include")],
+                this_directory, "./optframe-git/include"),
+                os.path.join(
+                this_directory, "./optframe-git/src")
+                ],
             #
             # ====================================================
             # In the future, try c++20. For now, too early.

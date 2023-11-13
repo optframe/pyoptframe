@@ -105,3 +105,4 @@ clean:
 load_thirdparty:
 	git submodule update --init --recursive 
 	git pull --recurse-submodules
+	pip install numpy # for demos
