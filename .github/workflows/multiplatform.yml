@@ -65,6 +65,9 @@ jobs:
     - name: make optframe_lib_cmake (windows)
       if: contains(matrix.os, 'windows')
       run: |
+        cmake --version
+        ls -la
+        chmod 777 . -R 
         cmake -S. -Bbuild -GNinja
         ninja -Cbuild
         mv optframe/liboptframe_lib.so optframe/optframe_lib.so
