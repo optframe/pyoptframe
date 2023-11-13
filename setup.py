@@ -44,8 +44,7 @@ class MyBuildExt(build_ext_orig):
         # git checkout origin/master -ft
         subprocess.check_call(
             ['git', 'clone', '--depth', '1', '--branch', '5.0.16', 'https://github.com/optframe/optframe', 'optframe-git'])
-        subprocess.check_call(
-            ['ls', '-la'])
+        # subprocess.check_call(['ls', '-la'])
         
         # ===== check that clone() was done fine ======
         # subprocess.check_call(
