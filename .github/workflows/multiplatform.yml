@@ -64,6 +64,7 @@ jobs:
         make optframe_lib
     - name: make optframe_lib_cmake (windows)
       if: contains(matrix.os, 'windows')
+      shell: bash
       run: |
         cmake --version
         ls -la
