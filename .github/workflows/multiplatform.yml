@@ -72,6 +72,10 @@ jobs:
         cmake -S. -Bbuild_out -GNinja
         ninja -Cbuild_out
         mv optframe/liboptframe_lib.so optframe/optframe_lib.so
+    - name: make install (all)
+      shell: bash
+      run: |
+        make install    
     - name: make test_package
       shell: bash
       run: |
