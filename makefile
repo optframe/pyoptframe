@@ -33,7 +33,8 @@ optframe_lib:
 	@echo "BUILD WITH ${CC_CLANG} (PART 2/2)"
 	$(CC_CLANG) $(CPPSTD) -g -I${OPTFRAME_SRC}/include -Wall -pedantic -Ofast --shared optframe/optframe_lib.cpp $(OPTFRAME_C_LIB) -o optframe/optframe_lib.so -fPIC
 	#
-	readelf -s optframe/optframe_lib.so | grep fcore
+	# readelf -s optframe/optframe_lib.so | grep fcore
+	ls -la optframe/optframe_lib.so
 
 optframe_lib_cmake:
 	@echo "BUILD WITH CL (default)"
