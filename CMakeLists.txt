@@ -26,6 +26,7 @@ target_link_libraries(optframe_lib PRIVATE OptFrameAll)
 set_target_properties(optframe_lib PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/optframe
     LIBRARY_OUTPUT_NAME optframe_lib
+    WINDOWS_EXPORT_ALL_SYMBOLS ON
 )
 set_target_properties(optframe_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # https://stackoverflow.com/questions/58059048/ambiguous-byte-definition-in-rpcndr-and-cstddef#58060367
