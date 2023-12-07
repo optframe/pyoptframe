@@ -71,7 +71,7 @@ jobs:
         ls -la
         cmake -S. -Bbuild_out -GNinja
         ninja -Cbuild_out
-        mv optframe/optframe_lib.dll optframe/optframe_lib.so
+        # mv optframe/optframe_lib.dll optframe/optframe_lib.dll
     - name: make test_local (all)
       shell: bash
       run: |
