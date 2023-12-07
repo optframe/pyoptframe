@@ -40,6 +40,7 @@ if os.name == 'posix':  # Linux or macOS
 elif os.name == 'nt':   # Windows
     my_extra_compile_args.append('/std:c++17')
     my_extra_compile_args.append('/DWIN32')
+    my_extra_compile_args.append('/D_HAS_STD_BYTE=0')
     print("FLAGS for Windows")
 else:
     pass
