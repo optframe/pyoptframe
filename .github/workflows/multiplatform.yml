@@ -76,7 +76,11 @@ jobs:
       shell: bash
       run: |
         make install    
-    - name: make test_package
+    - name: make test_local (all)
+      shell: bash
+      run: |
+        make test_local
+    - name: make test_package (all)
       shell: bash
       run: |
         make test_package
