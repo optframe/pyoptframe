@@ -20,8 +20,19 @@ from optframe.components import *
 
 # ==================== optframe_lib.so ===================
 
+optframe_lib = None
+
+# default: linux
 libfile = pathlib.Path(__file__).parent / "optframe_lib.so"
-optframe_lib = ctypes.CDLL(str(libfile))
+if libfile.exists():
+    optframe_lib = ctypes.CDLL(str(libfile))
+else:
+    # maybe windows...
+    libfile = pathlib.Path(__file__).parent / "optframe_lib.dll"
+    if libfile.exists():
+        optframe_lib = ctypes.CDLL(str(libfile))
+    else:
+        print(f"Error: {libfile} not found.")
 
 FCORE_WARN_ISSUES = True
 
