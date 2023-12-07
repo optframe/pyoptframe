@@ -35,6 +35,10 @@ else:
         print(f"Error: {libfile} not found.")
         assert False
 
+# final check on library...
+if optframe_lib is None:
+    raise ImportError(f"Error: library 'optframe_lib' not found.")
+
 FCORE_WARN_ISSUES = True
 
 # =====================================
