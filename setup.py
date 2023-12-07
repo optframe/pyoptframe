@@ -25,7 +25,8 @@ class MyBuildExt(build_ext_orig):
     def get_ext_filename(self, ext_name):
         if self._ctypes:
             if os.name == 'nt':  # Windows
-                return ext_name + '.pyd'
+                # only use .pyd if PyInit_foo() exists...
+                return ext_name + '.dll'
             else:
                 return ext_name + '.so'
         return super().get_ext_filename(ext_name)
