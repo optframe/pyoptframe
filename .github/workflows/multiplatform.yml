@@ -79,6 +79,7 @@ jobs:
     - name: make test_local (all)
       shell: bash
       run: |
+        python3 --version
         make test_local
     - name: make test_package (all)
       shell: bash
