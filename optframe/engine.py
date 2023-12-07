@@ -739,7 +739,7 @@ class Engine(object):
         assert not inspect.isclass(problemCtx)
         # get move type
         mType = inspect.signature(ns.randomMove).return_annotation
-        print("ns::mType = ", mType)
+        #print("ns::mType = ", mType)
         assert isinstance(mType, XMove)
         assert inspect.isclass(mType)
         #
@@ -821,7 +821,7 @@ class Engine(object):
         assert not inspect.isclass(problemCtx)
         #
         mType = inspect.signature(nsseq.randomMove).return_annotation
-        print("nsseq::mType = ", mType)
+        #print("nsseq::mType = ", mType)
         assert isinstance(mType, XMove)
         assert inspect.isclass(mType)
         #
