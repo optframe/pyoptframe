@@ -643,7 +643,9 @@ class Engine(object):
             self.callback_utils_decref_ptr)
         return IdDecoderRandomKeysNoEvaluation(idx_dec)
     
-    def add_edecoder_op_rk_class(self, p : XProblem, decoder_rk: Type[XDecoderRandomKeysMinimize|XDecoderRandomKeysMaximize]):
+    # decoder_rk: Type[XDecoderRandomKeysMinimize|XDecoderRandomKeysMaximize]
+    # cannot make Union here... think about python 3.9 (pipe only after 3.10)
+    def add_edecoder_op_rk_class(self, p : XProblem, decoder_rk: Union[XDecoderRandomKeysMinimize,XDecoderRandomKeysMaximize]):
         """
         Add a XDecoderRandomKeys class to the engine.
 

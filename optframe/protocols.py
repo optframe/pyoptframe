@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from typing import Protocol, runtime_checkable, Tuple
+from typing import Protocol, runtime_checkable, Tuple, Union
 
 # protocols should only depend on 'core'
 from optframe.core import SearchOutput
@@ -95,13 +95,13 @@ class XDecoderRandomKeysNoEvaluation(Protocol):
 @runtime_checkable
 class XDecoderRandomKeysMinimize(Protocol):
     @staticmethod
-    def decodeMinimize(p: XProblem, rk : LibArrayDouble, needsSolution: bool) -> Tuple[XSolution|None, float]:
+    def decodeMinimize(p: XProblem, rk : LibArrayDouble, needsSolution: bool) -> Tuple[Union[XSolution,None], float]:
         ...
 
 @runtime_checkable
 class XDecoderRandomKeysMaximize(Protocol):
     @staticmethod
-    def decodeMaximize(p: XProblem, rk : LibArrayDouble, needsSolution: bool) -> Tuple[XSolution|None, float]:
+    def decodeMaximize(p: XProblem, rk : LibArrayDouble, needsSolution: bool) -> Tuple[Union[XSolution,None], float]:
         ...
 
 @runtime_checkable

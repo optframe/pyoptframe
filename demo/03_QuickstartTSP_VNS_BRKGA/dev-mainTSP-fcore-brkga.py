@@ -187,7 +187,7 @@ class RKConstructiveTSP(object):
 
 
 from optframe.core import LibArrayDouble
-from typing import Tuple
+from typing import Tuple, Union
 
 import ctypes
 
@@ -217,7 +217,7 @@ class DecoderTSP(object):
         return sol
 
     @staticmethod
-    def decodeMinimize(pTSP: ProblemContextTSP, array_double : LibArrayDouble, needsSolution: bool) -> Tuple[SolutionTSP|None, float]:
+    def decodeMinimize(pTSP: ProblemContextTSP, array_double : LibArrayDouble, needsSolution: bool) -> Tuple[Union[SolutionTSP,None], float]:
         #
         # print("decodeMinimize! needsSolution="+str(needsSolution), flush=True)
         sol = DecoderTSP.decodeSolution(pTSP, array_double)
