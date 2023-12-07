@@ -72,15 +72,15 @@ jobs:
         cmake -S. -Bbuild_out -GNinja
         ninja -Cbuild_out
         mv optframe/optframe_lib.dll optframe/optframe_lib.so
-    - name: make install (all)
-      shell: bash
-      run: |
-        make install    
     - name: make test_local (all)
       shell: bash
       run: |
         python3 --version
         make test_local
+    - name: make install (all)
+      shell: bash
+      run: |
+        make install    
     - name: make test_package (all)
       shell: bash
       run: |
