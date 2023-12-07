@@ -33,6 +33,7 @@ else:
         optframe_lib = ctypes.CDLL(str(libfile))
     else:
         print(f"Error: {libfile} not found.")
+        assert False
 
 FCORE_WARN_ISSUES = True
 
