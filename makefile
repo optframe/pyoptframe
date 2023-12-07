@@ -70,6 +70,8 @@ docs:
 	cd docs && make clean && make html
 
 test_local: load_thirdparty
+	echo "test_local: Check if library exists..."
+	ls -la optframe/optframe_lib.so
 	echo ""
 	echo "Running DEV Demos as tests..."
 	echo ""
