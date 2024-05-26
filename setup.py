@@ -10,7 +10,7 @@ class CTypesExtension(Extension):
 class MyBuildExt(build_ext_orig):
     def run(self):
         subprocess.check_call(
-            ['git', 'clone', '--depth', '1', '--branch', '5.0.18', 'https://github.com/optframe/optframe', 'optframe-git'])        
+            ['git', 'clone', '--depth', '1', '--branch', '5.1.0', 'https://github.com/optframe/optframe', 'optframe-git'])        
         build_ext_orig.run(self)
 
     def build_extension(self, ext):
@@ -49,7 +49,7 @@ else:
 
 setup(
     name="optframe",
-    version="5.0.28rc0",
+    version="5.0.28",
     py_modules=["optframe.components","optframe.core","optframe.engine","optframe.heuristics","optframe.protocols"],
     ext_modules=[
         CTypesExtension(

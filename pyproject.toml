@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "optframe"
-version = "5.0.28rc0"
+version = "5.0.28"
 description = "Python bindings for OptFrame Functional Core"
 readme = "README.md"
 authors = [{ name = "Igor Machado Coelho", email = "igormcoelho@proton.me" }]
@@ -27,4 +27,4 @@ requires-python = ">=3.9"
 dev = ["black", "bumpver", "isort", "pip-tools", "pytest"]
 
 [project.urls]
-Homepage = "https://github.com/optframe/pyoptframe-dev"
+Homepage = "https://github.com/optframe/pyoptframe"

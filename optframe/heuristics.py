@@ -128,6 +128,26 @@ class BestImprovement(LocalSearch):
     def get_id(self) -> IdLocalSearch:
         return self.ls_idx
 
+class FirstImprovement(LocalSearch):
+    def __init__(self, _engine: XEngine, _ev: IdGeneralEvaluator, _nsseq: IdNSSeq):
+        assert isinstance(_engine, XEngine)
+        if (isinstance(_ev, int)):
+            _ev = IdGeneralEvaluator(_ev)
+        if (not isinstance(_ev, IdGeneralEvaluator)):
+            print(_ev)
+            assert (False)
+        if (isinstance(_nsseq, int)):
+            _nsseq = IdNSSeq(_nsseq)
+        if (not isinstance(_nsseq, IdNSSeq)):
+            print(_nsseq)
+            assert (False)
+        self.engine = _engine
+        str_code    = "OptFrame:ComponentBuilder:LocalSearch:FI"
+        str_args    = "OptFrame:GeneralEvaluator "+str(_ev.id)+" OptFrame:NS:NSFind:NSSeq "+str(_nsseq.id)
+        self.ls_idx  = self.engine.build_local_search(str_code, str_args)
+    def get_id(self) -> IdLocalSearch:
+        return self.ls_idx
+
 class VariableNeighborhoodDescent(LocalSearch):
     def __init__(self, _engine: XEngine, _ev: IdGeneralEvaluator, _lslist: IdListLocalSearch):
         assert isinstance(_engine, XEngine)
