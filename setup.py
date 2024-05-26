@@ -49,7 +49,7 @@ else:
 
 setup(
     name="optframe",
-    version="5.0.28",
+    version="5.1.0",
     py_modules=["optframe.components","optframe.core","optframe.engine","optframe.heuristics","optframe.protocols"],
     ext_modules=[
         CTypesExtension(
