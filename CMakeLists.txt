@@ -12,7 +12,7 @@ add_library(OptFrameAll INTERFACE)
 target_include_directories(OptFrameAll INTERFACE thirdparty/optframe-external/include/)
 
 # This will simply test if 'thirdparty/optframe-external' is working
-add_executable(app_demo_opt_py thirdparty/optframe-external/demo/00_SimpleBuild/OptFCore_load.cpp)
+add_executable(app_demo_opt_py thirdparty/optframe-external/demo/00_SimpleBuild/src/OptFCore_load.cpp)
 target_link_libraries(app_demo_opt_py PRIVATE OptFrameAll)
 
 # ==================================
