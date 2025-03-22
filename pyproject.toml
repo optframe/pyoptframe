@@ -19,7 +19,12 @@ classifiers = [
 ]
 keywords = ["optframe", "optimization", "metaheuristics"]
 dependencies = [
-#    "ctypes"
+    "breathe>=4.13.0",
+    "exhale>=0.3.7",
+    #    "ctypes"
+    "recommonmark>=0.7.1",
+    "sphinx>=2.0",
+    "sphinx-rtd-theme>=3.0.2",
 ]
 requires-python = ">=3.9"
 
@@ -28,3 +33,8 @@ dev = ["black", "bumpver", "isort", "pip-tools", "pytest"]
 
 [project.urls]
 Homepage = "https://github.com/optframe/pyoptframe"
+
+[dependency-groups]
+dev = [
+    "build>=1.2.2.post1",
+]
