@@ -11,9 +11,10 @@ version = "5.1.0"
 description = "Python bindings for OptFrame Functional Core"
 readme = "README.md"
 authors = [{ name = "Igor Machado Coelho", email = "igormcoelho@proton.me" }]
-license = { file = "LICENSE" }
+# license = { file = "LICENSE" } # DEPRECATED
+license = "MIT OR LGPL-3.0-or-later"
 classifiers = [
-    "License :: OSI Approved :: MIT License",
+    # "License :: OSI Approved :: MIT License",  # DEPRECATED
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
