@@ -168,7 +168,7 @@ def mycallback_constructive(problemCtx: ExampleKP) -> ExampleSol:
 class KPRandom(object):
     @staticmethod
     def generateSolution(problem: ExampleKP) -> ExampleSol:
-        print("\tinvoking mycallback_constructive for problem: ", problem, flush=True)
+        # print("\tinvoking mycallback_constructive for problem: ", problem, flush=True)
         sol = ExampleSol()
         # print("count=", sys.getrefcount(sol)) # count=2
         for _ in range(0, problem.n):
@@ -387,10 +387,12 @@ pKP.w = [1, 2, 3, 4, 5]
 pKP.p = [5, 4, 3, 2, 1]
 pKP.Q = 6.0
 #
+
 if not KP_EXAMPLE_SILENT:
     pKP.engine = optframe.Engine(APILevel.API1d, LogLevel.Debug)
 else:
     pKP.engine = optframe.Engine(APILevel.API1d, LogLevel.Silent)
+
 
 if not KP_EXAMPLE_SILENT:
     print(pKP)
@@ -398,11 +400,12 @@ if not KP_EXAMPLE_SILENT:
 ##################
 
 print("==-Experimental-==")
-json_out = pKP.engine.experimental_get_parameter("")
-print("json_out=",json_out)
-pKP.engine.experimental_set_parameter("NS_VALID_RANDOM_MOVE_MAX_TRIES", "2")
-json_out = pKP.engine.experimental_get_parameter("")
-print("json_out=",json_out)
+#json_out = pKP.engine.experimental_get_parameter("")
+#print("BEGIN PROBLEM 4")
+#print("json_out=",json_out)
+#pKP.engine.experimental_set_parameter("NS_VALID_RANDOM_MOVE_MAX_TRIES", "2")
+#json_out = pKP.engine.experimental_get_parameter("")
+#print("json_out=",json_out)
 
 ##################
 
@@ -553,6 +556,7 @@ if not KP_EXAMPLE_SILENT:
     else:
         print("OK. no stress...")
 
+
 # ============= CHECK =============
 
 if not KP_EXAMPLE_SILENT:
@@ -561,7 +565,9 @@ if not KP_EXAMPLE_SILENT:
     print("")
 
 # LogLevel::Info(3) for check module
-pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "3")
+# BUGGY IN OPTFRAME 5.1
+# pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "3")
+
 
 pKP.engine.check(100, 10, False)
 
@@ -760,7 +766,8 @@ if not KP_EXAMPLE_SILENT:
     print("")
 
 # make it silent
-pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
+# BUGGY IN OPTFRAME 5.1
+# pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
 
 g_idx = pKP.engine.build_global_search(
     "OptFrame:ComponentBuilder:SingleObjSearch:TS:BasicTabuSearch",
