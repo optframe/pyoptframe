@@ -23,6 +23,8 @@ This is a 10+ year project with several practical applications in industry and a
 
 ## For Developers
 
+To test locally, just run: `make demo_local`.
+
 If you want to help, please see instructions on [Development.md](./Development.md).
 
 
