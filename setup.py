@@ -34,12 +34,11 @@ class MyBuildExt(build_ext_orig):
 this_directory = os.path.abspath(os.path.dirname(__file__))
 
 my_extra_compile_args = []
-# In the future, try c++20. For now, too early.
 if os.name == 'posix':  # Linux or macOS
-    my_extra_compile_args.append('--std=c++17')
+    my_extra_compile_args.append('--std=c++20')
     print("FLAGS for Linux or MacOS")
 elif os.name == 'nt':   # Windows
-    my_extra_compile_args.append('/std:c++17')
+    my_extra_compile_args.append('/std:c++20')
     my_extra_compile_args.append('/DWIN32')
     my_extra_compile_args.append('/D_HAS_STD_BYTE=0')
     print("FLAGS for Windows")
