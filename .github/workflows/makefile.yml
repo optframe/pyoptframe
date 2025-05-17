@@ -14,13 +14,13 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Run full make
+      run: make
+
     - name: Run tests (test_local)
       run: make test_local
 
     - name: Run tests (test_package)
       run: make test_package
-
-    - name: Run full make
-      run: make
 
       
