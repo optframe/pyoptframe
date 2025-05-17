@@ -37,15 +37,16 @@ class LibArrayDouble(ctypes.Structure):
     def __str__(self):
         return f"LibArrayDouble(size={self.size};v={self.v};)"
 
-# optframe.LogLevel
+# optframe.LogLevel from modlog library
 class LogLevel(IntEnum):
-    Silent = 0
-    Error = 1
-    Warning = 2
-    Info = 3
-    Debug = 4
+    Disabled = 4
+    Fatal = 3
+    Error = 2
+    Warning = 1
+    Info = 0
+    Debug = -1
 # example:
-# if (loglevel >= LogLevel::Warning) { ... }
+# if (loglevel <= LogLevel::Warning) { ... }
 
 
 class CheckCommandFailCode(IntEnum):

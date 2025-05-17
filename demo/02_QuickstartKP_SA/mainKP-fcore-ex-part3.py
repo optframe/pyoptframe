@@ -10,8 +10,8 @@ is_idx = 0
 pKP.engine.add_ns_class(pKP, NSBitFlip) 
 ns_idx = 0
 
-# make engine silent (loglevel 0)
-pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "0")
+# make engine disabled (loglevel 4)
+pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", str(LogLevel.Disabled))
 
 # ======= play a little bit ========
 

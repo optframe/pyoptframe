@@ -4,4 +4,5 @@
 # ===========================
 
 # get SimulatedAnnealing
+from optframe.core import LogLevel
 from optframe.heuristics import *

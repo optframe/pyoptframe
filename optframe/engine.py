@@ -350,7 +350,7 @@ class Engine(object):
         self.loglevel = loglevel
         ll_int = int(self.loglevel)
         assert (apilevel == APILevel.API1d)
-        if (loglevel >= LogLevel.Debug):
+        if (loglevel <= LogLevel.Debug):
             print("Debug: Engine using API level API1d")
         self.hf = optframe_lib.optframe_api1d_create_engine(ll_int)
         self.callback_sol_deepcopy_ptr = FUNC_SOL_DEEPCOPY(
@@ -375,7 +375,7 @@ class Engine(object):
         self.callback_list.append(func)
 
     def cleanup(self):
-        if (self.loglevel >= LogLevel.Debug):
+        if (self.loglevel <= LogLevel.Debug):
             print("Running optframe cleanup...")
         optframe_lib.optframe_api1d_destroy_engine(self.hf)
 

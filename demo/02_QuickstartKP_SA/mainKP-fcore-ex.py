@@ -86,6 +86,7 @@ assert isinstance(NSBitFlip, XNS)     # composition tests
 # ===========================
 
 # get SimulatedAnnealing
+from optframe.core import LogLevel
 from optframe.heuristics import *
 
 # set random seed for system
@@ -112,8 +113,8 @@ is_idx = 0
 pKP.engine.add_ns_class(pKP, NSBitFlip) 
 ns_idx = 0
 
-# make engine silent (loglevel 0)
-pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", "0")
+# make engine disabled (loglevel 4)
+pKP.engine.experimental_set_parameter("ENGINE_LOG_LEVEL", str(LogLevel.Disabled))
 
 # ======= play a little bit ========
 
@@ -145,7 +146,8 @@ pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
 
 # check components!
 print("will invoke check module")
-pKP.engine.check(100, 10, False)
+b=pKP.engine.check(100, 10, False)
+assert(b)
 
 # build Simulated Annealing with alpha=0.98 T0=99999 and IterMax=100
 sa = BasicSimulatedAnnealing(pKP.engine, 0, 0, list_idx, 0.98, 100, 99999)
