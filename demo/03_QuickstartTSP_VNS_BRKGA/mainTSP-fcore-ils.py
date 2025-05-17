@@ -161,6 +161,7 @@ class NSSeqSwap(object):
 # ===========================================
 
 # import ILSLevels and BestImprovement
+from optframe.core import LogLevel
 from optframe.heuristics import *
 
 # set random seed for system
@@ -239,8 +240,8 @@ print("list_idx=", list_idx)
 # print(pTSP.engine.list_builders("OptFrame:"))
 # print()
 
-# make next local search component silent (loglevel 0)
-pTSP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
+# make next local search component silent (loglevel 4)
+pTSP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", str(LogLevel.Disabled))
 
 print("building 'BI' neighborhood exploration as local search", flush=True)
 bi = BestImprovement(pTSP.engine, 0, 0)
@@ -268,8 +269,8 @@ print("pert_idx=", pert_idx)
 
 # pTSP.engine.list_components("OptFrame:")
 
-# make next global search component info (loglevel 3)
-pTSP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "3")
+# make next global search component info (loglevel 0)
+pTSP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", str(LogLevel.Info))
 
 # build Iterated Local Search (ILS) Levels with iterMax=10 maxPert=5
 ilsl = ILSLevels(pTSP.engine, 0, 0, 1, 0, 10, 5)

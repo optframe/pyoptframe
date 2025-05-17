@@ -9,8 +9,8 @@ print("pert_idx=", pert_idx)
 
 # pTSP.engine.list_components("OptFrame:")
 
-# make next global search component info (loglevel 3)
-pTSP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "3")
+# make next global search component info (loglevel 0)
+pTSP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", str(LogLevel.Info))
 
 # build Iterated Local Search (ILS) Levels with iterMax=10 maxPert=5
 ilsl = ILSLevels(pTSP.engine, 0, 0, 1, 0, 10, 5)

@@ -141,8 +141,8 @@ print("nbuilders =", nbuilders)
 list_idx = pKP.engine.create_component_list(
     "[ OptFrame:NS 0 ]", "OptFrame:NS[]")
 
-# make global search silent (loglevel 0)
-pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
+# make global search silent (loglevel 4)
+pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", str(LogLevel.Disabled))
 
 # check components!
 print("will invoke check module")

@@ -17,8 +17,8 @@ list_idx = pKP.engine.create_component_list(
     "[ OptFrame:NS 0 ]", "OptFrame:NS[]")
 print("list_idx=", list_idx)
 
-# make global search silent (loglevel 0)
-pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", "0")
+# make global search silent (loglevel 4)
+pKP.engine.experimental_set_parameter("COMPONENT_LOG_LEVEL", str(LogLevel.Disabled))
 
 # build Simulated Annealing with alpha=0.98 T0=99999 and IterMax=100
 gs_idx = pKP.engine.build_global_search(

@@ -3,4 +3,5 @@
 # ===========================================
 
 # import ILSLevels and BestImprovement
+from optframe.core import LogLevel
 from optframe.heuristics import *
