@@ -391,7 +391,7 @@ pKP.Q = 6.0
 if not KP_EXAMPLE_SILENT:
     pKP.engine = optframe.Engine(APILevel.API1d, LogLevel.Debug)
 else:
-    pKP.engine = optframe.Engine(APILevel.API1d, LogLevel.Silent)
+    pKP.engine = optframe.Engine(APILevel.API1d, LogLevel.Disabled)
 
 
 if not KP_EXAMPLE_SILENT:

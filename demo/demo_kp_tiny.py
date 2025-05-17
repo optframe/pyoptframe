@@ -162,7 +162,7 @@ pKP.Q = 6.0
 if not KP_EXAMPLE_SILENT:
     pKP.engine = Engine(APILevel.API1d, LogLevel.Debug)
 else:
-    pKP.engine = Engine(APILevel.API1d, LogLevel.Silent)
+    pKP.engine = Engine(APILevel.API1d, LogLevel.Disabled)
 
 if not KP_EXAMPLE_SILENT:
     print(pKP)
