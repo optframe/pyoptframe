@@ -1,9 +1,4 @@
-CC=clang++
-CC_GCC=g++
-CC_CLANG=clang++
-#CC=clang++
-#CPPSTD=-std=c++20   # -fconcepts-diagnostics-depth=2  # -Wfatal-errors
-CPPSTD=--std=c++17   # TODO REMOVE # -Wfatal-errors
+CPPSTD=--std=c++20
 
 ##########################################
 #         SUBMODULE LOCATION
@@ -23,21 +18,17 @@ all: load_thirdparty optframe_lib demo_local
 
 OPTFRAME_C_LIB=thirdparty/optframe-external/src/OptFrameLib/OptFrameLib.cpp
 
-optframe_lib:
-	# mkdir -p build/
-	# -Wextra
-	#
-	@echo "BUILD WITH ${CC_GCC} (PART 1/2)"
-	$(CC_GCC) $(CPPSTD) -g -I${OPTFRAME_SRC}/include   -Wall -pedantic -Ofast --shared optframe/optframe_lib.cpp $(OPTFRAME_C_LIB)  -o optframe/optframe_lib.so -fPIC
-	#
-	@echo "BUILD WITH ${CC_CLANG} (PART 2/2)"
-	$(CC_CLANG) $(CPPSTD) -g -I${OPTFRAME_SRC}/include -Wall -pedantic -Ofast --shared optframe/optframe_lib.cpp $(OPTFRAME_C_LIB) -o optframe/optframe_lib.so -fPIC
-	#
+optframe_lib: optframe/optframe_lib.so
+	@echo "make optframe_lib: OptFrame C Library is built!"
+
+optframe/optframe_lib.so:
+	@echo "make optframe/optframe_lib.so: BUILD WITH ${CXX}"
+	$(CXX) $(CPPSTD) -g -I${OPTFRAME_SRC}/include   -Wall -pedantic -Ofast --shared optframe/optframe_lib.cpp $(OPTFRAME_C_LIB)  -o optframe/optframe_lib.so -fPIC
 	# readelf -s optframe/optframe_lib.so | grep fcore
 	ls -la optframe/optframe_lib.so
 
 optframe_lib_cmake:
-	@echo "BUILD WITH CL (default)"
+	@echo "make optframe_lib_cmake: BUILD WITH CL (default)"
 	cmake -S. -Bbuild -GNinja
 	ninja -Cbuild
 	mv optframe/liboptframe_lib.so optframe/optframe_lib.so
@@ -69,16 +60,15 @@ demo_local_tiny: optframe/optframe_lib.so
 docs:
 	cd docs && make clean && make html
 
-test_local: load_thirdparty
-	# echo "test_local: Check if library exists..."
-	# ls -la optframe/optframe_lib.so
-	echo ""
-	echo "Running DEV Demos as tests..."
-	echo ""
+test_local: optframe_lib
+	@echo "make test_local"
+	@echo ""
+	@echo "Running DEV Demos as tests..."
+	@echo ""
 	(cd demo/02_QuickstartKP_SA/ && ./join.sh && python3 dev-mainKP-fcore-ex.py > /dev/null)
 	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 dev-mainTSP-fcore-brkga.py > /dev/null)
 	(cd demo/03_QuickstartTSP_VNS_BRKGA/ && ./join.sh && python3 dev-mainTSP-fcore-ils.py > /dev/null)
-	echo "Finished 'make test_local'"
+	@echo "Finished 'make test_local'"
 
 test: optframe_lib test_local test_package
 

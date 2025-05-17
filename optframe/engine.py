@@ -281,7 +281,12 @@ optframe_lib.optframe_api1d_engine_experimental_set_parameter.restype = ctypes.c
 
 optframe_lib.optframe_api1d_engine_experimental_get_parameter.argtypes = [
     ctypes.c_void_p, ctypes.c_char_p]
-optframe_lib.optframe_api1d_engine_experimental_get_parameter.restype = ctypes.c_char_p
+# note: this is 'c_char_p', but we need 'c_void_p' to manually clear the 'char*'
+optframe_lib.optframe_api1d_engine_experimental_get_parameter.restype = ctypes.c_void_p
+# note: this is 'c_char_p', but we need 'c_void_p' to manually clear the 'char*'
+optframe_lib.optframe_api1d_free_string.argtypes = [ctypes.c_void_p]
+optframe_lib.optframe_api1d_free_string.restype = None
+
 
 
 ########
@@ -409,14 +414,22 @@ class Engine(object):
         if (not isinstance(sparameter, str)):
             assert (False)
         b_param = sparameter.encode('ascii')
-        b_out = optframe_lib.optframe_api1d_engine_experimental_get_parameter(self.hf, b_param)
+        ptr = optframe_lib.optframe_api1d_engine_experimental_get_parameter(self.hf, b_param)
+        if not ptr:
+            assert(False)
+            return ''
+        # manually cast 'void*' to 'char*'
+        b_out = ctypes.string_at(ptr) 
         str_out=b_out.decode('ascii')
         if len(str_out) == 0:
-            return None
+            optframe_lib.optframe_api1d_free_string(ptr)
+            assert(False)
+            return ''
         # print("str_out=",str_out, len(str_out))
         # output is JSON
         import json        
         json_data = json.loads(str_out)
+        optframe_lib.optframe_api1d_free_string(ptr)
         #print(json_data)
         return json_data
 
