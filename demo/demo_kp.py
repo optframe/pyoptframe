@@ -782,6 +782,15 @@ lout = pKP.engine.run_global_search(g_idx, 4.7)
 
 print('BasicTabuSearch output =', lout)
 
+print("will run some experiments!")
+
+str_sa = "OptFrame:ComponentBuilder:GlobalSearch:SA:BasicSA OptFrame:GeneralEvaluator:Evaluator 0  OptFrame:InitialSearch 0 OptFrame:NS[] 0 0.99 100 99999"
+
+lout = pKP.engine.run_experiments(3, str_sa, 0, "", 5)
+    
+
+
+
 print("finished!")
 ##################
 

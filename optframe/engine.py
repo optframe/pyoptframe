@@ -134,6 +134,12 @@ optframe_lib.optframe_api1d_add_rk_constructive.argtypes = [
 optframe_lib.optframe_api1d_add_rk_constructive.restype = ctypes.c_int32
 
 
+optframe_lib.optframe_api1d_run_experiments.argtypes = [
+    ctypes.c_void_p, ctypes.c_int32, ctypes.c_char_p, ctypes.c_int32,
+    ctypes.c_char_p, ctypes.c_double]
+optframe_lib.optframe_api1d_run_experiments.restype = ctypes.c_int32
+
+
 
 # ----------
 
@@ -1057,6 +1063,11 @@ class Engine(object):
         lout = optframe_lib.optframe_api1d_run_sos_search(
             self.hf, sos_idx.id, timelimit)
         # l2out = SearchOutput(lout)
+        return lout
+    
+    def run_experiments(self, numRuns: int, buildersLines: str, firstSeed: int, outfile: str, timelimit: float) -> int:
+        lout = optframe_lib.optframe_api1d_run_experiments(
+            self.hf, numRuns, buildersLines,firstSeed, outfile, timelimit)
         return lout
 
 
