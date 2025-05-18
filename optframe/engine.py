@@ -1066,8 +1066,11 @@ class Engine(object):
         return lout
     
     def run_experiments(self, numRuns: int, buildersLines: str, firstSeed: int, outfile: str, timelimit: float) -> int:
+        print("will run ", numRuns, " experiments!")
+        b_buildersLines = buildersLines.encode('ascii')
+        b_outfile = outfile.encode('ascii')
         lout = optframe_lib.optframe_api1d_run_experiments(
-            self.hf, numRuns, buildersLines,firstSeed, outfile, timelimit)
+            self.hf, numRuns, b_buildersLines,firstSeed, b_outfile, timelimit)
         return lout
 
 
